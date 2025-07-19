@@ -5,6 +5,8 @@ import DashboardLayout from '@/components/Layout/DashboardLayout';
 import { productsAPI } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useNotification } from '@/context/NotificationContext';
+import { ProductModal, useProductModal } from '@/components/Products/ProductModal';
+import { Product } from '@/types/product';
 import {
   Package,
   Plus,
@@ -15,32 +17,24 @@ import {
   Filter,
 } from 'lucide-react';
 
-interface Product {
-  _id: string;
-  name: string;
-  description: string;
-  sku: string;
-  category: string;
-  price: number;
-  cost: number;
-  stock: number;
-  minStock: number;
-  unit: string;
-  supplier: string;
-  profitMargin: number;
-  stockStatus: string;
-  isActive: boolean;
-}
-
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [stockFilter, setStockFilter] = useState('');
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const { user } = useAuth();
   const { success, error, warning } = useNotification();
+  
+  // Product modal management
+  const {
+    isOpen: isModalOpen,
+    mode: modalMode,
+    selectedProduct,
+    openCreateModal,
+    openEditModal,
+    closeModal,
+  } = useProductModal();
 
   const canEdit = user?.role === 'admin' || user?.role === 'manager';
   const canDelete = user?.role === 'admin';
@@ -90,6 +84,10 @@ export default function ProductsPage() {
     }
   };
 
+  const handleModalSuccess = () => {
+    fetchProducts();
+  };
+
   const getStockStatusColor = (status: string) => {
     switch (status) {
       case 'out_of_stock':
@@ -137,7 +135,7 @@ export default function ProductsPage() {
             <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
               <button
                 type="button"
-                onClick={() => setShowCreateModal(true)}
+                onClick={openCreateModal}
                 className="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -265,16 +263,16 @@ export default function ProductsPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
-                            %{product.profitMargin}
+                            %{product.profitMargin || ((product.price - product.cost) / product.cost * 100).toFixed(2)}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStockStatusColor(
-                              product.stockStatus
+                              product.stockStatus || (product.stock <= product.minStock ? 'low_stock' : 'in_stock')
                             )}`}
                           >
-                            {getStockStatusText(product.stockStatus)}
+                            {getStockStatusText(product.stockStatus || (product.stock <= product.minStock ? 'low_stock' : 'in_stock'))}
                           </span>
                         </td>
                         {(canEdit || canDelete) && (
@@ -282,7 +280,8 @@ export default function ProductsPage() {
                             <div className="flex space-x-2">
                               {canEdit && (
                                 <button
-                                  className="text-indigo-600 hover:text-indigo-900"
+                                  onClick={() => openEditModal(product)}
+                                  className="text-indigo-600 hover:text-indigo-900 transition-colors"
                                   title="Düzenle"
                                 >
                                   <Edit className="h-4 w-4" />
@@ -291,7 +290,7 @@ export default function ProductsPage() {
                               {canDelete && (
                                 <button
                                   onClick={() => handleDelete(product._id, product.name)}
-                                  className="text-red-600 hover:text-red-900"
+                                  className="text-red-600 hover:text-red-900 transition-colors"
                                   title="Sil"
                                 >
                                   <Trash2 className="h-4 w-4" />
@@ -311,6 +310,18 @@ export default function ProductsPage() {
                     <p className="mt-1 text-sm text-gray-500">
                       Arama kriterlerinizi değiştirin veya yeni ürün ekleyin.
                     </p>
+                    {canEdit && (
+                      <div className="mt-6">
+                        <button
+                          type="button"
+                          onClick={openCreateModal}
+                          className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          İlk Ürünü Ekle
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -318,6 +329,15 @@ export default function ProductsPage() {
           </div>
         </div>
       </div>
+
+      {/* Product Modal */}
+      <ProductModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onSuccess={handleModalSuccess}
+        product={selectedProduct}
+        mode={modalMode}
+      />
     </DashboardLayout>
   );
 } 

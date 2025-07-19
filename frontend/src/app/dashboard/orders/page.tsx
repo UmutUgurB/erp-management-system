@@ -4,176 +4,139 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/Layout/DashboardLayout';
 import { ordersAPI } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { useNotification } from '@/context/NotificationContext';
+import { OrderModal, useOrderModal } from '@/components/Orders/OrderModal';
+import { Order, ORDER_STATUS_OPTIONS, PAYMENT_STATUS_OPTIONS } from '@/types/order';
 import {
   ShoppingCart,
   Plus,
   Search,
-  Eye,
   Edit,
   Trash2,
-  Package,
-  CreditCard,
+  Eye,
+  Filter,
   Calendar,
+  User,
+  DollarSign,
 } from 'lucide-react';
-import toast from 'react-hot-toast';
-
-interface Order {
-  _id: string;
-  orderNumber: string;
-  customer: {
-    name: string;
-    email: string;
-    phone: string;
-    address: string;
-  };
-  items: Array<{
-    product: {
-      _id: string;
-      name: string;
-      sku: string;
-    };
-    quantity: number;
-    price: number;
-  }>;
-  status: string;
-  totalAmount: number;
-  paymentStatus: string;
-  paymentMethod: string;
-  notes?: string;
-  createdBy: {
-    name: string;
-    email: string;
-  };
-  createdAt: string;
-}
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('');
   const { user } = useAuth();
+  const { success, error, warning } = useNotification();
+  
+  // Order modal management
+  const {
+    isOpen: isModalOpen,
+    mode: modalMode,
+    selectedOrder,
+    openCreateModal,
+    openEditModal,
+    closeModal,
+  } = useOrderModal();
 
   const canEdit = user?.role === 'admin' || user?.role === 'manager';
   const canDelete = user?.role === 'admin';
 
   useEffect(() => {
     fetchOrders();
-  }, [statusFilter, paymentFilter]);
+  }, [search, statusFilter, paymentFilter]);
 
   const fetchOrders = async () => {
     try {
       const params: any = {};
+      if (search) params.search = search;
       if (statusFilter) params.status = statusFilter;
       if (paymentFilter) params.paymentStatus = paymentFilter;
 
       const response = await ordersAPI.getOrders(params);
       setOrders(response.data.orders || []);
     } catch (error) {
-      toast.error('Siparişler yüklenirken hata oluştu');
+      error('Siparişler yüklenirken hata oluştu', {
+        title: 'Yükleme Hatası'
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
-    try {
-      await ordersAPI.updateOrderStatus(orderId, newStatus);
-      toast.success('Sipariş durumu güncellendi');
-      fetchOrders();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Durum güncellenirken hata oluştu');
-    }
-  };
-
-  const handlePaymentUpdate = async (orderId: string, newPaymentStatus: string) => {
-    try {
-      await ordersAPI.updatePaymentStatus(orderId, newPaymentStatus);
-      toast.success('Ödeme durumu güncellendi');
-      fetchOrders();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Ödeme durumu güncellenirken hata oluştu');
-    }
-  };
-
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, orderNumber: string) => {
     if (!window.confirm('Bu siparişi silmek istediğinizden emin misiniz?')) return;
 
     try {
       await ordersAPI.deleteOrder(id);
-      toast.success('Sipariş başarıyla silindi');
+      success(`${orderNumber} başarıyla silindi`, {
+        title: 'Sipariş Silindi',
+        actions: [
+          {
+            label: 'Geri Al',
+            action: () => warning('Geri alma özelliği yakında eklenecek'),
+            style: 'secondary'
+          }
+        ]
+      });
       fetchOrders();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Sipariş silinirken hata oluştu');
+      error(error.response?.data?.message || 'Sipariş silinirken hata oluştu', {
+        title: 'Silme Hatası'
+      });
     }
   };
 
+  const handleModalSuccess = () => {
+    fetchOrders();
+  };
+
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'text-yellow-600 bg-yellow-100';
-      case 'confirmed':
-        return 'text-blue-600 bg-blue-100';
-      case 'processing':
-        return 'text-purple-600 bg-purple-100';
-      case 'shipped':
-        return 'text-orange-600 bg-orange-100';
-      case 'delivered':
-        return 'text-green-600 bg-green-100';
-      case 'cancelled':
-        return 'text-red-600 bg-red-100';
-      default:
-        return 'text-gray-600 bg-gray-100';
+    const statusOption = ORDER_STATUS_OPTIONS.find(s => s.value === status);
+    if (!statusOption) return 'text-gray-600 bg-gray-100';
+    
+    switch (statusOption.color) {
+      case 'yellow': return 'text-yellow-800 bg-yellow-100';
+      case 'blue': return 'text-blue-800 bg-blue-100';
+      case 'purple': return 'text-purple-800 bg-purple-100';
+      case 'indigo': return 'text-indigo-800 bg-indigo-100';
+      case 'green': return 'text-green-800 bg-green-100';
+      case 'red': return 'text-red-800 bg-red-100';
+      default: return 'text-gray-800 bg-gray-100';
     }
   };
 
   const getStatusText = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'Beklemede';
-      case 'confirmed':
-        return 'Onaylandı';
-      case 'processing':
-        return 'İşleniyor';
-      case 'shipped':
-        return 'Kargoda';
-      case 'delivered':
-        return 'Teslim Edildi';
-      case 'cancelled':
-        return 'İptal Edildi';
-      default:
-        return status;
-    }
+    const statusOption = ORDER_STATUS_OPTIONS.find(s => s.value === status);
+    return statusOption?.label || status;
   };
 
   const getPaymentStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'text-yellow-600 bg-yellow-100';
-      case 'partial':
-        return 'text-orange-600 bg-orange-100';
-      case 'paid':
-        return 'text-green-600 bg-green-100';
-      case 'refunded':
-        return 'text-red-600 bg-red-100';
-      default:
-        return 'text-gray-600 bg-gray-100';
+    const statusOption = PAYMENT_STATUS_OPTIONS.find(s => s.value === status);
+    if (!statusOption) return 'text-gray-600 bg-gray-100';
+    
+    switch (statusOption.color) {
+      case 'yellow': return 'text-yellow-800 bg-yellow-100';
+      case 'green': return 'text-green-800 bg-green-100';
+      case 'orange': return 'text-orange-800 bg-orange-100';
+      case 'red': return 'text-red-800 bg-red-100';
+      default: return 'text-gray-800 bg-gray-100';
     }
   };
 
   const getPaymentStatusText = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'Bekliyor';
-      case 'partial':
-        return 'Kısmi';
-      case 'paid':
-        return 'Ödendi';
-      case 'refunded':
-        return 'İade Edildi';
-      default:
-        return status;
-    }
+    const statusOption = PAYMENT_STATUS_OPTIONS.find(s => s.value === status);
+    return statusOption?.label || status;
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('tr-TR', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   if (loading) {
@@ -194,34 +157,49 @@ export default function OrdersPage() {
           <div className="sm:flex-auto">
             <h1 className="text-2xl font-semibold text-gray-900">Sipariş Yönetimi</h1>
             <p className="mt-2 text-sm text-gray-700">
-              Tüm siparişleri görüntüleyin, durumlarını güncelleyin ve yönetin.
+              Tüm siparişleri görüntüleyin, düzenleyin ve yönetin.
             </p>
           </div>
-          <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Yeni Sipariş
-            </button>
-          </div>
+          {canEdit && (
+            <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+              <button
+                type="button"
+                onClick={openCreateModal}
+                className="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Yeni Sipariş
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Filters */}
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              placeholder="Sipariş ara..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
           <select
             className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             <option value="">Tüm Durumlar</option>
-            <option value="pending">Beklemede</option>
-            <option value="confirmed">Onaylandı</option>
-            <option value="processing">İşleniyor</option>
-            <option value="shipped">Kargoda</option>
-            <option value="delivered">Teslim Edildi</option>
-            <option value="cancelled">İptal Edildi</option>
+            {ORDER_STATUS_OPTIONS.map((status) => (
+              <option key={status.value} value={status.value}>
+                {status.label}
+              </option>
+            ))}
           </select>
 
           <select
@@ -230,10 +208,11 @@ export default function OrdersPage() {
             onChange={(e) => setPaymentFilter(e.target.value)}
           >
             <option value="">Tüm Ödeme Durumları</option>
-            <option value="pending">Bekliyor</option>
-            <option value="partial">Kısmi</option>
-            <option value="paid">Ödendi</option>
-            <option value="refunded">İade Edildi</option>
+            {PAYMENT_STATUS_OPTIONS.map((status) => (
+              <option key={status.value} value={status.value}>
+                {status.label}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -276,8 +255,8 @@ export default function OrdersPage() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-10 w-10">
-                              <div className="h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center">
-                                <ShoppingCart className="h-5 w-5 text-gray-500" />
+                              <div className="h-10 w-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                                <ShoppingCart className="h-5 w-5 text-indigo-600" />
                               </div>
                             </div>
                             <div className="ml-4">
@@ -291,86 +270,55 @@ export default function OrdersPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{order.customer.name}</div>
-                          <div className="text-sm text-gray-500">{order.customer.email}</div>
+                          <div className="text-sm text-gray-900">{order.customerName}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            ₺{order.totalAmount.toLocaleString('tr-TR')}
-                          </div>
-                          <div className="text-sm text-gray-500">{order.paymentMethod}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {canEdit ? (
-                            <select
-                              value={order.status}
-                              onChange={(e) => handleStatusUpdate(order._id, e.target.value)}
-                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border-0 ${getStatusColor(
-                                order.status
-                              )}`}
-                            >
-                              <option value="pending">Beklemede</option>
-                              <option value="confirmed">Onaylandı</option>
-                              <option value="processing">İşleniyor</option>
-                              <option value="shipped">Kargoda</option>
-                              <option value="delivered">Teslim Edildi</option>
-                              <option value="cancelled">İptal Edildi</option>
-                            </select>
-                          ) : (
-                            <span
-                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                                order.status
-                              )}`}
-                            >
-                              {getStatusText(order.status)}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {canEdit ? (
-                            <select
-                              value={order.paymentStatus}
-                              onChange={(e) => handlePaymentUpdate(order._id, e.target.value)}
-                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border-0 ${getPaymentStatusColor(
-                                order.paymentStatus
-                              )}`}
-                            >
-                              <option value="pending">Bekliyor</option>
-                              <option value="partial">Kısmi</option>
-                              <option value="paid">Ödendi</option>
-                              <option value="refunded">İade Edildi</option>
-                            </select>
-                          ) : (
-                            <span
-                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPaymentStatusColor(
-                                order.paymentStatus
-                              )}`}
-                            >
-                              {getPaymentStatusText(order.paymentStatus)}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {new Date(order.createdAt).toLocaleDateString('tr-TR')}
+                          <div className="text-sm font-medium text-gray-900">
+                            ₺{order.totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {order.createdBy.name}
+                            {order.items.length} ürün
                           </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}
+                          >
+                            {getStatusText(order.status)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPaymentStatusColor(order.paymentStatus)}`}
+                          >
+                            {getPaymentStatusText(order.paymentStatus)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {formatDate(order.createdAt)}
                         </td>
                         {(canEdit || canDelete) && (
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex space-x-2">
                               <button
-                                className="text-gray-600 hover:text-gray-900"
+                                className="text-indigo-600 hover:text-indigo-900 transition-colors"
                                 title="Görüntüle"
                               >
                                 <Eye className="h-4 w-4" />
                               </button>
+                              {canEdit && (
+                                <button
+                                  onClick={() => openEditModal(order)}
+                                  className="text-indigo-600 hover:text-indigo-900 transition-colors"
+                                  title="Düzenle"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </button>
+                              )}
                               {canDelete && (
                                 <button
-                                  onClick={() => handleDelete(order._id)}
-                                  className="text-red-600 hover:text-red-900"
+                                  onClick={() => handleDelete(order._id, order.orderNumber)}
+                                  className="text-red-600 hover:text-red-900 transition-colors"
                                   title="Sil"
                                 >
                                   <Trash2 className="h-4 w-4" />
@@ -388,8 +336,20 @@ export default function OrdersPage() {
                     <ShoppingCart className="mx-auto h-12 w-12 text-gray-400" />
                     <h3 className="mt-2 text-sm font-medium text-gray-900">Sipariş bulunamadı</h3>
                     <p className="mt-1 text-sm text-gray-500">
-                      Henüz sipariş bulunmuyor veya filtreleme kriterlerinizi değiştirin.
+                      Arama kriterlerinizi değiştirin veya yeni sipariş oluşturun.
                     </p>
+                    {canEdit && (
+                      <div className="mt-6">
+                        <button
+                          type="button"
+                          onClick={openCreateModal}
+                          className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          İlk Siparişi Oluştur
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -397,6 +357,15 @@ export default function OrdersPage() {
           </div>
         </div>
       </div>
+
+      {/* Order Modal */}
+      <OrderModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onSuccess={handleModalSuccess}
+        order={selectedOrder}
+        mode={modalMode}
+      />
     </DashboardLayout>
   );
 } 
