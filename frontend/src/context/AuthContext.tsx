@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '@/lib/api';
-import toast from 'react-hot-toast';
+import { useNotification } from '@/context/NotificationContext';
 
 interface User {
   id: string;
@@ -32,6 +32,22 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Use notification context with fallback
+  const getNotification = () => {
+    try {
+      return useNotification();
+    } catch {
+      // Fallback for when NotificationProvider is not available
+      return {
+        success: (msg: string) => console.log('Success:', msg),
+        error: (msg: string) => console.error('Error:', msg),
+        info: (msg: string) => console.info('Info:', msg),
+      };
+    }
+  };
+
+  const notification = getNotification();
 
   useEffect(() => {
     checkAuthStatus();
@@ -61,10 +77,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
       
-      toast.success('Giriş başarılı!');
+      notification.success('Giriş başarılı!', {
+        title: 'Hoş Geldiniz',
+        duration: 3000
+      });
       return true;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Giriş başarısız');
+      notification.error(
+        error.response?.data?.message || 'Giriş başarısız', 
+        {
+          title: 'Giriş Hatası',
+          duration: 5000
+        }
+      );
       return false;
     }
   };
@@ -73,7 +98,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
-    toast.success('Çıkış yapıldı');
+    notification.info('Güvenli bir şekilde çıkış yaptınız', {
+      title: 'Çıkış Yapıldı',
+      duration: 3000
+    });
   };
 
   const value = {

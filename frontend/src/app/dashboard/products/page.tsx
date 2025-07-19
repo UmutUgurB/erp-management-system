@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/Layout/DashboardLayout';
 import { productsAPI } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { useNotification } from '@/context/NotificationContext';
 import {
   Package,
   Plus,
@@ -13,7 +14,6 @@ import {
   AlertTriangle,
   Filter,
 } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 interface Product {
   _id: string;
@@ -40,6 +40,7 @@ export default function ProductsPage() {
   const [stockFilter, setStockFilter] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const { user } = useAuth();
+  const { success, error, warning } = useNotification();
 
   const canEdit = user?.role === 'admin' || user?.role === 'manager';
   const canDelete = user?.role === 'admin';
@@ -58,21 +59,34 @@ export default function ProductsPage() {
       const response = await productsAPI.getProducts(params);
       setProducts(response.data.products || []);
     } catch (error) {
-      toast.error('Ürünler yüklenirken hata oluştu');
+      error('Ürünler yüklenirken hata oluştu', {
+        title: 'Yükleme Hatası'
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, productName: string) => {
     if (!window.confirm('Bu ürünü silmek istediğinizden emin misiniz?')) return;
 
     try {
       await productsAPI.deleteProduct(id);
-      toast.success('Ürün başarıyla silindi');
+      success(`${productName} başarıyla silindi`, {
+        title: 'Ürün Silindi',
+        actions: [
+          {
+            label: 'Geri Al',
+            action: () => warning('Geri alma özelliği yakında eklenecek'),
+            style: 'secondary'
+          }
+        ]
+      });
       fetchProducts();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Ürün silinirken hata oluştu');
+      error(error.response?.data?.message || 'Ürün silinirken hata oluştu', {
+        title: 'Silme Hatası'
+      });
     }
   };
 
@@ -276,7 +290,7 @@ export default function ProductsPage() {
                               )}
                               {canDelete && (
                                 <button
-                                  onClick={() => handleDelete(product._id)}
+                                  onClick={() => handleDelete(product._id, product.name)}
                                   className="text-red-600 hover:text-red-900"
                                   title="Sil"
                                 >

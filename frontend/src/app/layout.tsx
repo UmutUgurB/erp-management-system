@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from '@/context/AuthContext';
+import { NotificationProvider } from '@/context/NotificationContext';
+import { NotificationContainer, NotificationDebugPanel } from '@/components/Notifications/NotificationContainer';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -30,27 +31,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          {children}
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#363636',
-                color: '#fff',
-              },
-              success: {
-                style: {
-                  background: '#10b981',
-                },
-              },
-              error: {
-                style: {
-                  background: '#ef4444',
-                },
-              },
-            }}
-          />
+          <NotificationProvider settings={{ enableSounds: false, maxNotifications: 6 }}>
+            {children}
+            <NotificationContainer />
+            <NotificationDebugPanel />
+          </NotificationProvider>
         </AuthProvider>
       </body>
     </html>
