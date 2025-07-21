@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import {
   LayoutDashboard,
   Package,
@@ -34,6 +35,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuth();
   const router = useRouter();
+  
+  // Initialize real-time notifications
+  const { isConnected } = useRealtimeNotifications();
 
   const handleLogout = () => {
     logout();
@@ -94,6 +98,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="ml-4 flex items-center md:ml-6">
               <div className="ml-3 relative">
                 <div className="flex items-center space-x-4">
+                  {/* Connection Status */}
+                  <div className="flex items-center">
+                    <div className={`w-2 h-2 rounded-full mr-2 ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
+                    <span className="text-xs text-gray-500">
+                      {isConnected ? 'Bağlı' : 'Bağlantı Yok'}
+                    </span>
+                  </div>
+                  
                   <div className="flex flex-col text-right">
                     <span className="text-sm font-medium text-gray-900">{user?.name}</span>
                     <span className="text-xs text-gray-500 capitalize">{user?.role}</span>

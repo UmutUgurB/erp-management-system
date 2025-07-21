@@ -1,6 +1,9 @@
 const express = require('express');
 const Product = require('../models/Product');
 const { auth, authorize } = require('../middleware/auth');
+const socketManager = require('../utils/socket');
+const emailService = require('../utils/email');
+const User = require('../models/User');
 
 const router = express.Router();
 
@@ -119,6 +122,22 @@ router.patch('/:id/stock', auth, authorize('admin', 'manager'), async (req, res)
     
     if (!product) {
       return res.status(404).json({ message: 'Ürün bulunamadı' });
+    }
+    
+    // Check if stock is low and send alerts
+    if (product.stock <= product.minStock) {
+      // Send real-time alert
+      socketManager.sendStockAlert(product._id.toString(), product.name, product.stock, product.minStock);
+      
+      // Send email alert to admins
+      try {
+        const admins = await User.find({ role: 'admin' });
+        if (admins.length > 0) {
+          await emailService.sendStockAlertEmail(admins, product);
+        }
+      } catch (error) {
+        console.error('Stock alert email failed:', error);
+      }
     }
     
     res.json({ message: 'Stok başarıyla güncellendi', product });

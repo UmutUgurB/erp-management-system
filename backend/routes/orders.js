@@ -2,6 +2,8 @@ const express = require('express');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { auth, authorize } = require('../middleware/auth');
+const socketManager = require('../utils/socket');
+const emailService = require('../utils/email');
 
 const router = express.Router();
 
@@ -108,6 +110,16 @@ router.post('/', auth, async (req, res) => {
     
     await order.populate('items.product', 'name sku');
     
+    // Send real-time notifications
+    socketManager.sendNewOrderNotification(order);
+    
+    // Send email confirmation
+    try {
+      await emailService.sendOrderConfirmationEmail(req.user, order);
+    } catch (error) {
+      console.error('Email sending failed:', error);
+    }
+    
     res.status(201).json({ message: 'Sipariş başarıyla oluşturuldu', order });
   } catch (error) {
     res.status(400).json({ message: 'Sipariş oluşturulurken hata', error: error.message });
@@ -127,6 +139,16 @@ router.patch('/:id/status', auth, authorize('admin', 'manager'), async (req, res
     
     if (!order) {
       return res.status(404).json({ message: 'Sipariş bulunamadı' });
+    }
+    
+    // Send real-time notification
+    socketManager.sendOrderUpdate(order.createdBy.toString(), order._id.toString(), status, order);
+    
+    // Send email notification
+    try {
+      await emailService.sendOrderStatusUpdateEmail(req.user, order);
+    } catch (error) {
+      console.error('Email sending failed:', error);
     }
     
     res.json({ message: 'Sipariş durumu güncellendi', order });

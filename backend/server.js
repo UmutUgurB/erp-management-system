@@ -2,11 +2,13 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const path = require('path');
+const http = require('http');
 require('dotenv').config();
 
 // Import utilities
 const { logger, logRequest, logError } = require('./utils/logger');
 const { uploadsDir } = require('./middleware/upload');
+const socketManager = require('./utils/socket');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -50,7 +52,13 @@ app.get('/', (req, res) => {
   res.json({ message: 'ERP API çalışıyor!' });
 });
 
-app.listen(PORT, () => {
+// Create HTTP server
+const server = http.createServer(app);
+
+// Initialize Socket.IO
+socketManager.initialize(server);
+
+server.listen(PORT, () => {
   logger.info(`Sunucu başlatıldı`, { port: PORT });
   console.log(`Sunucu ${PORT} portunda çalışıyor`);
 }); 

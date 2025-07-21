@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '@/lib/api';
 import { useNotification } from '@/context/NotificationContext';
+import socketClient from '@/lib/socket';
 
 interface User {
   id: string;
@@ -59,6 +60,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (token) {
         const response = await authAPI.getCurrentUser();
         setUser(response.data.user);
+        
+        // Connect to WebSocket if user is authenticated
+        socketClient.connect(token);
       }
     } catch (error) {
       localStorage.removeItem('token');
@@ -76,6 +80,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
+      
+      // Connect to WebSocket
+      socketClient.connect(token);
       
       notification.success('Giriş başarılı!', {
         title: 'Hoş Geldiniz',
@@ -98,6 +105,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
+    
+    // Disconnect WebSocket
+    socketClient.disconnect();
+    
     notification.info('Güvenli bir şekilde çıkış yaptınız', {
       title: 'Çıkış Yapıldı',
       duration: 3000
