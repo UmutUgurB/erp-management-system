@@ -62,9 +62,12 @@
 
 ### 📊 Dashboard & Analytics
 - **Real-time statistics** and KPIs
+- **Advanced analytics** with interactive charts
 - **Sales analytics** and reporting
 - **Stock alerts** and notifications
 - **System status** monitoring
+- **Performance metrics** and monitoring
+- **Custom reports** with PDF export
 
 ### 🎨 Modern UI/UX
 - **Responsive design** for all devices
@@ -72,6 +75,11 @@
 - **Advanced notifications** with sound and animations
 - **Interactive forms** with validation
 - **Loading states** and error handling
+- **Multi-language support** (Turkish/English)
+- **Real-time notifications** with WebSocket
+- **Advanced search** and filtering
+- **File upload** with drag & drop
+- **Data export/import** (CSV, Excel, PDF)
 
 ---
 
@@ -85,6 +93,11 @@
 - **Zod** - Schema validation
 - **Lucide React** - Beautiful icons
 - **Axios** - HTTP client
+- **Recharts** - Data visualization
+- **Socket.IO Client** - Real-time communication
+- **Next-intl** - Internationalization
+- **jsPDF** - PDF generation
+- **ExcelJS** - Excel file handling
 
 ### Backend
 - **Node.js** - JavaScript runtime
@@ -94,6 +107,13 @@
 - **JWT** - Authentication tokens
 - **bcrypt** - Password hashing
 - **CORS** - Cross-origin resource sharing
+- **Socket.IO** - Real-time communication
+- **Multer** - File upload handling
+- **Winston** - Logging system
+- **Nodemailer** - Email service
+- **Swagger** - API documentation
+- **Helmet** - Security headers
+- **Rate Limiting** - API protection
 
 ### Development Tools
 - **ESLint** - Code linting
@@ -169,6 +189,7 @@
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:5000
    - API Docs: http://localhost:5000/api-docs
+   - Health Check: http://localhost:5000/health
 
 ### Demo Users
 ```
@@ -267,6 +288,19 @@ POST   /api/orders            # Create order
 PUT    /api/orders/:id        # Update order
 DELETE /api/orders/:id        # Delete order
 PATCH  /api/orders/:id/status # Update order status
+```
+
+### System Management
+```
+GET    /api/metrics           # Get performance metrics
+POST   /api/metrics/reset     # Reset metrics
+GET    /api/metrics/system    # Get system information
+GET    /api/backup/stats      # Get backup statistics
+GET    /api/backup/list       # List backups
+POST   /api/backup/create     # Create backup
+POST   /api/backup/restore/:filename # Restore backup
+DELETE /api/backup/delete/:filename # Delete backup
+GET    /api/backup/download/:filename # Download backup
 ```
 
 ---

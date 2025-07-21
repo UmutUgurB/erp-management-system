@@ -1,0 +1,220 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No",
+    "confirm": "Confirm",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "loginSuccess": "Successfully logged in",
+    "loginError": "Login failed",
+    "invalidCredentials": "Invalid email or password"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "totalProducts": "Total Products",
+    "totalOrders": "Total Orders",
+    "totalUsers": "Total Users",
+    "totalRevenue": "Total Revenue",
+    "recentOrders": "Recent Orders",
+    "lowStockProducts": "Low Stock Products"
+  },
+  "products": {
+    "title": "Products",
+    "addProduct": "Add Product",
+    "editProduct": "Edit Product",
+    "deleteProduct": "Delete Product",
+    "name": "Product Name",
+    "description": "Description",
+    "price": "Price",
+    "stock": "Stock",
+    "category": "Category",
+    "image": "Image",
+    "sku": "SKU",
+    "minStock": "Minimum Stock",
+    "productAdded": "Product added successfully",
+    "productUpdated": "Product updated successfully",
+    "productDeleted": "Product deleted successfully"
+  },
+  "orders": {
+    "title": "Orders",
+    "addOrder": "Add Order",
+    "editOrder": "Edit Order",
+    "deleteOrder": "Delete Order",
+    "orderNumber": "Order Number",
+    "customer": "Customer",
+    "status": "Status",
+    "total": "Total",
+    "date": "Date",
+    "items": "Items",
+    "quantity": "Quantity",
+    "unitPrice": "Unit Price",
+    "subtotal": "Subtotal",
+    "orderAdded": "Order added successfully",
+    "orderUpdated": "Order updated successfully",
+    "orderDeleted": "Order deleted successfully",
+    "statuses": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    }
+  },
+  "users": {
+    "title": "Users",
+    "addUser": "Add User",
+    "editUser": "Edit User",
+    "deleteUser": "Delete User",
+    "name": "Full Name",
+    "email": "Email",
+    "role": "Role",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "userAdded": "User added successfully",
+    "userUpdated": "User updated successfully",
+    "userDeleted": "User deleted successfully",
+    "roles": {
+      "admin": "Admin",
+      "user": "User"
+    }
+  },
+  "analytics": {
+    "title": "Analytics",
+    "monthlySales": "Monthly Sales Chart",
+    "productPerformance": "Product Performance",
+    "orderStatus": "Order Status Distribution",
+    "stockLevels": "Stock Levels by Category",
+    "keyMetrics": "Key Metrics",
+    "totalSales": "Total Sales",
+    "averageOrderValue": "Average Order Value",
+    "bestSellingProduct": "Best Selling Product",
+    "sales": "Sales",
+    "inStock": "In Stock",
+    "lowStock": "Low Stock"
+  },
+  "backup": {
+    "title": "Backup Management",
+    "description": "Database backup and restore operations",
+    "createBackup": "Create New Backup",
+    "creating": "Creating...",
+    "restore": "Restore",
+    "restoring": "Restoring...",
+    "download": "Download",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "noBackups": "No backups found",
+    "stats": {
+      "total": "Total Backups",
+      "size": "Total Size",
+      "oldest": "Oldest",
+      "newest": "Newest"
+    }
+  },
+  "metrics": {
+    "title": "System Metrics",
+    "description": "Performance monitoring and system status",
+    "resetMetrics": "Reset Metrics",
+    "resetting": "Resetting...",
+    "performanceMetrics": "Performance Metrics",
+    "systemInfo": "System Information",
+    "serverInfo": "Server Information",
+    "serverInfoDesc": "System hardware and software information",
+    "lastUpdated": "Last updated",
+    "requests": {
+      "total": "Total Requests",
+      "successRate": "Success Rate",
+      "averageResponseTime": "Avg. Response Time"
+    },
+    "database": {
+      "queries": "Total Queries",
+      "slowQueries": "Slow Queries",
+      "averageQueryTime": "Avg. Query Time"
+    },
+    "memory": {
+      "usage": "Memory Usage",
+      "total": "Total",
+      "used": "Used",
+      "free": "Free"
+    },
+    "system": {
+      "platform": "Platform",
+      "nodeVersion": "Node.js Version",
+      "cpu": "CPU",
+      "cores": "cores",
+      "uptime": "Uptime",
+      "system": "System",
+      "process": "Process",
+      "environment": "Environment"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAsRead": "Mark as Read",
+    "markAllAsRead": "Mark All as Read",
+    "delete": "Delete Notification",
+    "noNotifications": "No notifications",
+    "types": {
+      "success": "Success",
+      "error": "Error",
+      "warning": "Warning",
+      "info": "Info"
+    }
+  },
+  "search": {
+    "basicSearch": "Basic Search",
+    "advancedSearch": "Advanced Search",
+    "filters": "Filters",
+    "activeFilters": "Active Filters",
+    "clearFilters": "Clear Filters",
+    "dateRange": "Date Range",
+    "priceRange": "Price Range",
+    "from": "From",
+    "to": "To"
+  },
+  "fileUpload": {
+    "dragAndDrop": "Drag and drop files here or click to browse",
+    "or": "or",
+    "browse": "Browse Files",
+    "uploading": "Uploading...",
+    "uploadSuccess": "File uploaded successfully",
+    "uploadError": "File upload failed",
+    "fileTooLarge": "File size too large",
+    "invalidFileType": "Invalid file type",
+    "maxFilesExceeded": "Maximum number of files exceeded"
+  },
+  "dataExport": {
+    "export": "Export",
+    "import": "Import",
+    "exportToCSV": "Export to CSV",
+    "exportToExcel": "Export to Excel",
+    "importFromCSV": "Import from CSV",
+    "importFromExcel": "Import from Excel",
+    "selectFile": "Select File",
+    "importing": "Importing...",
+    "importSuccess": "Data imported successfully",
+    "importError": "Data import failed",
+    "invalidFileFormat": "Invalid file format"
+  }
+} 

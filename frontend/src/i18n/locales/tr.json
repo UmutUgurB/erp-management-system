@@ -1,0 +1,220 @@
+{
+  "common": {
+    "loading": "Yükleniyor...",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "add": "Ekle",
+    "search": "Ara",
+    "filter": "Filtrele",
+    "export": "Dışa Aktar",
+    "import": "İçe Aktar",
+    "back": "Geri",
+    "next": "İleri",
+    "submit": "Gönder",
+    "close": "Kapat",
+    "yes": "Evet",
+    "no": "Hayır",
+    "confirm": "Onayla",
+    "success": "Başarılı",
+    "error": "Hata",
+    "warning": "Uyarı",
+    "info": "Bilgi"
+  },
+  "auth": {
+    "login": "Giriş Yap",
+    "logout": "Çıkış Yap",
+    "email": "E-posta",
+    "password": "Şifre",
+    "loginSuccess": "Başarıyla giriş yapıldı",
+    "loginError": "Giriş yapılamadı",
+    "invalidCredentials": "Geçersiz e-posta veya şifre"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "totalProducts": "Toplam Ürün",
+    "totalOrders": "Toplam Sipariş",
+    "totalUsers": "Toplam Kullanıcı",
+    "totalRevenue": "Toplam Gelir",
+    "recentOrders": "Son Siparişler",
+    "lowStockProducts": "Düşük Stok Ürünleri"
+  },
+  "products": {
+    "title": "Ürünler",
+    "addProduct": "Ürün Ekle",
+    "editProduct": "Ürün Düzenle",
+    "deleteProduct": "Ürün Sil",
+    "name": "Ürün Adı",
+    "description": "Açıklama",
+    "price": "Fiyat",
+    "stock": "Stok",
+    "category": "Kategori",
+    "image": "Resim",
+    "sku": "SKU",
+    "minStock": "Minimum Stok",
+    "productAdded": "Ürün başarıyla eklendi",
+    "productUpdated": "Ürün başarıyla güncellendi",
+    "productDeleted": "Ürün başarıyla silindi"
+  },
+  "orders": {
+    "title": "Siparişler",
+    "addOrder": "Sipariş Ekle",
+    "editOrder": "Sipariş Düzenle",
+    "deleteOrder": "Sipariş Sil",
+    "orderNumber": "Sipariş No",
+    "customer": "Müşteri",
+    "status": "Durum",
+    "total": "Toplam",
+    "date": "Tarih",
+    "items": "Ürünler",
+    "quantity": "Miktar",
+    "unitPrice": "Birim Fiyat",
+    "subtotal": "Ara Toplam",
+    "orderAdded": "Sipariş başarıyla eklendi",
+    "orderUpdated": "Sipariş başarıyla güncellendi",
+    "orderDeleted": "Sipariş başarıyla silindi",
+    "statuses": {
+      "pending": "Beklemede",
+      "processing": "İşleniyor",
+      "shipped": "Kargoda",
+      "delivered": "Teslim Edildi",
+      "cancelled": "İptal Edildi"
+    }
+  },
+  "users": {
+    "title": "Kullanıcılar",
+    "addUser": "Kullanıcı Ekle",
+    "editUser": "Kullanıcı Düzenle",
+    "deleteUser": "Kullanıcı Sil",
+    "name": "Ad Soyad",
+    "email": "E-posta",
+    "role": "Rol",
+    "password": "Şifre",
+    "confirmPassword": "Şifre Tekrar",
+    "userAdded": "Kullanıcı başarıyla eklendi",
+    "userUpdated": "Kullanıcı başarıyla güncellendi",
+    "userDeleted": "Kullanıcı başarıyla silindi",
+    "roles": {
+      "admin": "Yönetici",
+      "user": "Kullanıcı"
+    }
+  },
+  "analytics": {
+    "title": "Analitik",
+    "monthlySales": "Aylık Satış Grafiği",
+    "productPerformance": "Ürün Performansı",
+    "orderStatus": "Sipariş Durumu Dağılımı",
+    "stockLevels": "Kategori Bazında Stok Durumu",
+    "keyMetrics": "Anahtar Metrikler",
+    "totalSales": "Toplam Satış",
+    "averageOrderValue": "Ortalama Sipariş Değeri",
+    "bestSellingProduct": "En Çok Satan Ürün",
+    "sales": "Satış",
+    "inStock": "Stokta",
+    "lowStock": "Düşük Stok"
+  },
+  "backup": {
+    "title": "Backup Yönetimi",
+    "description": "Veritabanı yedekleme ve geri yükleme işlemleri",
+    "createBackup": "Yeni Backup Oluştur",
+    "creating": "Oluşturuluyor...",
+    "restore": "Geri Yükle",
+    "restoring": "Geri Yükleniyor...",
+    "download": "İndir",
+    "delete": "Sil",
+    "deleting": "Siliniyor...",
+    "noBackups": "Henüz backup bulunmuyor",
+    "stats": {
+      "total": "Toplam Backup",
+      "size": "Toplam Boyut",
+      "oldest": "En Eski",
+      "newest": "En Yeni"
+    }
+  },
+  "metrics": {
+    "title": "Sistem Metrikleri",
+    "description": "Performans izleme ve sistem durumu",
+    "resetMetrics": "Metrikleri Sıfırla",
+    "resetting": "Sıfırlanıyor...",
+    "performanceMetrics": "Performans Metrikleri",
+    "systemInfo": "Sistem Bilgileri",
+    "serverInfo": "Sunucu Bilgileri",
+    "serverInfoDesc": "Sistem donanım ve yazılım bilgileri",
+    "lastUpdated": "Son güncelleme",
+    "requests": {
+      "total": "Toplam İstek",
+      "successRate": "Başarı Oranı",
+      "averageResponseTime": "Ort. Yanıt Süresi"
+    },
+    "database": {
+      "queries": "Toplam Sorgu",
+      "slowQueries": "Yavaş Sorgu",
+      "averageQueryTime": "Ort. Sorgu Süresi"
+    },
+    "memory": {
+      "usage": "Bellek Kullanımı",
+      "total": "Toplam",
+      "used": "Kullanılan",
+      "free": "Boş"
+    },
+    "system": {
+      "platform": "Platform",
+      "nodeVersion": "Node.js Versiyonu",
+      "cpu": "CPU",
+      "cores": "çekirdek",
+      "uptime": "Çalışma Süresi",
+      "system": "Sistem",
+      "process": "Uygulama",
+      "environment": "Ortam"
+    }
+  },
+  "notifications": {
+    "title": "Bildirimler",
+    "markAsRead": "Okundu Olarak İşaretle",
+    "markAllAsRead": "Tümünü Okundu Olarak İşaretle",
+    "delete": "Bildirimi Sil",
+    "noNotifications": "Bildirim bulunmuyor",
+    "types": {
+      "success": "Başarılı",
+      "error": "Hata",
+      "warning": "Uyarı",
+      "info": "Bilgi"
+    }
+  },
+  "search": {
+    "basicSearch": "Temel Arama",
+    "advancedSearch": "Gelişmiş Arama",
+    "filters": "Filtreler",
+    "activeFilters": "Aktif Filtreler",
+    "clearFilters": "Filtreleri Temizle",
+    "dateRange": "Tarih Aralığı",
+    "priceRange": "Fiyat Aralığı",
+    "from": "Başlangıç",
+    "to": "Bitiş"
+  },
+  "fileUpload": {
+    "dragAndDrop": "Dosyaları buraya sürükleyin veya tıklayın",
+    "or": "veya",
+    "browse": "Dosya Seç",
+    "uploading": "Yükleniyor...",
+    "uploadSuccess": "Dosya başarıyla yüklendi",
+    "uploadError": "Dosya yüklenemedi",
+    "fileTooLarge": "Dosya boyutu çok büyük",
+    "invalidFileType": "Geçersiz dosya türü",
+    "maxFilesExceeded": "Maksimum dosya sayısı aşıldı"
+  },
+  "dataExport": {
+    "export": "Dışa Aktar",
+    "import": "İçe Aktar",
+    "exportToCSV": "CSV'ye Aktar",
+    "exportToExcel": "Excel'e Aktar",
+    "importFromCSV": "CSV'den İçe Aktar",
+    "importFromExcel": "Excel'den İçe Aktar",
+    "selectFile": "Dosya Seç",
+    "importing": "İçe Aktarılıyor...",
+    "importSuccess": "Veri başarıyla içe aktarıldı",
+    "importError": "Veri içe aktarılamadı",
+    "invalidFileFormat": "Geçersiz dosya formatı"
+  }
+} 
