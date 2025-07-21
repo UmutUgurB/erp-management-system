@@ -13,6 +13,8 @@ import {
   X,
   User,
   Settings,
+  BarChart3,
+  Database,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -21,9 +23,11 @@ interface DashboardLayoutProps {
 
 const navigationItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
   { name: 'Ürünler', href: '/dashboard/products', icon: Package },
   { name: 'Siparişler', href: '/dashboard/orders', icon: ShoppingCart },
   { name: 'Kullanıcılar', href: '/dashboard/users', icon: Users, adminOnly: true },
+  { name: 'Backup', href: '/dashboard/backup', icon: Database, adminOnly: true },
 ];
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {

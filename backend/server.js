@@ -1,7 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const path = require('path');
 require('dotenv').config();
+
+// Import utilities
+const { logger, logRequest, logError } = require('./utils/logger');
+const { uploadsDir } = require('./middleware/upload');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -10,19 +15,35 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// Logging middleware
+app.use(logRequest);
+
+// Serve static files
+app.use('/uploads', express.static(uploadsDir));
+
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/erp_db', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => console.log('MongoDB bağlantısı başarılı'))
-.catch(err => console.error('MongoDB bağlantı hatası:', err));
+.then(() => {
+  logger.info('MongoDB bağlantısı başarılı');
+  console.log('MongoDB bağlantısı başarılı');
+})
+.catch(err => {
+  logger.error('MongoDB bağlantı hatası', { error: err.message });
+  console.error('MongoDB bağlantı hatası:', err);
+});
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
+app.use('/api/backup', require('./routes/backup'));
+
+// Error logging middleware
+app.use(logError);
 
 // Test route
 app.get('/', (req, res) => {
@@ -30,5 +51,6 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
+  logger.info(`Sunucu başlatıldı`, { port: PORT });
   console.log(`Sunucu ${PORT} portunda çalışıyor`);
 }); 
