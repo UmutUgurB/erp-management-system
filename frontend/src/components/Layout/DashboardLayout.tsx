@@ -18,6 +18,7 @@ import {
   Database,
   Activity,
   FileText,
+  Palette,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -33,6 +34,7 @@ const navigationItems = [
   { name: 'Backup', href: '/dashboard/backup', icon: Database, adminOnly: true },
   { name: 'Metrikler', href: '/dashboard/metrics', icon: Activity, adminOnly: true },
   { name: 'Raporlar', href: '/dashboard/reports', icon: FileText, adminOnly: true },
+  { name: 'Dashboard Builder', href: '/dashboard/builder', icon: Palette, adminOnly: true },
 ];
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
