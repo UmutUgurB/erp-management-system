@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from '@/context/AuthContext';
 import { NotificationProvider } from '@/context/NotificationContext';
 import { NotificationContainer, NotificationDebugPanel } from '@/components/Notifications/NotificationContainer';
@@ -26,17 +27,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr">
+    <html lang="tr" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          <NotificationProvider settings={{ enableSounds: false, maxNotifications: 6 }}>
-            {children}
-            <NotificationContainer />
-            <NotificationDebugPanel />
-          </NotificationProvider>
-        </AuthProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <AuthProvider>
+            <NotificationProvider settings={{ enableSounds: false, maxNotifications: 6 }}>
+              {children}
+              <NotificationContainer />
+              <NotificationDebugPanel />
+            </NotificationProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
