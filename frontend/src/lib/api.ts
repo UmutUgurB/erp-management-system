@@ -102,8 +102,10 @@ export const attendanceAPI = {
   updateAttendance: (id: string, data: any) => api.put(`/attendance/${id}`, data),
   deleteAttendance: (id: string) => api.delete(`/attendance/${id}`),
   getStats: (filters?: any) => api.get('/attendance/stats/overview', { params: filters }),
-  getEmployeeStats: (employeeId: string, filters?: any) => 
-    api.get(`/attendance/employee/${employeeId}/stats`, { params: filters }),
+  getEmployeeStats: (employeeId: string, filters?: any) =>
+    api.get(`/attendance/stats/employee/${employeeId}`, { params: filters }),
+  bulkImport: (data: any) => api.post('/attendance/bulk-import', data),
+};/employee/${employeeId}/stats`, { params: filters }),
   bulkImport: (data: any) => api.post('/attendance/bulk-import', data),
 };
 
