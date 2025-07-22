@@ -79,4 +79,32 @@ export const ordersAPI = {
     api.patch(`/orders/${id}/payment`, { paymentStatus }),
 };
 
+// Employees API
+export const employeesAPI = {
+  getEmployees: (filters?: any) => api.get('/employees', { params: filters }),
+  getEmployee: (id: string) => api.get(`/employees/${id}`),
+  createEmployee: (data: any) => api.post('/employees', data),
+  updateEmployee: (id: string, data: any) => api.put(`/employees/${id}`, data),
+  deleteEmployee: (id: string) => api.delete(`/employees/${id}`),
+  getStats: () => api.get('/employees/stats/overview'),
+  getByDepartment: (department: string) => api.get(`/employees/department/${department}`),
+  searchEmployees: (query: string) => api.get(`/employees/search/${query}`),
+};
+
+// Attendance API
+export const attendanceAPI = {
+  getAttendance: (filters?: any) => api.get('/attendance', { params: filters }),
+  getAttendanceRecord: (id: string) => api.get(`/attendance/${id}`),
+  checkIn: (data: any) => api.post('/attendance/checkin', data),
+  checkOut: (data: any) => api.post('/attendance/checkout', data),
+  startBreak: (data: any) => api.post('/attendance/break/start', data),
+  endBreak: (data: any) => api.post('/attendance/break/end', data),
+  updateAttendance: (id: string, data: any) => api.put(`/attendance/${id}`, data),
+  deleteAttendance: (id: string) => api.delete(`/attendance/${id}`),
+  getStats: (filters?: any) => api.get('/attendance/stats/overview', { params: filters }),
+  getEmployeeStats: (employeeId: string, filters?: any) => 
+    api.get(`/attendance/employee/${employeeId}/stats`, { params: filters }),
+  bulkImport: (data: any) => api.post('/attendance/bulk-import', data),
+};
+
 export default api; 
