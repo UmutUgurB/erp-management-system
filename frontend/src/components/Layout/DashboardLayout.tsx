@@ -33,6 +33,7 @@ const navigationItems = [
   { name: 'Siparişler', href: '/dashboard/orders', icon: ShoppingCart },
           { name: 'Çalışanlar', href: '/dashboard/employees', icon: Users },
         { name: 'Devam Takibi', href: '/dashboard/attendance', icon: Clock },
+        { name: 'Devam Takvimi', href: '/dashboard/attendance/calendar', icon: Calendar },
         { name: 'Kullanıcılar', href: '/dashboard/users', icon: Users, adminOnly: true },
   { name: 'Backup', href: '/dashboard/backup', icon: Database, adminOnly: true },
   { name: 'Metrikler', href: '/dashboard/metrics', icon: Activity, adminOnly: true },
