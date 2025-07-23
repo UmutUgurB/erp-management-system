@@ -110,4 +110,19 @@ export const attendanceAPI = {
     api.get(`/attendance/reports/export/${format}`, { params: filters }),
 };
 
+// Payroll API
+export const payrollAPI = {
+  getPayroll: (filters?: any) => api.get('/payroll', { params: filters }),
+  getPayrollRecord: (id: string) => api.get(`/payroll/${id}`),
+  createPayroll: (data: any) => api.post('/payroll', data),
+  updatePayroll: (id: string, data: any) => api.put(`/payroll/${id}`, data),
+  deletePayroll: (id: string) => api.delete(`/payroll/${id}`),
+  approvePayroll: (id: string) => api.patch(`/payroll/${id}/approve`),
+  markAsPaid: (id: string, data: any) => api.patch(`/payroll/${id}/pay`, data),
+  bulkCreate: (data: any) => api.post('/payroll/bulk-create', data),
+  getStats: (filters?: any) => api.get('/payroll/stats/overview', { params: filters }),
+  getEmployeeHistory: (employeeId: string, filters?: any) => 
+    api.get(`/payroll/employee/${employeeId}`, { params: filters }),
+};
+
 export default api; 

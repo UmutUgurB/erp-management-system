@@ -37,6 +37,7 @@ const navigationItems = [
   { name: 'Devam Takibi', href: '/dashboard/attendance', icon: Clock },
   { name: 'Devam Takvimi', href: '/dashboard/attendance/calendar', icon: Calendar },
   { name: 'Devam Raporları', href: '/dashboard/attendance/reports', icon: FileText },
+  { name: 'Maaş Yönetimi', href: '/dashboard/payroll', icon: DollarSign },
   { name: 'Kullanıcılar', href: '/dashboard/users', icon: Users, adminOnly: true },
   { name: 'Backup', href: '/dashboard/backup', icon: Database, adminOnly: true },
   { name: 'Metrikler', href: '/dashboard/metrics', icon: Activity, adminOnly: true },

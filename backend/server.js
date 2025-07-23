@@ -6,7 +6,7 @@ const http = require('http');
 const swaggerUi = require('swagger-ui-express');
 require('dotenv').config();
 
-// Import utilities
+
 const { logger, logRequest, logError } = require('./utils/logger');
 const { uploadsDir } = require('./middleware/upload');
 const socketManager = require('./utils/socket');
@@ -68,6 +68,7 @@ app.use('/api/products', apiRateLimitMiddleware, require('./routes/products'));
 app.use('/api/orders', apiRateLimitMiddleware, require('./routes/orders'));
 app.use('/api/employees', apiRateLimitMiddleware, require('./routes/employees'));
 app.use('/api/attendance', apiRateLimitMiddleware, require('./routes/attendance'));
+app.use('/api/payroll', apiRateLimitMiddleware, require('./routes/payroll'));
 app.use('/api/backup', apiRateLimitMiddleware, require('./routes/backup'));
 app.use('/api/metrics', apiRateLimitMiddleware, require('./routes/metrics'));
 
