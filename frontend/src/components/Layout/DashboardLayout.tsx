@@ -20,6 +20,8 @@ import {
   Activity,
   FileText,
   Palette,
+  Clock,
+  Calendar,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -31,10 +33,11 @@ const navigationItems = [
   { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
   { name: 'Ürünler', href: '/dashboard/products', icon: Package },
   { name: 'Siparişler', href: '/dashboard/orders', icon: ShoppingCart },
-          { name: 'Çalışanlar', href: '/dashboard/employees', icon: Users },
-        { name: 'Devam Takibi', href: '/dashboard/attendance', icon: Clock },
-        { name: 'Devam Takvimi', href: '/dashboard/attendance/calendar', icon: Calendar },
-        { name: 'Kullanıcılar', href: '/dashboard/users', icon: Users, adminOnly: true },
+  { name: 'Çalışanlar', href: '/dashboard/employees', icon: Users },
+  { name: 'Devam Takibi', href: '/dashboard/attendance', icon: Clock },
+  { name: 'Devam Takvimi', href: '/dashboard/attendance/calendar', icon: Calendar },
+  { name: 'Devam Raporları', href: '/dashboard/attendance/reports', icon: FileText },
+  { name: 'Kullanıcılar', href: '/dashboard/users', icon: Users, adminOnly: true },
   { name: 'Backup', href: '/dashboard/backup', icon: Database, adminOnly: true },
   { name: 'Metrikler', href: '/dashboard/metrics', icon: Activity, adminOnly: true },
   { name: 'Raporlar', href: '/dashboard/reports', icon: FileText, adminOnly: true },

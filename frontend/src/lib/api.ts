@@ -105,8 +105,9 @@ export const attendanceAPI = {
   getEmployeeStats: (employeeId: string, filters?: any) =>
     api.get(`/attendance/stats/employee/${employeeId}`, { params: filters }),
   bulkImport: (data: any) => api.post('/attendance/bulk-import', data),
-};/employee/${employeeId}/stats`, { params: filters }),
-  bulkImport: (data: any) => api.post('/attendance/bulk-import', data),
+  getReports: (filters?: any) => api.get('/attendance/reports', { params: filters }),
+  exportReport: (format: string, filters?: any) => 
+    api.get(`/attendance/reports/export/${format}`, { params: filters }),
 };
 
 export default api; 

@@ -4,47 +4,42 @@ import { motion } from 'framer-motion';
 
 interface AnimatedLoadingProps {
   size?: 'sm' | 'md' | 'lg';
-  color?: 'primary' | 'secondary' | 'white';
   text?: string;
 }
 
-const sizeClasses = {
-  sm: 'h-4 w-4',
-  md: 'h-8 w-8',
-  lg: 'h-12 w-12',
-};
+export default function AnimatedLoading({ size = 'md', text }: AnimatedLoadingProps) {
+  const sizeClasses = {
+    sm: 'w-4 h-4',
+    md: 'w-6 h-6',
+    lg: 'w-8 h-8'
+  };
 
-const colorClasses = {
-  primary: 'border-indigo-500',
-  secondary: 'border-gray-500',
-  white: 'border-white',
-};
+  const containerClasses = {
+    sm: 'space-x-2',
+    md: 'space-x-3',
+    lg: 'space-x-4'
+  };
 
-export default function AnimatedLoading({ 
-  size = 'md', 
-  color = 'primary',
-  text 
-}: AnimatedLoadingProps) {
   return (
-    <div className="flex flex-col items-center justify-center space-y-4">
+    <div className={`flex items-center ${containerClasses[size]}`}>
       <motion.div
-        className={`${sizeClasses[size]} ${colorClasses[color]} border-2 border-t-transparent rounded-full`}
+        className={`${sizeClasses[size]} border-2 border-gray-300 dark:border-gray-600 border-t-indigo-600 dark:border-t-indigo-400 rounded-full`}
         animate={{ rotate: 360 }}
         transition={{
           duration: 1,
           repeat: Infinity,
-          ease: 'linear',
+          ease: "linear"
         }}
       />
       {text && (
-        <motion.p
+        <motion.span
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
+          transition={{ duration: 0.5 }}
           className="text-sm text-gray-600 dark:text-gray-400"
         >
           {text}
-        </motion.p>
+        </motion.span>
       )}
     </div>
   );
