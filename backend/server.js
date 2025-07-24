@@ -69,6 +69,8 @@ app.use('/api/orders', apiRateLimitMiddleware, require('./routes/orders'));
 app.use('/api/employees', apiRateLimitMiddleware, require('./routes/employees'));
 app.use('/api/attendance', apiRateLimitMiddleware, require('./routes/attendance'));
 app.use('/api/payroll', apiRateLimitMiddleware, require('./routes/payroll'));
+app.use('/api/leave', apiRateLimitMiddleware, require('./routes/leave'));
+app.use('/api/performance', apiRateLimitMiddleware, require('./routes/performance'));
 app.use('/api/backup', apiRateLimitMiddleware, require('./routes/backup'));
 app.use('/api/metrics', apiRateLimitMiddleware, require('./routes/metrics'));
 
