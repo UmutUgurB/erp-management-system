@@ -22,6 +22,7 @@ import {
   Palette,
   Clock,
   Calendar,
+  Warehouse,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -33,6 +34,7 @@ const navigationItems = [
   { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
   { name: 'Ürünler', href: '/dashboard/products', icon: Package },
   { name: 'Siparişler', href: '/dashboard/orders', icon: ShoppingCart },
+  { name: 'Envanter', href: '/dashboard/inventory', icon: Warehouse },
   { name: 'Çalışanlar', href: '/dashboard/employees', icon: Users },
   { name: 'Devam Takibi', href: '/dashboard/attendance', icon: Clock },
   { name: 'Devam Takvimi', href: '/dashboard/attendance/calendar', icon: Calendar },

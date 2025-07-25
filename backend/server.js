@@ -73,6 +73,8 @@ app.use('/api/leave', apiRateLimitMiddleware, require('./routes/leave'));
 app.use('/api/performance', apiRateLimitMiddleware, require('./routes/performance'));
 app.use('/api/backup', apiRateLimitMiddleware, require('./routes/backup'));
 app.use('/api/metrics', apiRateLimitMiddleware, require('./routes/metrics'));
+app.use('/api/inventory', apiRateLimitMiddleware, require('./routes/inventory'));
+app.use('/api/stockcount', apiRateLimitMiddleware, require('./routes/stockcount'));
 
 // Health check endpoint
 app.get('/health', (req, res) => {

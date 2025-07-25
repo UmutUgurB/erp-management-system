@@ -98,6 +98,34 @@ export const attendanceAPI = {
   checkIn: (data: any) => api.post('/attendance/checkin', data),
   checkOut: (data: any) => api.post('/attendance/checkout', data),
   startBreak: (data: any) => api.post('/attendance/break/start', data),
+};
+
+// Inventory API
+export const inventoryAPI = {
+  getTransactions: (params?: any) => api.get('/inventory', { params }),
+  getTransaction: (id: string) => api.get(`/inventory/${id}`),
+  stockIn: (data: any) => api.post('/inventory/stock-in', data),
+  stockOut: (data: any) => api.post('/inventory/stock-out', data),
+  stockTransfer: (data: any) => api.post('/inventory/stock-transfer', data),
+  stockAdjustment: (data: any) => api.post('/inventory/stock-adjustment', data),
+  getStats: (params?: any) => api.get('/inventory/stats/overview', { params }),
+  getProductHistory: (productId: string, params?: any) => 
+    api.get(`/inventory/product/${productId}/history`, { params }),
+};
+
+// Stock Count API
+export const stockCountAPI = {
+  getStockCounts: (params?: any) => api.get('/stockcount', { params }),
+  getStockCount: (id: string) => api.get(`/stockcount/${id}`),
+  createStockCount: (data: any) => api.post('/stockcount', data),
+  updateStockCount: (id: string, data: any) => api.put(`/stockcount/${id}`, data),
+  startStockCount: (id: string) => api.patch(`/stockcount/${id}/start`),
+  completeStockCount: (id: string) => api.patch(`/stockcount/${id}/complete`),
+  updateItemCount: (id: string, itemIndex: number, data: any) => 
+    api.patch(`/stockcount/${id}/items/${itemIndex}`, data),
+  cancelStockCount: (id: string) => api.patch(`/stockcount/${id}/cancel`),
+  getStats: () => api.get('/stockcount/stats/overview'),
+};
   endBreak: (data: any) => api.post('/attendance/break/end', data),
   updateAttendance: (id: string, data: any) => api.put(`/attendance/${id}`, data),
   deleteAttendance: (id: string) => api.delete(`/attendance/${id}`),
