@@ -5,7 +5,9 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/Layout/DashboardLayout';
 import { productsAPI, ordersAPI, usersAPI } from '@/lib/api';
-import AnimatedLoading from '@/components/UI/AnimatedLoading';
+import LoadingSpinner from '@/components/UI/LoadingSpinner';
+import { SkeletonStats } from '@/components/UI/Skeleton';
+import { SuccessCelebration } from '@/components/UI/Confetti';
 import { useNotifications } from '@/hooks/useNotifications';
 import {
   Package,
@@ -21,6 +23,7 @@ import {
   Settings,
   BarChart3,
   Bell,
+  Sparkles,
 } from 'lucide-react';
 
 interface Stats {
@@ -42,6 +45,7 @@ export default function DashboardPage() {
     totalRevenue: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [showCelebration, setShowCelebration] = useState(false);
   const router = useRouter();
   const { addNotification } = useNotifications();
 
@@ -77,6 +81,7 @@ export default function DashboardPage() {
       });
     } catch (error) {
       console.error('Failed to fetch stats:', error);
+      addNotification('error', 'Hata!', 'Dashboard verileri yüklenirken bir hata oluştu.');
     } finally {
       setLoading(false);
     }
@@ -185,11 +190,36 @@ export default function DashboardPage() {
     }, 3000);
   };
 
+  const triggerCelebration = () => {
+    setShowCelebration(true);
+    setTimeout(() => setShowCelebration(false), 3000);
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <AnimatedLoading size="lg" text="Dashboard yükleniyor..." />
+        <div className="px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="sm:flex sm:items-center sm:justify-between"
+          >
+            <div className="sm:flex-auto">
+              <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Dashboard</h1>
+              <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+                ERP sistemi genel durumu ve istatistikleri
+              </p>
+            </div>
+          </motion.div>
+
+          <div className="mt-8">
+            <LoadingSpinner size="lg" text="Dashboard yükleniyor..." type="dots" />
+          </div>
+
+          <div className="mt-8">
+            <SkeletonStats />
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -215,14 +245,25 @@ export default function DashboardPage() {
               ERP sistemi genel durumu ve istatistikleri
             </p>
           </div>
-          <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-            <button
+          <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none space-x-2">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={triggerCelebration}
+              className="inline-flex items-center justify-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:w-auto"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Kutlama
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={testNotifications}
               className="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto"
             >
               <Bell className="h-4 w-4 mr-2" />
               Test Bildirimleri
-            </button>
+            </motion.button>
           </div>
         </motion.div>
 
@@ -369,6 +410,12 @@ export default function DashboardPage() {
           </motion.div>
         </motion.div>
       </motion.div>
+
+      {/* Success Celebration */}
+      <SuccessCelebration 
+        isActive={showCelebration} 
+        onComplete={() => setShowCelebration(false)} 
+      />
     </DashboardLayout>
   );
 } 
