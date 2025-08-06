@@ -2,420 +2,369 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/Layout/DashboardLayout';
-import { productsAPI, ordersAPI, usersAPI } from '@/lib/api';
-import LoadingSpinner from '@/components/UI/LoadingSpinner';
-import { SkeletonStats } from '@/components/UI/Skeleton';
-import { SuccessCelebration } from '@/components/UI/Confetti';
-import { useNotifications } from '@/hooks/useNotifications';
-import {
-  Package,
+import AIAssistant from '@/components/AI/AIAssistant';
+import AdvancedAnalytics from '@/components/Analytics/AdvancedAnalytics';
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  DollarSign, 
+  Package, 
+  Users, 
   ShoppingCart,
-  Users,
-  TrendingUp,
-  AlertTriangle,
-  DollarSign,
-  Plus,
-  Warehouse,
-  UserPlus,
-  FileText,
-  Settings,
+  Activity,
   BarChart3,
-  Bell,
-  Sparkles,
+  Calendar,
+  Clock,
+  Target,
+  Zap,
+  Brain,
+  Lightbulb
 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
-interface Stats {
-  totalProducts: number;
-  lowStockProducts: number;
-  totalOrders: number;
-  pendingOrders: number;
-  totalUsers: number;
-  totalRevenue: number;
+interface DashboardData {
+  sales: {
+    current: number;
+    previous: number;
+    trend: number;
+  };
+  orders: {
+    total: number;
+    pending: number;
+    completed: number;
+  };
+  customers: {
+    total: number;
+    new: number;
+    active: number;
+  };
+  inventory: {
+    total: number;
+    lowStock: number;
+    outOfStock: number;
+  };
+  recentActivity: Array<{
+    id: string;
+    type: string;
+    description: string;
+    timestamp: string;
+    user: string;
+  }>;
+  quickStats: Array<{
+    title: string;
+    value: string;
+    change: number;
+    icon: any;
+  }>;
 }
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState<Stats>({
-    totalProducts: 0,
-    lowStockProducts: 0,
-    totalOrders: 0,
-    pendingOrders: 0,
-    totalUsers: 0,
-    totalRevenue: 0,
-  });
+  const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showCelebration, setShowCelebration] = useState(false);
-  const router = useRouter();
-  const { addNotification } = useNotifications();
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   useEffect(() => {
-    fetchStats();
+    loadDashboardData();
   }, []);
 
-  const fetchStats = async () => {
+  const loadDashboardData = async () => {
+    setLoading(true);
     try {
-      const [productsRes, ordersRes, usersRes] = await Promise.all([
-        productsAPI.getProducts(),
-        ordersAPI.getOrders(),
-        usersAPI.getUsers(),
-      ]);
-
-      const products = productsRes.data.products || [];
-      const orders = ordersRes.data.orders || [];
-      const users = usersRes.data.users || [];
-
-      const lowStockProducts = products.filter((p: any) => p.stock <= p.minStock).length;
-      const pendingOrders = orders.filter((o: any) => o.status === 'pending').length;
-      const totalRevenue = orders
-        .filter((o: any) => o.paymentStatus === 'paid')
-        .reduce((sum: number, o: any) => sum + o.totalAmount, 0);
-
-      setStats({
-        totalProducts: products.length,
-        lowStockProducts,
-        totalOrders: orders.length,
-        pendingOrders,
-        totalUsers: users.length,
-        totalRevenue,
-      });
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const mockData: DashboardData = {
+        sales: {
+          current: 67500,
+          previous: 58000,
+          trend: 16.4
+        },
+        orders: {
+          total: 156,
+          pending: 23,
+          completed: 133
+        },
+        customers: {
+          total: 1247,
+          new: 45,
+          active: 1189
+        },
+        inventory: {
+          total: 125000,
+          lowStock: 8,
+          outOfStock: 3
+        },
+        recentActivity: [
+          {
+            id: '1',
+            type: 'order',
+            description: 'Yeni sipariş oluşturuldu: #ORD-2024-001',
+            timestamp: '2 dakika önce',
+            user: 'Ahmet Yılmaz'
+          },
+          {
+            id: '2',
+            type: 'product',
+            description: 'Laptop Pro stok seviyesi güncellendi',
+            timestamp: '15 dakika önce',
+            user: 'Sistem'
+          },
+          {
+            id: '3',
+            type: 'customer',
+            description: 'Yeni müşteri kaydı: Mehmet Demir',
+            timestamp: '1 saat önce',
+            user: 'Ayşe Kaya'
+          },
+          {
+            id: '4',
+            type: 'payment',
+            description: 'Ödeme alındı: ₺2,500',
+            timestamp: '2 saat önce',
+            user: 'Sistem'
+          }
+        ],
+        quickStats: [
+          {
+            title: 'Günlük Satış',
+            value: '₺2,250',
+            change: 12.5,
+            icon: TrendingUp
+          },
+          {
+            title: 'Aktif Siparişler',
+            value: '23',
+            change: -5.2,
+            icon: ShoppingCart
+          },
+          {
+            title: 'Yeni Müşteriler',
+            value: '8',
+            change: 25.0,
+            icon: Users
+          },
+          {
+            title: 'Stok Uyarıları',
+            value: '5',
+            change: 0,
+            icon: Package
+          }
+        ]
+      };
+      
+      setData(mockData);
     } catch (error) {
-      console.error('Failed to fetch stats:', error);
-      addNotification('error', 'Hata!', 'Dashboard verileri yüklenirken bir hata oluştu.');
+      console.error('Failed to load dashboard data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const statCards = [
-    {
-      name: 'Toplam Ürün',
-      value: stats.totalProducts,
-      icon: Package,
-      color: 'bg-blue-500',
-      bgColor: 'bg-blue-50',
-    },
-    {
-      name: 'Düşük Stok',
-      value: stats.lowStockProducts,
-      icon: AlertTriangle,
-      color: 'bg-yellow-500',
-      bgColor: 'bg-yellow-50',
-    },
-    {
-      name: 'Toplam Sipariş',
-      value: stats.totalOrders,
-      icon: ShoppingCart,
-      color: 'bg-green-500',
-      bgColor: 'bg-green-50',
-    },
-    {
-      name: 'Bekleyen Sipariş',
-      value: stats.pendingOrders,
-      icon: TrendingUp,
-      color: 'bg-purple-500',
-      bgColor: 'bg-purple-50',
-    },
-    {
-      name: 'Toplam Kullanıcı',
-      value: stats.totalUsers,
-      icon: Users,
-      color: 'bg-indigo-500',
-      bgColor: 'bg-indigo-50',
-    },
-    {
-      name: 'Toplam Ciro',
-      value: `₺${stats.totalRevenue.toLocaleString('tr-TR')}`,
-      icon: DollarSign,
-      color: 'bg-emerald-500',
-      bgColor: 'bg-emerald-50',
-    },
-  ];
-
-  const quickActions = [
-    {
-      name: 'Yeni Ürün Ekle',
-      description: 'Ürün kataloğuna yeni ürün ekle',
-      icon: Plus,
-      color: 'bg-blue-500 hover:bg-blue-600',
-      href: '/dashboard/products',
-    },
-    {
-      name: 'Sipariş Oluştur',
-      description: 'Yeni müşteri siparişi oluştur',
-      icon: ShoppingCart,
-      color: 'bg-green-500 hover:bg-green-600',
-      href: '/dashboard/orders',
-    },
-    {
-      name: 'Stok Yönetimi',
-      description: 'Envanter işlemlerini yönet',
-      icon: Warehouse,
-      color: 'bg-purple-500 hover:bg-purple-600',
-      href: '/dashboard/inventory',
-    },
-    {
-      name: 'Müşteri Ekle',
-      description: 'Yeni müşteri kaydı oluştur',
-      icon: UserPlus,
-      color: 'bg-indigo-500 hover:bg-indigo-600',
-      href: '/dashboard/customers',
-    },
-    {
-      name: 'Fatura Oluştur',
-      description: 'Yeni fatura oluştur',
-      icon: FileText,
-      color: 'bg-emerald-500 hover:bg-emerald-600',
-      href: '/dashboard/financial',
-    },
-    {
-      name: 'Raporlar',
-      description: 'Sistem raporlarını görüntüle',
-      icon: BarChart3,
-      color: 'bg-orange-500 hover:bg-orange-600',
-      href: '/dashboard/reports',
-    },
-  ];
-
-  const testNotifications = () => {
-    addNotification('success', 'Başarılı!', 'İşlem başarıyla tamamlandı.', 3000);
-    setTimeout(() => {
-      addNotification('error', 'Hata!', 'Bir hata oluştu, lütfen tekrar deneyin.', 4000);
-    }, 1000);
-    setTimeout(() => {
-      addNotification('warning', 'Uyarı!', 'Düşük stok seviyesi tespit edildi.', 5000);
-    }, 2000);
-    setTimeout(() => {
-      addNotification('info', 'Bilgi', 'Sistem güncellemesi yapıldı.', 6000);
-    }, 3000);
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'order': return <ShoppingCart className="w-4 h-4" />;
+      case 'product': return <Package className="w-4 h-4" />;
+      case 'customer': return <Users className="w-4 h-4" />;
+      case 'payment': return <DollarSign className="w-4 h-4" />;
+      default: return <Activity className="w-4 h-4" />;
+    }
   };
 
-  const triggerCelebration = () => {
-    setShowCelebration(true);
-    setTimeout(() => setShowCelebration(false), 3000);
+  const getActivityColor = (type: string) => {
+    switch (type) {
+      case 'order': return 'text-blue-600 bg-blue-100 dark:bg-blue-900/20';
+      case 'product': return 'text-green-600 bg-green-100 dark:bg-green-900/20';
+      case 'customer': return 'text-purple-600 bg-purple-100 dark:bg-purple-900/20';
+      case 'payment': return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20';
+      default: return 'text-gray-600 bg-gray-100 dark:bg-gray-700';
+    }
   };
 
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="px-4 sm:px-6 lg:px-8">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="sm:flex sm:items-center sm:justify-between"
-          >
-            <div className="sm:flex-auto">
-              <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Dashboard</h1>
-              <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-                ERP sistemi genel durumu ve istatistikleri
-              </p>
-            </div>
-          </motion.div>
-
-          <div className="mt-8">
-            <LoadingSpinner size="lg" text="Dashboard yükleniyor..." type="dots" />
-          </div>
-
-          <div className="mt-8">
-            <SkeletonStats />
-          </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
         </div>
       </DashboardLayout>
     );
   }
 
+  if (!data) return null;
+
   return (
     <DashboardLayout>
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="px-4 sm:px-6 lg:px-8"
-      >
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="sm:flex sm:items-center sm:justify-between"
-        >
-          <div className="sm:flex-auto">
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Dashboard</h1>
-            <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-              ERP sistemi genel durumu ve istatistikleri
+      <div className="px-4 sm:px-6 lg:px-8 py-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              Dashboard
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              ERP sisteminizin genel durumu ve önemli metrikler
             </p>
           </div>
-          <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none space-x-2">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={triggerCelebration}
-              className="inline-flex items-center justify-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:w-auto"
+          <div className="flex items-center space-x-2">
+            <Button
+              onClick={() => setShowAnalytics(!showAnalytics)}
+              variant="outline"
+              className="flex items-center space-x-2"
             >
-              <Sparkles className="h-4 w-4 mr-2" />
-              Kutlama
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={testNotifications}
-              className="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto"
-            >
-              <Bell className="h-4 w-4 mr-2" />
-              Test Bildirimleri
-            </motion.button>
+              {showAnalytics ? <BarChart3 className="w-4 h-4" /> : <Brain className="w-4 h-4" />}
+              <span>{showAnalytics ? 'Gelişmiş Analitik' : 'AI Analitik'}</span>
+            </Button>
+            <Button onClick={loadDashboardData} variant="outline">
+              <Zap className="w-4 h-4" />
+            </Button>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Quick Actions */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.15 }}
-          className="mt-8"
-        >
-          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Hızlı İşlemler</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {quickActions.map((action, index) => {
-              const Icon = action.icon;
-              return (
-                <motion.button
-                  key={action.name}
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ 
-                    duration: 0.5, 
-                    delay: 0.2 + index * 0.1,
-                    type: "spring",
-                    stiffness: 100
-                  }}
-                  whileHover={{ 
-                    scale: 1.02,
-                    transition: { duration: 0.2 }
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => router.push(action.href)}
-                  className={`relative overflow-hidden rounded-lg ${action.color} p-6 text-white shadow-lg transition-all duration-200 group`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <Icon className="h-6 w-6" />
-                    <div className="text-left">
-                      <h3 className="font-semibold text-sm">{action.name}</h3>
-                      <p className="text-xs opacity-90">{action.description}</p>
-                    </div>
-                  </div>
-                  <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-200"></div>
-                </motion.button>
-              );
-            })}
-          </div>
-        </motion.div>
-
-        {/* Stats Grid */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="mt-8"
-        >
-          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Genel İstatistikler</h2>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {statCards.map((card, index) => {
-              const Icon = card.icon;
-              return (
-                <motion.div
-                  key={card.name}
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ 
-                    duration: 0.5, 
-                    delay: 0.4 + index * 0.1,
-                    type: "spring",
-                    stiffness: 100
-                  }}
-                  whileHover={{ 
-                    scale: 1.02,
-                    transition: { duration: 0.2 }
-                  }}
-                  className={`relative overflow-hidden rounded-lg ${card.bgColor} dark:bg-gray-800 px-4 pb-12 pt-5 shadow sm:px-6 sm:pt-6 border border-gray-200 dark:border-gray-700`}
-                >
-                  <dt>
-                    <div className={`absolute rounded-md ${card.color} p-3`}>
-                      <Icon className="h-6 w-6 text-white" aria-hidden="true" />
-                    </div>
-                    <p className="ml-16 truncate text-sm font-medium text-gray-500 dark:text-gray-400">
-                      {card.name}
-                    </p>
-                  </dt>
-                  <dd className="ml-16 flex items-baseline pb-6 sm:pb-7">
-                    <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                      {card.value}
-                    </p>
-                  </dd>
-                </motion.div>
-              );
-            })}
-          </div>
-        </motion.div>
-
-        {/* Recent Activity */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="mt-8"
-        >
-          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Sistem Durumu</h2>
-          <motion.div 
-            whileHover={{ scale: 1.01 }}
-            transition={{ duration: 0.2 }}
-            className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg border border-gray-200 dark:border-gray-700"
-          >
-            <div className="px-4 py-5 sm:p-6">
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.6 }}
-                >
-                  <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
-                    Stok Durumu
-                  </h3>
-                  <div className="mt-2 max-w-xl text-sm text-gray-500 dark:text-gray-400">
-                    <p>
-                      {stats.lowStockProducts > 0
-                        ? `${stats.lowStockProducts} ürün kritik stok seviyesinde`
-                        : 'Tüm ürünler yeterli stok seviyesinde'}
-                    </p>
-                  </div>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.7 }}
-                >
-                  <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
-                    Sipariş Durumu
-                  </h3>
-                  <div className="mt-2 max-w-xl text-sm text-gray-500 dark:text-gray-400">
-                    <p>
-                      {stats.pendingOrders > 0
-                        ? `${stats.pendingOrders} sipariş işlem bekliyor`
-                        : 'Bekleyen sipariş bulunmuyor'}
-                    </p>
-                  </div>
-                </motion.div>
-              </div>
+        {showAnalytics ? (
+          <AdvancedAnalytics />
+        ) : (
+          <>
+            {/* Quick Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {data.quickStats.map((stat, index) => {
+                const Icon = stat.icon;
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                        <Icon className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{stat.value}</div>
+                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                          {stat.change > 0 ? (
+                            <TrendingUp className="w-3 h-3 text-green-500" />
+                          ) : stat.change < 0 ? (
+                            <TrendingDown className="w-3 h-3 text-red-500" />
+                          ) : (
+                            <Activity className="w-3 h-3 text-gray-500" />
+                          )}
+                          <span>
+                            {stat.change > 0 ? '+' : ''}{stat.change}% geçen güne göre
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
             </div>
-          </motion.div>
-        </motion.div>
-      </motion.div>
 
-      {/* Success Celebration */}
-      <SuccessCelebration 
-        isActive={showCelebration} 
-        onComplete={() => setShowCelebration(false)} 
-      />
+            {/* Main Metrics */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+              {/* Sales Overview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <DollarSign className="w-5 h-5 mr-2" />
+                    Satış Genel Bakış
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Bu Ay</span>
+                      <span className="text-2xl font-bold">₺{data.sales.current.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Geçen Ay</span>
+                      <span className="text-lg">₺{data.sales.previous.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {data.sales.trend > 0 ? (
+                        <TrendingUp className="w-4 h-4 text-green-500" />
+                      ) : (
+                        <TrendingDown className="w-4 h-4 text-red-500" />
+                      )}
+                      <span className={`text-sm ${data.sales.trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {data.sales.trend > 0 ? '+' : ''}{data.sales.trend}% değişim
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Orders Overview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <ShoppingCart className="w-5 h-5 mr-2" />
+                    Sipariş Durumu
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Toplam</span>
+                      <span className="text-2xl font-bold">{data.orders.total}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Bekleyen</span>
+                      <Badge variant="secondary">{data.orders.pending}</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Tamamlanan</span>
+                      <Badge variant="default">{data.orders.completed}</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Activity className="w-5 h-5 mr-2" />
+                  Son Aktiviteler
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {data.recentActivity.map((activity, index) => (
+                    <motion.div
+                      key={activity.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <div className={`p-2 rounded-full ${getActivityColor(activity.type)}`}>
+                        {getActivityIcon(activity.type)}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {activity.description}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {activity.timestamp} • {activity.user}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {/* AI Assistant */}
+        <AIAssistant />
+      </div>
     </DashboardLayout>
   );
 } 
