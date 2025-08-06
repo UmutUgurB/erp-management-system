@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/Layout/DashboardLayout';
 import { productsAPI, ordersAPI, usersAPI } from '@/lib/api';
 import AnimatedLoading from '@/components/UI/AnimatedLoading';
@@ -12,6 +13,12 @@ import {
   TrendingUp,
   AlertTriangle,
   DollarSign,
+  Plus,
+  Warehouse,
+  UserPlus,
+  FileText,
+  Settings,
+  BarChart3,
 } from 'lucide-react';
 
 interface Stats {
@@ -33,6 +40,7 @@ export default function DashboardPage() {
     totalRevenue: 0,
   });
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     fetchStats();
@@ -116,6 +124,51 @@ export default function DashboardPage() {
     },
   ];
 
+  const quickActions = [
+    {
+      name: 'Yeni Ürün Ekle',
+      description: 'Ürün kataloğuna yeni ürün ekle',
+      icon: Plus,
+      color: 'bg-blue-500 hover:bg-blue-600',
+      href: '/dashboard/products',
+    },
+    {
+      name: 'Sipariş Oluştur',
+      description: 'Yeni müşteri siparişi oluştur',
+      icon: ShoppingCart,
+      color: 'bg-green-500 hover:bg-green-600',
+      href: '/dashboard/orders',
+    },
+    {
+      name: 'Stok Yönetimi',
+      description: 'Envanter işlemlerini yönet',
+      icon: Warehouse,
+      color: 'bg-purple-500 hover:bg-purple-600',
+      href: '/dashboard/inventory',
+    },
+    {
+      name: 'Müşteri Ekle',
+      description: 'Yeni müşteri kaydı oluştur',
+      icon: UserPlus,
+      color: 'bg-indigo-500 hover:bg-indigo-600',
+      href: '/dashboard/customers',
+    },
+    {
+      name: 'Fatura Oluştur',
+      description: 'Yeni fatura oluştur',
+      icon: FileText,
+      color: 'bg-emerald-500 hover:bg-emerald-600',
+      href: '/dashboard/financial',
+    },
+    {
+      name: 'Raporlar',
+      description: 'Sistem raporlarını görüntüle',
+      icon: BarChart3,
+      color: 'bg-orange-500 hover:bg-orange-600',
+      href: '/dashboard/reports',
+    },
+  ];
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -148,55 +201,102 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
+        {/* Quick Actions */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className="mt-8"
+        >
+          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Hızlı İşlemler</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {quickActions.map((action, index) => {
+              const Icon = action.icon;
+              return (
+                <motion.button
+                  key={action.name}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ 
+                    duration: 0.5, 
+                    delay: 0.2 + index * 0.1,
+                    type: "spring",
+                    stiffness: 100
+                  }}
+                  whileHover={{ 
+                    scale: 1.02,
+                    transition: { duration: 0.2 }
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => router.push(action.href)}
+                  className={`relative overflow-hidden rounded-lg ${action.color} p-6 text-white shadow-lg transition-all duration-200 group`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <Icon className="h-6 w-6" />
+                    <div className="text-left">
+                      <h3 className="font-semibold text-sm">{action.name}</h3>
+                      <p className="text-xs opacity-90">{action.description}</p>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-200"></div>
+                </motion.button>
+              );
+            })}
+          </div>
+        </motion.div>
+
         {/* Stats Grid */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mt-8"
         >
-          {statCards.map((card, index) => {
-            const Icon = card.icon;
-            return (
-              <motion.div
-                key={card.name}
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ 
-                  duration: 0.5, 
-                  delay: 0.3 + index * 0.1,
-                  type: "spring",
-                  stiffness: 100
-                }}
-                whileHover={{ 
-                  scale: 1.02,
-                  transition: { duration: 0.2 }
-                }}
-                className={`relative overflow-hidden rounded-lg ${card.bgColor} dark:bg-gray-800 px-4 pb-12 pt-5 shadow sm:px-6 sm:pt-6 border border-gray-200 dark:border-gray-700`}
-              >
-                <dt>
-                  <div className={`absolute rounded-md ${card.color} p-3`}>
-                    <Icon className="h-6 w-6 text-white" aria-hidden="true" />
-                  </div>
-                  <p className="ml-16 truncate text-sm font-medium text-gray-500 dark:text-gray-400">
-                    {card.name}
-                  </p>
-                </dt>
-                <dd className="ml-16 flex items-baseline pb-6 sm:pb-7">
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {card.value}
-                  </p>
-                </dd>
-              </motion.div>
-            );
-          })}
+          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Genel İstatistikler</h2>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {statCards.map((card, index) => {
+              const Icon = card.icon;
+              return (
+                <motion.div
+                  key={card.name}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ 
+                    duration: 0.5, 
+                    delay: 0.4 + index * 0.1,
+                    type: "spring",
+                    stiffness: 100
+                  }}
+                  whileHover={{ 
+                    scale: 1.02,
+                    transition: { duration: 0.2 }
+                  }}
+                  className={`relative overflow-hidden rounded-lg ${card.bgColor} dark:bg-gray-800 px-4 pb-12 pt-5 shadow sm:px-6 sm:pt-6 border border-gray-200 dark:border-gray-700`}
+                >
+                  <dt>
+                    <div className={`absolute rounded-md ${card.color} p-3`}>
+                      <Icon className="h-6 w-6 text-white" aria-hidden="true" />
+                    </div>
+                    <p className="ml-16 truncate text-sm font-medium text-gray-500 dark:text-gray-400">
+                      {card.name}
+                    </p>
+                  </dt>
+                  <dd className="ml-16 flex items-baseline pb-6 sm:pb-7">
+                    <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                      {card.value}
+                    </p>
+                  </dd>
+                </motion.div>
+              );
+            })}
+          </div>
         </motion.div>
 
         {/* Recent Activity */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
           className="mt-8"
         >
           <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Sistem Durumu</h2>
@@ -210,7 +310,7 @@ export default function DashboardPage() {
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.5 }}
+                  transition={{ duration: 0.5, delay: 0.6 }}
                 >
                   <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
                     Stok Durumu
@@ -226,7 +326,7 @@ export default function DashboardPage() {
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.6 }}
+                  transition={{ duration: 0.5, delay: 0.7 }}
                 >
                   <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
                     Sipariş Durumu
