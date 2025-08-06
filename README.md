@@ -396,3 +396,271 @@ We welcome contributions! Please follow these steps:
 
 ---
 
+# 🏢 Modern ERP Management System
+
+Modern, full-stack ERP (Enterprise Resource Planning) sistemi. React, Node.js, MongoDB ve TypeScript kullanılarak geliştirilmiştir.
+
+## ✨ Özellikler
+
+### 👥 Kullanıcı Yönetimi
+- **Kullanıcı kayıt** ve giriş sistemi
+- **Rol tabanlı** yetkilendirme (admin, manager, user)
+- **JWT token** tabanlı kimlik doğrulama
+- **Şifre hashleme** ve güvenlik
+
+### 📦 Ürün Yönetimi
+- **Ürün kataloğu** yönetimi
+- **Kategori** ve **marka** organizasyonu
+- **Stok takibi** ve **minimum stok** uyarıları
+- **Ürün arama** ve filtreleme
+- **Toplu işlemler** (import/export)
+
+### 🛒 Sipariş Yönetimi
+- **Sipariş oluşturma** ve takibi
+- **Müşteri bilgileri** entegrasyonu
+- **Ödeme durumu** yönetimi
+- **Sipariş geçmişi** ve analitik
+
+### 📦 Envanter Yönetimi
+- **Stok takibi** gerçek zamanlı güncellemeler
+- **Envanter işlemleri** (stok-giriş, stok-çıkış, transfer, düzeltme)
+- **Stok sayımı** işlemleri varyans takibi
+- **Düşük stok uyarıları** ve bildirimler
+- **Envanter analitik** ve raporlama
+- **Barkod/QR kod** desteği (planlanan)
+
+### 👥 Müşteri Yönetimi (CRM)
+- **Müşteri profilleri** detaylı bilgilerle
+- **Müşteri etkileşimleri** ve iletişim geçmişi
+- **Lead yönetimi** ve dönüşüm takibi
+- **Müşteri analitik** ve raporlama
+- **İletişim yönetimi** müşteri başına birden fazla kişi
+
+### 💰 Finansal Yönetim
+- **Fatura oluşturma** ve yönetimi
+- **Ödeme takibi** birden fazla ödeme yöntemiyle
+- **Finansal raporlama** ve analitik
+- **Gecikmiş ödeme** izleme
+- **Para birimi desteği** (TRY, USD, EUR, GBP)
+- **Vergi hesaplama** ve yönetimi
+
+### 📋 Proje Yönetimi
+- **Proje yaşam döngüsü** yönetimi
+- **Ekip işbirliği** rol atamalarıyla
+- **Proje ilerleme** takibi
+- **Bütçe yönetimi** ve maliyet takibi
+- **Proje analitik** ve raporlama
+- **Proje doküman yönetimi**
+
+### ✅ Görev Yönetimi
+- **Görev oluşturma** ve atama
+- **Zaman takibi** başlat/durdur işlevselliği
+- **Görev bağımlılıkları** ve ilişkiler
+- **İlerleme takibi** yüzde tamamlanma
+- **Görev yorumları** ve işbirliği
+- **Zaman analitik** ve raporlama
+
+### 🏢 Varlık Yönetimi
+- **Varlık yaşam döngüsü** takibi
+- **Bakım planlama** ve geçmişi
+- **Varlık amortismanı** ve değer takibi
+- **Garanti yönetimi** süre dolumu uyarıları
+- **Varlık atama** çalışanlara
+- **Varlık analitik** ve raporlama
+
+### 📊 Dashboard & Analitik
+- **Gerçek zamanlı** istatistikler
+- **Grafik ve** chart'lar
+- **Özelleştirilebilir** widget'lar
+- **Raporlama** sistemi
+- **Export** özellikleri (PDF, Excel)
+
+### 🔔 Bildirim Sistemi
+- **Gerçek zamanlı** bildirimler
+- **Farklı bildirim türleri** (başarı, hata, uyarı, bilgi)
+- **Otomatik kapanma** ve manuel kapatma
+- **Animasyonlu** bildirimler
+- **İlerleme çubuğu** gösterimi
+
+## 🚀 Teknoloji Stack
+
+### Frontend
+- **Next.js 14** (App Router)
+- **TypeScript** - Tip güvenliği
+- **Tailwind CSS** - Modern UI
+- **React Hook Form** - Form yönetimi
+- **Zod** - Schema validasyonu
+- **Lucide React** - İkonlar
+- **Axios** - HTTP istekleri
+- **Recharts** - Veri görselleştirme
+- **Socket.IO Client** - Gerçek zamanlı iletişim
+- **Next-intl** - Çoklu dil desteği
+- **jsPDF** - PDF oluşturma
+- **ExcelJS** - Excel dosya işleme
+
+### Backend
+- **Node.js** - Runtime
+- **Express.js** - Web framework
+- **MongoDB** - Veritabanı
+- **Mongoose** - ODM
+- **JWT** - Kimlik doğrulama
+- **bcrypt** - Şifre hashleme
+- **CORS** - Cross-origin resource sharing
+- **Socket.IO** - Gerçek zamanlı iletişim
+- **Multer** - Dosya yükleme
+- **Winston** - Loglama
+- **Nodemailer** - Email gönderimi
+- **Swagger** - API dokümantasyonu
+- **Helmet** - Güvenlik
+- **Rate Limiting** - API koruması
+
+### DevOps & Deployment
+- **Docker** - Containerization
+- **Docker Compose** - Multi-container orchestration
+- **Nginx** - Reverse proxy
+- **Redis** - Caching (opsiyonel)
+- **Health checks** - Servis sağlığı kontrolü
+
+## 🐳 Docker ile Kurulum
+
+### Gereksinimler
+- Docker
+- Docker Compose
+
+### Hızlı Başlangıç
+
+```bash
+# Projeyi klonlayın
+git clone https://github.com/yourusername/erp-management-system.git
+cd erp-management-system
+
+# Docker ile başlatın
+npm run docker:up
+
+# Veya manuel olarak
+docker-compose up -d
+```
+
+### Docker Komutları
+
+```bash
+# Tüm servisleri başlat
+npm run docker:up
+
+# Servisleri durdur
+npm run docker:down
+
+# Logları görüntüle
+npm run docker:logs
+
+# Servisleri yeniden başlat
+npm run docker:restart
+
+# Temizlik (volumes dahil)
+npm run docker:clean
+```
+
+### Servisler
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:5000
+- **MongoDB**: localhost:27017
+- **Redis**: localhost:6379 (opsiyonel)
+- **Nginx**: http://localhost:80 (opsiyonel)
+
+## 🛠️ Geliştirme Kurulumu
+
+### Gereksinimler
+- Node.js 18+
+- MongoDB 6.0+
+- npm veya yarn
+
+### Kurulum Adımları
+
+```bash
+# Projeyi klonlayın
+git clone https://github.com/yourusername/erp-management-system.git
+cd erp-management-system
+
+# Tüm bağımlılıkları yükleyin
+npm run install:all
+
+# Geliştirme sunucularını başlatın
+npm run dev
+```
+
+### Ortam Değişkenleri
+
+Backend için `.env` dosyası oluşturun:
+
+```env
+NODE_ENV=development
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/erp_system
+JWT_SECRET=your-super-secret-jwt-key
+CORS_ORIGIN=http://localhost:3000
+```
+
+Frontend için `.env.local` dosyası oluşturun:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
+NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
+```
+
+## 📝 API Dokümantasyonu
+
+API dokümantasyonu Swagger ile sağlanmaktadır:
+- **Development**: http://localhost:5000/api-docs
+- **Production**: https://your-domain.com/api-docs
+
+## 🔧 Geliştirme Komutları
+
+```bash
+# Geliştirme
+npm run dev
+
+# Build
+npm run build
+
+# Test
+npm run test
+
+# Lint
+npm run lint
+
+# Docker
+npm run docker:up
+```
+
+## 📊 Demo Hesaplar
+
+- **Admin**: admin@example.com / 123456
+- **Manager**: manager@example.com / 123456
+
+## 🤝 Katkıda Bulunma
+
+1. Fork yapın
+2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
+3. Commit yapın (`git commit -m 'Add amazing feature'`)
+4. Push yapın (`git push origin feature/amazing-feature`)
+5. Pull Request oluşturun
+
+## 📄 Lisans
+
+Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için `LICENSE` dosyasına bakın.
+
+## 📞 İletişim
+
+- **Email**: your.email@example.com
+- **LinkedIn**: [Your Name](https://linkedin.com/in/yourprofile)
+- **GitHub**: [@yourusername](https://github.com/yourusername)
+
+## 🙏 Teşekkürler
+
+Bu proje aşağıdaki açık kaynak projelerin kullanımıyla mümkün olmuştur:
+- Next.js
+- Express.js
+- MongoDB
+- Tailwind CSS
+- Ve diğer tüm bağımlılıklar
+
