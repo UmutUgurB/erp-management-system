@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
+import { useNotifications } from '@/hooks/useNotifications';
 import ThemeToggle from '@/components/UI/ThemeToggle';
+import NotificationManager from '@/components/UI/NotificationManager';
 import {
   LayoutDashboard,
   Package,
@@ -63,6 +65,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   
   // Initialize real-time notifications
   const { isConnected } = useRealtimeNotifications();
+  
+  // Initialize notification system
+  const { notifications, removeNotification } = useNotifications();
 
   const handleLogout = () => {
     logout();
@@ -157,6 +162,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </main>
       </div>
+
+      {/* Notification System */}
+      <NotificationManager 
+        notifications={notifications}
+        onRemove={removeNotification}
+      />
     </div>
   );
 }

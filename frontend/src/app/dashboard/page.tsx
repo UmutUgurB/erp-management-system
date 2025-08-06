@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/Layout/DashboardLayout';
 import { productsAPI, ordersAPI, usersAPI } from '@/lib/api';
 import AnimatedLoading from '@/components/UI/AnimatedLoading';
+import { useNotifications } from '@/hooks/useNotifications';
 import {
   Package,
   ShoppingCart,
@@ -19,6 +20,7 @@ import {
   FileText,
   Settings,
   BarChart3,
+  Bell,
 } from 'lucide-react';
 
 interface Stats {
@@ -41,6 +43,7 @@ export default function DashboardPage() {
   });
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { addNotification } = useNotifications();
 
   useEffect(() => {
     fetchStats();
@@ -169,6 +172,19 @@ export default function DashboardPage() {
     },
   ];
 
+  const testNotifications = () => {
+    addNotification('success', 'Başarılı!', 'İşlem başarıyla tamamlandı.', 3000);
+    setTimeout(() => {
+      addNotification('error', 'Hata!', 'Bir hata oluştu, lütfen tekrar deneyin.', 4000);
+    }, 1000);
+    setTimeout(() => {
+      addNotification('warning', 'Uyarı!', 'Düşük stok seviyesi tespit edildi.', 5000);
+    }, 2000);
+    setTimeout(() => {
+      addNotification('info', 'Bilgi', 'Sistem güncellemesi yapıldı.', 6000);
+    }, 3000);
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -191,13 +207,22 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="sm:flex sm:items-center"
+          className="sm:flex sm:items-center sm:justify-between"
         >
           <div className="sm:flex-auto">
             <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Dashboard</h1>
             <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
               ERP sistemi genel durumu ve istatistikleri
             </p>
+          </div>
+          <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+            <button
+              onClick={testNotifications}
+              className="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto"
+            >
+              <Bell className="h-4 w-4 mr-2" />
+              Test Bildirimleri
+            </button>
           </div>
         </motion.div>
 
