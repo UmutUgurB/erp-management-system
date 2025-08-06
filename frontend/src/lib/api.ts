@@ -121,10 +121,84 @@ export const stockCountAPI = {
   updateStockCount: (id: string, data: any) => api.put(`/stockcount/${id}`, data),
   startStockCount: (id: string) => api.patch(`/stockcount/${id}/start`),
   completeStockCount: (id: string) => api.patch(`/stockcount/${id}/complete`),
-  updateItemCount: (id: string, itemIndex: number, data: any) => 
+  updateItemCount: (id: string, itemIndex: number, data: any) =>
     api.patch(`/stockcount/${id}/items/${itemIndex}`, data),
   cancelStockCount: (id: string) => api.patch(`/stockcount/${id}/cancel`),
   getStats: () => api.get('/stockcount/stats/overview'),
+};
+
+export const customerAPI = {
+  getCustomers: (params?: any) => api.get('/customers', { params }),
+  getCustomer: (id: string) => api.get(`/customers/${id}`),
+  createCustomer: (data: any) => api.post('/customers', data),
+  updateCustomer: (id: string, data: any) => api.put(`/customers/${id}`, data),
+  deleteCustomer: (id: string) => api.delete(`/customers/${id}`),
+  getCustomerInteractions: (customerId: string, params?: any) =>
+    api.get(`/customers/${customerId}/interactions`, { params }),
+  createCustomerInteraction: (customerId: string, data: any) =>
+    api.post(`/customers/${customerId}/interactions`, data),
+  updateCustomerInteraction: (customerId: string, interactionId: string, data: any) =>
+    api.put(`/customers/${customerId}/interactions/${interactionId}`, data),
+  getStats: () => api.get('/customers/stats/overview'),
+  getAssignedCustomers: (userId: string) => api.get(`/customers/assigned/${userId}`),
+  searchCustomers: (query: string) => api.get(`/customers/search/${query}`),
+};
+
+// Financial API
+export const financialAPI = {
+  getInvoices: (params?: any) => api.get('/invoices', { params }),
+  getInvoice: (id: string) => api.get(`/invoices/${id}`),
+  createInvoice: (data: any) => api.post('/invoices', data),
+  updateInvoice: (id: string, data: any) => api.put(`/invoices/${id}`, data),
+  deleteInvoice: (id: string) => api.delete(`/invoices/${id}`),
+  recordPayment: (invoiceId: string, data: any) => api.post(`/invoices/${invoiceId}/payments`, data),
+  sendInvoice: (id: string) => api.patch(`/invoices/${id}/send`),
+  markAsPaid: (id: string) => api.patch(`/invoices/${id}/mark-paid`),
+  getStats: (params?: any) => api.get('/invoices/stats/overview', { params }),
+};
+
+// Project API
+export const projectAPI = {
+  getProjects: (params?: any) => api.get('/projects', { params }),
+  getProject: (id: string) => api.get(`/projects/${id}`),
+  createProject: (data: any) => api.post('/projects', data),
+  updateProject: (id: string, data: any) => api.put(`/projects/${id}`, data),
+  deleteProject: (id: string) => api.delete(`/projects/${id}`),
+  addTeamMember: (projectId: string, data: any) => api.post(`/projects/${projectId}/team`, data),
+  removeTeamMember: (projectId: string, userId: string) => api.delete(`/projects/${projectId}/team/${userId}`),
+  updateProgress: (projectId: string, data: any) => api.patch(`/projects/${projectId}/progress`, data),
+  getStats: () => api.get('/projects/stats/overview'),
+  getMyProjects: () => api.get('/projects/my/projects'),
+};
+
+// Task API
+export const taskAPI = {
+  getTasks: (params?: any) => api.get('/tasks', { params }),
+  getTask: (id: string) => api.get(`/tasks/${id}`),
+  createTask: (data: any) => api.post('/tasks', data),
+  updateTask: (id: string, data: any) => api.put(`/tasks/${id}`, data),
+  deleteTask: (id: string) => api.delete(`/tasks/${id}`),
+  addComment: (taskId: string, data: any) => api.post(`/tasks/${taskId}/comments`, data),
+  startTimeTracking: (taskId: string, data: any) => api.post(`/tasks/${taskId}/time/start`, data),
+  stopTimeTracking: (taskId: string) => api.post(`/tasks/${taskId}/time/stop`),
+  updateProgress: (taskId: string, data: any) => api.patch(`/tasks/${taskId}/progress`, data),
+  getMyTasks: (params?: any) => api.get('/tasks/my/tasks', { params }),
+  getStats: (params?: any) => api.get('/tasks/stats/overview', { params }),
+};
+
+// Asset API
+export const assetAPI = {
+  getAssets: (params?: any) => api.get('/assets', { params }),
+  getAsset: (id: string) => api.get(`/assets/${id}`),
+  createAsset: (data: any) => api.post('/assets', data),
+  updateAsset: (id: string, data: any) => api.put(`/assets/${id}`, data),
+  deleteAsset: (id: string) => api.delete(`/assets/${id}`),
+  addMaintenance: (assetId: string, data: any) => api.post(`/assets/${assetId}/maintenance`, data),
+  updateStatus: (assetId: string, data: any) => api.patch(`/assets/${assetId}/status`, data),
+  assignAsset: (assetId: string, data: any) => api.patch(`/assets/${assetId}/assign`, data),
+  getStats: () => api.get('/assets/stats/overview'),
+  getMyAssets: () => api.get('/assets/my/assets'),
+  searchAssets: (query: string) => api.get(`/assets/search/${query}`),
 };
   endBreak: (data: any) => api.post('/attendance/break/end', data),
   updateAttendance: (id: string, data: any) => api.put(`/attendance/${id}`, data),

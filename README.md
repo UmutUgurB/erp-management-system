@@ -60,6 +60,53 @@
 - **Payment status** management
 - **Order history** and analytics
 
+### 📦 Inventory Management
+- **Stock tracking** with real-time updates
+- **Inventory transactions** (stock-in, stock-out, transfer, adjustment)
+- **Stock count** operations with variance tracking
+- **Low stock alerts** and notifications
+- **Inventory analytics** and reporting
+- **Barcode/QR code** support (planned)
+
+### 👥 Customer Management (CRM)
+- **Customer profiles** with detailed information
+- **Customer interactions** and communication history
+- **Lead management** and conversion tracking
+- **Customer analytics** and reporting
+- **Contact management** with multiple contacts per customer
+
+### 💰 Financial Management
+- **Invoice generation** and management
+- **Payment tracking** with multiple payment methods
+- **Financial reporting** and analytics
+- **Overdue payment** monitoring
+- **Currency support** (TRY, USD, EUR, GBP)
+- **Tax calculation** and management
+
+### 📋 Project Management
+- **Project lifecycle** management
+- **Team collaboration** with role assignments
+- **Project progress** tracking
+- **Budget management** and cost tracking
+- **Project analytics** and reporting
+- **Document management** for projects
+
+### ✅ Task Management
+- **Task creation** and assignment
+- **Time tracking** with start/stop functionality
+- **Task dependencies** and relationships
+- **Progress tracking** with percentage completion
+- **Task comments** and collaboration
+- **Time analytics** and reporting
+
+### 🏢 Asset Management
+- **Asset lifecycle** tracking
+- **Maintenance scheduling** and history
+- **Asset depreciation** and value tracking
+- **Warranty management** with expiry alerts
+- **Asset assignment** to employees
+- **Asset analytics** and reporting
+
 ### 📊 Dashboard & Analytics
 - **Real-time statistics** and KPIs
 - **Advanced analytics** with interactive charts

@@ -19,11 +19,16 @@ import { InventoryStats } from '@/types/inventory';
 import InventoryTransactions from '@/components/Inventory/InventoryTransactions';
 import InventoryStatsOverview from '@/components/Inventory/InventoryStatsOverview';
 import StockCountList from '@/components/Inventory/StockCountList';
+import StockInForm from '@/components/Inventory/StockInForm';
+import StockOutForm from '@/components/Inventory/StockOutForm';
+import StockAlerts from '@/components/Inventory/StockAlerts';
 import { useAuth } from '@/context/AuthContext';
 
 export default function InventoryPage() {
   const [stats, setStats] = useState<InventoryStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showStockInForm, setShowStockInForm] = useState(false);
+  const [showStockOutForm, setShowStockOutForm] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -44,6 +49,12 @@ export default function InventoryPage() {
 
   const canManageInventory = user?.role === 'admin' || user?.role === 'manager';
 
+  const handleFormSuccess = () => {
+    setShowStockInForm(false);
+    setShowStockOutForm(false);
+    loadStats();
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -56,9 +67,13 @@ export default function InventoryPage() {
         </div>
         {canManageInventory && (
           <div className="flex gap-2">
-            <Button>
+            <Button onClick={() => setShowStockInForm(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Stok Girişi
+            </Button>
+            <Button variant="outline" onClick={() => setShowStockOutForm(true)}>
+              <Package className="mr-2 h-4 w-4" />
+              Stok Çıkışı
             </Button>
             <Button variant="outline">
               <ClipboardList className="mr-2 h-4 w-4" />
@@ -142,6 +157,10 @@ export default function InventoryPage() {
             <ClipboardList className="mr-2 h-4 w-4" />
             Stok Sayımları
           </TabsTrigger>
+          <TabsTrigger value="alerts">
+            <AlertTriangle className="mr-2 h-4 w-4" />
+            Uyarılar
+          </TabsTrigger>
           <TabsTrigger value="analytics">
             <TrendingUp className="mr-2 h-4 w-4" />
             Analitik
@@ -156,10 +175,33 @@ export default function InventoryPage() {
           <StockCountList />
         </TabsContent>
 
+        <TabsContent value="alerts" className="space-y-4">
+          <StockAlerts />
+        </TabsContent>
+
         <TabsContent value="analytics" className="space-y-4">
           <InventoryStatsOverview />
         </TabsContent>
       </Tabs>
+
+      {/* Modals */}
+      {showStockInForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <StockInForm
+            onSuccess={handleFormSuccess}
+            onCancel={() => setShowStockInForm(false)}
+          />
+        </div>
+      )}
+
+      {showStockOutForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <StockOutForm
+            onSuccess={handleFormSuccess}
+            onCancel={() => setShowStockOutForm(false)}
+          />
+        </div>
+      )}
     </div>
   );
 } 

@@ -25,6 +25,7 @@ import {
   ClipboardList,
   Plus
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { stockCountAPI } from '@/lib/api';
 import { StockCount } from '@/types/inventory';
 import { format } from 'date-fns';
@@ -45,6 +46,7 @@ export default function StockCountList() {
     total: 0
   });
   const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     loadStockCounts();
@@ -264,7 +266,11 @@ export default function StockCountList() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => router.push(`/dashboard/inventory/stockcount/${stockCount._id}`)}
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
                         {canManageStockCounts && stockCount.status === 'draft' && (

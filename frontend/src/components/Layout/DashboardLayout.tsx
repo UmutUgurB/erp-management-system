@@ -23,6 +23,10 @@ import {
   Clock,
   Calendar,
   Warehouse,
+  DollarSign,
+  FolderOpen,
+  CheckSquare,
+  Building,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -35,6 +39,11 @@ const navigationItems = [
   { name: 'Ürünler', href: '/dashboard/products', icon: Package },
   { name: 'Siparişler', href: '/dashboard/orders', icon: ShoppingCart },
   { name: 'Envanter', href: '/dashboard/inventory', icon: Warehouse },
+  { name: 'Müşteriler', href: '/dashboard/customers', icon: Users },
+  { name: 'Faturalar', href: '/dashboard/financial', icon: DollarSign },
+  { name: 'Projeler', href: '/dashboard/projects', icon: FolderOpen },
+  { name: 'Görevler', href: '/dashboard/tasks', icon: CheckSquare },
+  { name: 'Varlıklar', href: '/dashboard/assets', icon: Building },
   { name: 'Çalışanlar', href: '/dashboard/employees', icon: Users },
   { name: 'Devam Takibi', href: '/dashboard/attendance', icon: Clock },
   { name: 'Devam Takvimi', href: '/dashboard/attendance/calendar', icon: Calendar },
