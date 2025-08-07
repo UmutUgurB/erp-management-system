@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import DashboardLayout from '@/components/Layout/DashboardLayout';
 import AIAssistant from '@/components/AI/AIAssistant';
 import AdvancedAnalytics from '@/components/Analytics/AdvancedAnalytics';
+import MobileApp from '@/components/Mobile/MobileApp';
+import SecurityCenter from '@/components/Security/SecurityCenter';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -19,7 +21,9 @@ import {
   Target,
   Zap,
   Brain,
-  Lightbulb
+  Lightbulb,
+  Smartphone,
+  Shield
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -64,7 +68,7 @@ interface DashboardData {
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [selectedView, setSelectedView] = useState('overview');
 
   useEffect(() => {
     loadDashboardData();
@@ -210,12 +214,20 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center space-x-2">
             <Button
-              onClick={() => setShowAnalytics(!showAnalytics)}
+              onClick={() => setSelectedView(selectedView === 'analytics' ? 'overview' : 'analytics')}
               variant="outline"
               className="flex items-center space-x-2"
             >
-              {showAnalytics ? <BarChart3 className="w-4 h-4" /> : <Brain className="w-4 h-4" />}
-              <span>{showAnalytics ? 'Gelişmiş Analitik' : 'AI Analitik'}</span>
+              {selectedView === 'analytics' ? <BarChart3 className="w-4 h-4" /> : <Brain className="w-4 h-4" />}
+              <span>{selectedView === 'analytics' ? 'Gelişmiş Analitik' : 'AI Analitik'}</span>
+            </Button>
+            <Button
+              onClick={() => setSelectedView(selectedView === 'security' ? 'overview' : 'security')}
+              variant="outline"
+              className="flex items-center space-x-2"
+            >
+              <Shield className="w-4 h-4" />
+              <span>Güvenlik</span>
             </Button>
             <Button onClick={loadDashboardData} variant="outline">
               <Zap className="w-4 h-4" />
@@ -223,8 +235,10 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {showAnalytics ? (
+        {selectedView === 'analytics' ? (
           <AdvancedAnalytics />
+        ) : selectedView === 'security' ? (
+          <SecurityCenter />
         ) : (
           <>
             {/* Quick Stats */}
@@ -364,6 +378,9 @@ export default function DashboardPage() {
 
         {/* AI Assistant */}
         <AIAssistant />
+        
+        {/* Mobile App */}
+        <MobileApp />
       </div>
     </DashboardLayout>
   );
