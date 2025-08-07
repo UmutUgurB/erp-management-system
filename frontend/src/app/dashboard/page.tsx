@@ -9,6 +9,8 @@ import MobileApp from '@/components/Mobile/MobileApp';
 import SecurityCenter from '@/components/Security/SecurityCenter';
 import BlockchainManager from '@/components/Blockchain/BlockchainManager';
 import MachineLearning from '@/components/ML/MachineLearning';
+import LoadingSpinner from '@/components/UI/LoadingSpinner';
+import SkeletonLoader from '@/components/UI/SkeletonLoader';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -82,7 +84,7 @@ export default function DashboardPage() {
     setLoading(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       const mockData: DashboardData = {
         sales: {
@@ -194,8 +196,27 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="px-4 sm:px-6 lg:px-8 py-6">
+          {/* Header Skeleton */}
+          <div className="mb-8">
+            <SkeletonLoader type="card" rows={1} />
+          </div>
+          
+          {/* Quick Stats Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonLoader key={i} type="card" rows={2} />
+            ))}
+          </div>
+          
+          {/* Main Content Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <SkeletonLoader type="card" rows={4} />
+            <SkeletonLoader type="card" rows={4} />
+          </div>
+          
+          {/* Activity Skeleton */}
+          <SkeletonLoader type="list" rows={4} />
         </div>
       </DashboardLayout>
     );

@@ -1,59 +1,55 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Loader2, Circle, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
-  type?: 'spinner' | 'dots' | 'pulse' | 'success' | 'error';
+  variant?: 'default' | 'dots' | 'pulse' | 'wave' | 'bounce';
+  color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error';
   text?: string;
   className?: string;
 }
 
-const sizeClasses = {
-  sm: 'h-4 w-4',
-  md: 'h-6 w-6',
-  lg: 'h-8 w-8',
-  xl: 'h-12 w-12',
-};
-
 export default function LoadingSpinner({ 
   size = 'md', 
-  type = 'spinner', 
+  variant = 'default', 
+  color = 'primary',
   text,
   className = '' 
 }: LoadingSpinnerProps) {
-  const sizeClass = sizeClasses[size];
+  const sizeClasses = {
+    sm: 'w-4 h-4',
+    md: 'w-6 h-6',
+    lg: 'w-8 h-8',
+    xl: 'w-12 h-12'
+  };
+
+  const colorClasses = {
+    primary: 'text-indigo-600',
+    secondary: 'text-gray-600',
+    success: 'text-green-600',
+    warning: 'text-yellow-600',
+    error: 'text-red-600'
+  };
 
   const renderSpinner = () => {
-    switch (type) {
-      case 'spinner':
-        return (
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-            className={`${sizeClass} ${className}`}
-          >
-            <Loader2 className={`${sizeClass} text-indigo-600 dark:text-indigo-400`} />
-          </motion.div>
-        );
-
+    switch (variant) {
       case 'dots':
         return (
-          <div className={`flex space-x-1 ${className}`}>
+          <div className="flex space-x-1">
             {[0, 1, 2].map((i) => (
               <motion.div
                 key={i}
-                animate={{ 
+                className={`${sizeClasses[size]} ${colorClasses[color]} bg-current rounded-full`}
+                animate={{
                   scale: [1, 1.2, 1],
                   opacity: [0.5, 1, 0.5]
                 }}
-                transition={{ 
+                transition={{
                   duration: 1.4,
                   repeat: Infinity,
                   delay: i * 0.2
                 }}
-                className={`${size === 'sm' ? 'h-2 w-2' : size === 'lg' ? 'h-3 w-3' : 'h-2.5 w-2.5'} bg-indigo-600 dark:bg-indigo-400 rounded-full`}
               />
             ))}
           </div>
@@ -62,59 +58,82 @@ export default function LoadingSpinner({
       case 'pulse':
         return (
           <motion.div
-            animate={{ 
+            className={`${sizeClasses[size]} ${colorClasses[color]} bg-current rounded-full`}
+            animate={{
               scale: [1, 1.1, 1],
               opacity: [0.7, 1, 0.7]
             }}
-            transition={{ 
+            transition={{
               duration: 1.5,
               repeat: Infinity,
-              ease: 'easeInOut'
+              ease: "easeInOut"
             }}
-            className={`${sizeClass} ${className}`}
-          >
-            <Circle className={`${sizeClass} text-indigo-600 dark:text-indigo-400`} />
-          </motion.div>
+          />
         );
 
-      case 'success':
+      case 'wave':
         return (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 200 }}
-            className={`${sizeClass} ${className}`}
-          >
-            <CheckCircle className={`${sizeClass} text-green-600 dark:text-green-400`} />
-          </motion.div>
+          <div className="flex space-x-1">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <motion.div
+                key={i}
+                className={`w-1 ${colorClasses[color]} bg-current rounded-full`}
+                style={{ height: `${parseInt(sizeClasses[size].split(' ')[1])}px` }}
+                animate={{
+                  scaleY: [1, 2, 1]
+                }}
+                transition={{
+                  duration: 1.2,
+                  repeat: Infinity,
+                  delay: i * 0.1
+                }}
+              />
+            ))}
+          </div>
         );
 
-      case 'error':
+      case 'bounce':
         return (
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 200 }}
-            className={`${sizeClass} ${className}`}
-          >
-            <AlertCircle className={`${sizeClass} text-red-600 dark:text-red-400`} />
-          </motion.div>
+            className={`${sizeClasses[size]} ${colorClasses[color]} bg-current rounded-full`}
+            animate={{
+              y: [0, -10, 0]
+            }}
+            transition={{
+              duration: 1,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
         );
 
       default:
-        return null;
+        return (
+          <motion.div
+            className={`${sizeClasses[size]} border-2 border-gray-300 border-t-current rounded-full ${colorClasses[color]}`}
+            animate={{ rotate: 360 }}
+            transition={{
+              duration: 1,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          />
+        );
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-2">
+    <div className={`flex flex-col items-center justify-center space-y-2 ${className}`}>
       {renderSpinner()}
       {text && (
         <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="text-sm text-gray-600 dark:text-gray-400 text-center"
+          className="text-sm text-gray-600 dark:text-gray-400"
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
         >
           {text}
         </motion.p>
