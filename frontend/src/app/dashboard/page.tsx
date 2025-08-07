@@ -7,6 +7,8 @@ import AIAssistant from '@/components/AI/AIAssistant';
 import AdvancedAnalytics from '@/components/Analytics/AdvancedAnalytics';
 import MobileApp from '@/components/Mobile/MobileApp';
 import SecurityCenter from '@/components/Security/SecurityCenter';
+import BlockchainManager from '@/components/Blockchain/BlockchainManager';
+import MachineLearning from '@/components/ML/MachineLearning';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -23,7 +25,9 @@ import {
   Brain,
   Lightbulb,
   Smartphone,
-  Shield
+  Shield,
+  Link,
+  Cpu
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -229,6 +233,22 @@ export default function DashboardPage() {
               <Shield className="w-4 h-4" />
               <span>Güvenlik</span>
             </Button>
+            <Button
+              onClick={() => setSelectedView(selectedView === 'blockchain' ? 'overview' : 'blockchain')}
+              variant="outline"
+              className="flex items-center space-x-2"
+            >
+              <Link className="w-4 h-4" />
+              <span>Blockchain</span>
+            </Button>
+            <Button
+              onClick={() => setSelectedView(selectedView === 'ml' ? 'overview' : 'ml')}
+              variant="outline"
+              className="flex items-center space-x-2"
+            >
+              <Cpu className="w-4 h-4" />
+              <span>ML</span>
+            </Button>
             <Button onClick={loadDashboardData} variant="outline">
               <Zap className="w-4 h-4" />
             </Button>
@@ -239,6 +259,10 @@ export default function DashboardPage() {
           <AdvancedAnalytics />
         ) : selectedView === 'security' ? (
           <SecurityCenter />
+        ) : selectedView === 'blockchain' ? (
+          <BlockchainManager />
+        ) : selectedView === 'ml' ? (
+          <MachineLearning />
         ) : (
           <>
             {/* Quick Stats */}
