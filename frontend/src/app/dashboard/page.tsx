@@ -15,6 +15,8 @@ import AnimatedButton from '@/components/UI/AnimatedButton';
 import { StatsCard, FeatureCard, ActionCard } from '@/components/UI/HoverCard';
 import ThemeSwitcher from '@/components/UI/ThemeSwitcher';
 import { AnimatedGradientText, CardGradient } from '@/components/UI/GradientBackground';
+import Tooltip, { InfoTooltip, SuccessTooltip, WarningTooltip } from '@/components/UI/Tooltip';
+import Popover, { InfoPopover, MenuPopover } from '@/components/UI/Popover';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -39,7 +41,15 @@ import {
   Settings,
   Bell,
   Star,
-  Award
+  Award,
+  HelpCircle,
+  Info,
+  MoreVertical,
+  Download,
+  Share,
+  Edit,
+  Trash2,
+  Eye
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -202,6 +212,14 @@ export default function DashboardPage() {
     }
   };
 
+  const menuItems = [
+    { label: 'Görüntüle', onClick: () => console.log('View'), icon: Eye },
+    { label: 'Düzenle', onClick: () => console.log('Edit'), icon: Edit },
+    { label: 'İndir', onClick: () => console.log('Download'), icon: Download },
+    { label: 'Paylaş', onClick: () => console.log('Share'), icon: Share },
+    { label: 'Sil', onClick: () => console.log('Delete'), icon: Trash2 }
+  ];
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -250,42 +268,55 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center space-x-2">
             <ThemeSwitcher />
-            <AnimatedButton
-              onClick={() => setSelectedView(selectedView === 'analytics' ? 'overview' : 'analytics')}
-              variant="outline"
-              effect="bounce"
-              size="sm"
-            >
-              {selectedView === 'analytics' ? <BarChart3 className="w-4 h-4" /> : <Brain className="w-4 h-4" />}
-              <span>{selectedView === 'analytics' ? 'Gelişmiş Analitik' : 'AI Analitik'}</span>
-            </AnimatedButton>
-            <AnimatedButton
-              onClick={() => setSelectedView(selectedView === 'security' ? 'overview' : 'security')}
-              variant="outline"
-              effect="glow"
-              size="sm"
-            >
-              <Shield className="w-4 h-4" />
-              <span>Güvenlik</span>
-            </AnimatedButton>
-            <AnimatedButton
-              onClick={() => setSelectedView(selectedView === 'blockchain' ? 'overview' : 'blockchain')}
-              variant="outline"
-              effect="slide"
-              size="sm"
-            >
-              <Link className="w-4 h-4" />
-              <span>Blockchain</span>
-            </AnimatedButton>
-            <AnimatedButton
-              onClick={() => setSelectedView(selectedView === 'ml' ? 'overview' : 'ml')}
-              variant="outline"
-              effect="shake"
-              size="sm"
-            >
-              <Cpu className="w-4 h-4" />
-              <span>ML</span>
-            </AnimatedButton>
+            
+            <InfoTooltip content="AI destekli analitik ve öngörüler">
+              <AnimatedButton
+                onClick={() => setSelectedView(selectedView === 'analytics' ? 'overview' : 'analytics')}
+                variant="outline"
+                effect="bounce"
+                size="sm"
+              >
+                {selectedView === 'analytics' ? <BarChart3 className="w-4 h-4" /> : <Brain className="w-4 h-4" />}
+                <span>{selectedView === 'analytics' ? 'Gelişmiş Analitik' : 'AI Analitik'}</span>
+              </AnimatedButton>
+            </InfoTooltip>
+
+            <SuccessTooltip content="Güvenlik merkezi ve tehdit izleme">
+              <AnimatedButton
+                onClick={() => setSelectedView(selectedView === 'security' ? 'overview' : 'security')}
+                variant="outline"
+                effect="glow"
+                size="sm"
+              >
+                <Shield className="w-4 h-4" />
+                <span>Güvenlik</span>
+              </AnimatedButton>
+            </SuccessTooltip>
+
+            <WarningTooltip content="Blockchain işlemleri ve akıllı kontratlar">
+              <AnimatedButton
+                onClick={() => setSelectedView(selectedView === 'blockchain' ? 'overview' : 'blockchain')}
+                variant="outline"
+                effect="slide"
+                size="sm"
+              >
+                <Link className="w-4 h-4" />
+                <span>Blockchain</span>
+              </AnimatedButton>
+            </WarningTooltip>
+
+            <Tooltip content="Makine öğrenmesi modelleri ve tahminler" variant="info">
+              <AnimatedButton
+                onClick={() => setSelectedView(selectedView === 'ml' ? 'overview' : 'ml')}
+                variant="outline"
+                effect="shake"
+                size="sm"
+              >
+                <Cpu className="w-4 h-4" />
+                <span>ML</span>
+              </AnimatedButton>
+            </Tooltip>
+
             <AnimatedButton 
               onClick={loadDashboardData} 
               variant="primary"
@@ -349,9 +380,29 @@ export default function DashboardPage() {
 
             {/* Quick Actions */}
             <div className="mb-8">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                Hızlı İşlemler
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Hızlı İşlemler
+                </h2>
+                <InfoPopover
+                  title="Hızlı İşlemler Hakkında"
+                  content={
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Bu bölümde en sık kullanılan işlemleri hızlıca gerçekleştirebilirsiniz.
+                      </p>
+                      <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                        <li>• Yeni sipariş oluşturma</li>
+                        <li>• Ürün ekleme</li>
+                        <li>• Müşteri kaydı</li>
+                        <li>• Bildirim kontrolü</li>
+                      </ul>
+                    </div>
+                  }
+                >
+                  <HelpCircle className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-help" />
+                </InfoPopover>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <ActionCard
                   title="Yeni Sipariş"
@@ -416,10 +467,15 @@ export default function DashboardPage() {
             {/* Recent Activity */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Activity className="w-5 h-5 mr-2" />
-                  Son Aktiviteler
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center">
+                    <Activity className="w-5 h-5 mr-2" />
+                    Son Aktiviteler
+                  </CardTitle>
+                  <MenuPopover items={menuItems}>
+                    <MoreVertical className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-pointer" />
+                  </MenuPopover>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
