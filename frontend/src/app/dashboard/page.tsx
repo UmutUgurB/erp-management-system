@@ -13,6 +13,8 @@ import LoadingSpinner from '@/components/UI/LoadingSpinner';
 import SkeletonLoader from '@/components/UI/SkeletonLoader';
 import AnimatedButton from '@/components/UI/AnimatedButton';
 import { StatsCard, FeatureCard, ActionCard } from '@/components/UI/HoverCard';
+import ThemeSwitcher from '@/components/UI/ThemeSwitcher';
+import { AnimatedGradientText, CardGradient } from '@/components/UI/GradientBackground';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -35,7 +37,9 @@ import {
   Plus,
   RefreshCw,
   Settings,
-  Bell
+  Bell,
+  Star,
+  Award
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -236,13 +240,16 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              Dashboard
+              <AnimatedGradientText className="text-3xl font-bold">
+                Dashboard
+              </AnimatedGradientText>
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
               ERP sisteminizin genel durumu ve önemli metrikler
             </p>
           </div>
           <div className="flex items-center space-x-2">
+            <ThemeSwitcher />
             <AnimatedButton
               onClick={() => setSelectedView(selectedView === 'analytics' ? 'overview' : 'analytics')}
               variant="outline"
@@ -301,6 +308,23 @@ export default function DashboardPage() {
           <MachineLearning />
         ) : (
           <>
+            {/* Welcome Card */}
+            <CardGradient className="mb-8">
+              <div className="text-center">
+                <div className="flex items-center justify-center space-x-2 mb-4">
+                  <Star className="w-6 h-6 text-yellow-500" />
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                    Hoş Geldiniz! 🎉
+                  </h2>
+                  <Award className="w-6 h-6 text-yellow-500" />
+                </div>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Bugün sisteminizde <span className="font-semibold text-indigo-600">{data.orders.pending}</span> bekleyen sipariş ve 
+                  <span className="font-semibold text-green-600"> {data.customers.new}</span> yeni müşteri var.
+                </p>
+              </div>
+            </CardGradient>
+
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {data.quickStats.map((stat, index) => {
