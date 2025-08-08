@@ -17,6 +17,8 @@ import ThemeSwitcher from '@/components/UI/ThemeSwitcher';
 import { AnimatedGradientText, CardGradient } from '@/components/UI/GradientBackground';
 import Tooltip, { InfoTooltip, SuccessTooltip, WarningTooltip } from '@/components/UI/Tooltip';
 import Popover, { InfoPopover, MenuPopover } from '@/components/UI/Popover';
+import ShortcutsHelp from '@/components/UI/ShortcutsHelp';
+import { useKeyboardShortcuts, ERP_SHORTCUTS } from '@/hooks/useKeyboardShortcuts';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -49,7 +51,8 @@ import {
   Share,
   Edit,
   Trash2,
-  Eye
+  Eye,
+  Keyboard
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -94,6 +97,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedView, setSelectedView] = useState('overview');
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -191,6 +195,50 @@ export default function DashboardPage() {
       setLoading(false);
     }
   };
+
+  // Custom shortcuts for dashboard
+  const dashboardShortcuts = [
+    ...ERP_SHORTCUTS,
+    {
+      key: '?',
+      description: 'Shortcuts Help',
+      action: () => setShowShortcutsHelp(true)
+    },
+    {
+      key: 'r',
+      ctrl: true,
+      description: 'Refresh Dashboard',
+      action: loadDashboardData
+    },
+    {
+      key: '1',
+      description: 'Overview',
+      action: () => setSelectedView('overview')
+    },
+    {
+      key: 'a',
+      description: 'Analytics',
+      action: () => setSelectedView('analytics')
+    },
+    {
+      key: 's',
+      description: 'Security',
+      action: () => setSelectedView('security')
+    },
+    {
+      key: 'b',
+      description: 'Blockchain',
+      action: () => setSelectedView('blockchain')
+    },
+    {
+      key: 'm',
+      description: 'Machine Learning',
+      action: () => setSelectedView('ml')
+    }
+  ];
+
+  // Initialize keyboard shortcuts
+  useKeyboardShortcuts(dashboardShortcuts);
 
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -326,6 +374,35 @@ export default function DashboardPage() {
             >
               <RefreshCw className="w-4 h-4" />
             </AnimatedButton>
+
+            <Tooltip content="Klavye kısayolları (?)" variant="default">
+              <AnimatedButton
+                onClick={() => setShowShortcutsHelp(true)}
+                variant="ghost"
+                effect="bounce"
+                size="sm"
+              >
+                <Keyboard className="w-4 h-4" />
+              </AnimatedButton>
+            </Tooltip>
+          </div>
+        </div>
+
+        {/* Keyboard Shortcuts Indicator */}
+        <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Keyboard className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <span className="text-sm text-indigo-700 dark:text-indigo-300">
+                Klavye kısayolları aktif! <kbd className="px-1 py-0.5 bg-white dark:bg-gray-800 border border-indigo-300 dark:border-indigo-600 rounded text-xs">?</kbd> tuşuna basarak yardım alın.
+              </span>
+            </div>
+            <div className="flex items-center space-x-2 text-xs text-indigo-600 dark:text-indigo-400">
+              <kbd className="px-1 py-0.5 bg-white dark:bg-gray-800 border border-indigo-300 dark:border-indigo-600 rounded">1-5</kbd>
+              <span>Navigasyon</span>
+              <kbd className="px-1 py-0.5 bg-white dark:bg-gray-800 border border-indigo-300 dark:border-indigo-600 rounded">Ctrl+R</kbd>
+              <span>Yenile</span>
+            </div>
           </div>
         </div>
 
@@ -511,6 +588,12 @@ export default function DashboardPage() {
         
         {/* Mobile App */}
         <MobileApp />
+
+        {/* Shortcuts Help Modal */}
+        <ShortcutsHelp
+          isOpen={showShortcutsHelp}
+          onClose={() => setShowShortcutsHelp(false)}
+        />
       </div>
     </DashboardLayout>
   );
