@@ -11,6 +11,8 @@ import BlockchainManager from '@/components/Blockchain/BlockchainManager';
 import MachineLearning from '@/components/ML/MachineLearning';
 import LoadingSpinner from '@/components/UI/LoadingSpinner';
 import SkeletonLoader from '@/components/UI/SkeletonLoader';
+import AnimatedButton from '@/components/UI/AnimatedButton';
+import { StatsCard, FeatureCard, ActionCard } from '@/components/UI/HoverCard';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -29,10 +31,13 @@ import {
   Smartphone,
   Shield,
   Link,
-  Cpu
+  Cpu,
+  Plus,
+  RefreshCw,
+  Settings,
+  Bell
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 interface DashboardData {
@@ -238,41 +243,51 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <Button
+            <AnimatedButton
               onClick={() => setSelectedView(selectedView === 'analytics' ? 'overview' : 'analytics')}
               variant="outline"
-              className="flex items-center space-x-2"
+              effect="bounce"
+              size="sm"
             >
               {selectedView === 'analytics' ? <BarChart3 className="w-4 h-4" /> : <Brain className="w-4 h-4" />}
               <span>{selectedView === 'analytics' ? 'Gelişmiş Analitik' : 'AI Analitik'}</span>
-            </Button>
-            <Button
+            </AnimatedButton>
+            <AnimatedButton
               onClick={() => setSelectedView(selectedView === 'security' ? 'overview' : 'security')}
               variant="outline"
-              className="flex items-center space-x-2"
+              effect="glow"
+              size="sm"
             >
               <Shield className="w-4 h-4" />
               <span>Güvenlik</span>
-            </Button>
-            <Button
+            </AnimatedButton>
+            <AnimatedButton
               onClick={() => setSelectedView(selectedView === 'blockchain' ? 'overview' : 'blockchain')}
               variant="outline"
-              className="flex items-center space-x-2"
+              effect="slide"
+              size="sm"
             >
               <Link className="w-4 h-4" />
               <span>Blockchain</span>
-            </Button>
-            <Button
+            </AnimatedButton>
+            <AnimatedButton
               onClick={() => setSelectedView(selectedView === 'ml' ? 'overview' : 'ml')}
               variant="outline"
-              className="flex items-center space-x-2"
+              effect="shake"
+              size="sm"
             >
               <Cpu className="w-4 h-4" />
               <span>ML</span>
-            </Button>
-            <Button onClick={loadDashboardData} variant="outline">
-              <Zap className="w-4 h-4" />
-            </Button>
+            </AnimatedButton>
+            <AnimatedButton 
+              onClick={loadDashboardData} 
+              variant="primary"
+              effect="ripple"
+              loading={loading}
+              size="sm"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </AnimatedButton>
           </div>
         </div>
 
@@ -297,91 +312,81 @@ export default function DashboardPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                        <Icon className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{stat.value}</div>
-                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                          {stat.change > 0 ? (
-                            <TrendingUp className="w-3 h-3 text-green-500" />
-                          ) : stat.change < 0 ? (
-                            <TrendingDown className="w-3 h-3 text-red-500" />
-                          ) : (
-                            <Activity className="w-3 h-3 text-gray-500" />
-                          )}
-                          <span>
-                            {stat.change > 0 ? '+' : ''}{stat.change}% geçen güne göre
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <StatsCard
+                      title={stat.title}
+                      value={stat.value}
+                      change={stat.change}
+                      icon={Icon}
+                    />
                   </motion.div>
                 );
               })}
             </div>
 
+            {/* Quick Actions */}
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                Hızlı İşlemler
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <ActionCard
+                  title="Yeni Sipariş"
+                  description="Müşteri için yeni sipariş oluştur"
+                  action={
+                    <AnimatedButton variant="primary" effect="scale" size="sm">
+                      <Plus className="w-4 h-4" />
+                      Oluştur
+                    </AnimatedButton>
+                  }
+                />
+                <ActionCard
+                  title="Ürün Ekle"
+                  description="Envantere yeni ürün ekle"
+                  action={
+                    <AnimatedButton variant="secondary" effect="bounce" size="sm">
+                      <Plus className="w-4 h-4" />
+                      Ekle
+                    </AnimatedButton>
+                  }
+                />
+                <ActionCard
+                  title="Müşteri Kaydı"
+                  description="Yeni müşteri kaydı oluştur"
+                  action={
+                    <AnimatedButton variant="success" effect="glow" size="sm">
+                      <Plus className="w-4 h-4" />
+                      Kaydet
+                    </AnimatedButton>
+                  }
+                />
+                <ActionCard
+                  title="Bildirimler"
+                  description="Sistem bildirimlerini kontrol et"
+                  action={
+                    <AnimatedButton variant="warning" effect="shake" size="sm">
+                      <Bell className="w-4 h-4" />
+                      Görüntüle
+                    </AnimatedButton>
+                  }
+                />
+              </div>
+            </div>
+
             {/* Main Metrics */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
               {/* Sales Overview */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <DollarSign className="w-5 h-5 mr-2" />
-                    Satış Genel Bakış
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Bu Ay</span>
-                      <span className="text-2xl font-bold">₺{data.sales.current.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Geçen Ay</span>
-                      <span className="text-lg">₺{data.sales.previous.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {data.sales.trend > 0 ? (
-                        <TrendingUp className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <TrendingDown className="w-4 h-4 text-red-500" />
-                      )}
-                      <span className={`text-sm ${data.sales.trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {data.sales.trend > 0 ? '+' : ''}{data.sales.trend}% değişim
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <FeatureCard
+                title="Satış Genel Bakış"
+                description={`Bu ay ${data.sales.trend > 0 ? '+' : ''}${data.sales.trend}% artış ile ₺${data.sales.current.toLocaleString()} satış gerçekleşti.`}
+                icon={DollarSign}
+              />
 
               {/* Orders Overview */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <ShoppingCart className="w-5 h-5 mr-2" />
-                    Sipariş Durumu
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Toplam</span>
-                      <span className="text-2xl font-bold">{data.orders.total}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Bekleyen</span>
-                      <Badge variant="secondary">{data.orders.pending}</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Tamamlanan</span>
-                      <Badge variant="default">{data.orders.completed}</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <FeatureCard
+                title="Sipariş Durumu"
+                description={`${data.orders.total} toplam siparişten ${data.orders.pending} tanesi bekliyor, ${data.orders.completed} tanesi tamamlandı.`}
+                icon={ShoppingCart}
+              />
             </div>
 
             {/* Recent Activity */}
