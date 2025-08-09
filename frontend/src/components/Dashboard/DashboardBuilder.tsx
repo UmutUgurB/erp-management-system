@@ -313,17 +313,17 @@ export default function DashboardBuilder({
   return (
     <div className="h-full flex flex-col">
       {/* Toolbar */}
-      <div className="bg-white border-b border-gray-200 p-4">
+      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <h1 className="text-xl font-semibold text-gray-900">Dashboard Builder</h1>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Dashboard Builder</h1>
             
             <button
               onClick={() => setIsEditMode(!isEditMode)}
-              className={`flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+              className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 isEditMode 
-                  ? 'bg-indigo-100 text-indigo-700' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700/60 dark:text-gray-200 dark:hover:bg-gray-600/60'
               }`}
             >
               <Settings className="h-4 w-4 mr-2" />
@@ -333,7 +333,7 @@ export default function DashboardBuilder({
             {isEditMode && (
               <button
                 onClick={() => setShowWidgetPanel(!showWidgetPanel)}
-                className="flex items-center px-3 py-2 bg-green-100 text-green-700 rounded-md text-sm font-medium hover:bg-green-200"
+                className="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-800/30"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Widget Ekle
@@ -352,13 +352,13 @@ export default function DashboardBuilder({
 
             <button
               onClick={handleExport}
-              className="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200"
+              className="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700/60 dark:text-gray-200 dark:hover:bg-gray-600/60"
             >
               <Download className="h-4 w-4 mr-2" />
               Dışa Aktar
             </button>
 
-            <label className="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200 cursor-pointer">
+            <label className="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700/60 dark:text-gray-200 dark:hover:bg-gray-600/60 cursor-pointer">
               <Upload className="h-4 w-4 mr-2" />
               İçe Aktar
               <input
@@ -375,21 +375,21 @@ export default function DashboardBuilder({
       <div className="flex-1 flex">
         {/* Widget Panel */}
         {showWidgetPanel && isEditMode && (
-          <div className="w-80 bg-white border-r border-gray-200 p-4 overflow-y-auto">
+          <div className="w-80 bg-white/70 dark:bg-gray-800/70 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-r border-gray-200 dark:border-gray-700 p-4 overflow-y-auto">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Widget Şablonları</h3>
             
             <div className="space-y-4">
               {widgetTemplates.map((template) => (
                 <div
                   key={template.type}
-                  className="p-4 border border-gray-200 rounded-lg hover:border-indigo-300 cursor-pointer transition-colors"
+                  className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-500/40 cursor-pointer transition-colors bg-white/60 dark:bg-gray-800/60"
                   onClick={() => addWidget(template)}
                 >
                   <div className="flex items-center space-x-3">
                     <span className="text-2xl">{template.icon}</span>
                     <div>
-                      <h4 className="font-medium text-gray-900">{template.name}</h4>
-                      <p className="text-sm text-gray-500">{template.description}</p>
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">{template.name}</h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{template.description}</p>
                     </div>
                   </div>
                 </div>
@@ -399,7 +399,7 @@ export default function DashboardBuilder({
         )}
 
         {/* Dashboard Grid */}
-        <div className="flex-1 p-4 bg-gray-50 overflow-auto">
+        <div className="flex-1 p-4 bg-gray-50/60 dark:bg-gray-900 overflow-auto">
           <ResponsiveGridLayout
             className="layout"
             layouts={{ lg: generateLayout() }}
@@ -419,14 +419,14 @@ export default function DashboardBuilder({
                   <div className="absolute top-2 right-2 z-10 flex items-center space-x-1">
                     <button
                       onClick={() => setSelectedWidget(selectedWidget === widget.id ? null : widget.id)}
-                      className="p-1 bg-white rounded shadow-sm hover:bg-gray-50"
+                      className="p-1 bg-white/80 dark:bg-gray-800/70 backdrop-blur rounded shadow-sm hover:bg-white"
                       title="Düzenle"
                     >
                       <Settings className="h-3 w-3 text-gray-600" />
                     </button>
                     <button
                       onClick={() => removeWidget(widget.id)}
-                      className="p-1 bg-white rounded shadow-sm hover:bg-gray-50"
+                      className="p-1 bg-white/80 dark:bg-gray-800/70 backdrop-blur rounded shadow-sm hover:bg-white"
                       title="Sil"
                     >
                       <Trash2 className="h-3 w-3 text-red-600" />

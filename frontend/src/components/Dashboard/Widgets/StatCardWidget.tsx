@@ -69,54 +69,59 @@ export default function StatCardWidget({ config, isEditing = false, onConfigChan
   };
 
   return (
-    <div 
-      className={`relative bg-white rounded-lg shadow-sm border-2 transition-all duration-200 ${
-        isEditing ? 'border-dashed border-gray-300' : colorBorders[config.color]
-      } ${isHovered ? 'shadow-md' : ''}`}
+    <div
+      className="group relative rounded-xl p-[1px] bg-gradient-to-br from-indigo-200/60 via-transparent to-pink-200/60 dark:from-indigo-500/20 dark:to-pink-500/20"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
+      <div
+        className={`relative rounded-xl bg-white/70 dark:bg-gray-800/60 backdrop-blur supports-[backdrop-filter]:bg-white/60 border transition-all duration-300 ${
+          isEditing
+            ? 'border-dashed border-indigo-300/70 dark:border-indigo-500/40'
+            : `border-white/60 dark:border-white/10 shadow-sm ${colorBorders[config.color]}`
+        } ${isHovered && !isEditing ? 'shadow-md translate-y-[-1px]' : ''}`}
+      >
       {/* Widget Header */}
-      <div className="flex items-center justify-between p-4">
-        <div className={`p-2 rounded-lg ${colorClasses[config.color]}`}>
-          <IconComponent className="h-5 w-5" />
-        </div>
-        {config.trend && (
-          <div className="flex items-center space-x-1">
-            {config.trend.isPositive ? (
-              <TrendingUp className="h-4 w-4 text-green-500" />
-            ) : (
-              <TrendingDown className="h-4 w-4 text-red-500" />
-            )}
-            <span className={`text-sm font-medium ${
-              config.trend.isPositive ? 'text-green-600' : 'text-red-600'
-            }`}>
-              {config.trend.isPositive ? '+' : ''}{config.trend.value}%
-            </span>
+        <div className="flex items-center justify-between p-4">
+          <div className={`p-2 rounded-lg ${colorClasses[config.color]}`}>
+            <IconComponent className="h-5 w-5" />
           </div>
-        )}
-      </div>
+          {config.trend && (
+            <div className="flex items-center space-x-1">
+              {config.trend.isPositive ? (
+                <TrendingUp className="h-4 w-4 text-green-500" />
+              ) : (
+                <TrendingDown className="h-4 w-4 text-red-500" />
+              )}
+              <span className={`text-sm font-medium ${
+                config.trend.isPositive ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {config.trend.isPositive ? '+' : ''}{config.trend.value}%
+              </span>
+            </div>
+          )}
+        </div>
 
       {/* Widget Content */}
-      <div className="px-4 pb-4">
+        <div className="px-4 pb-4">
         {isEditing ? (
           <div className="space-y-2">
             <input
               type="text"
               value={config.value}
               onChange={(e) => handleConfigChange('value', e.target.value)}
-              className="w-full px-2 py-1 text-2xl font-bold text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-2 py-1 text-2xl font-bold text-gray-900 dark:text-gray-100 bg-white/80 dark:bg-gray-800/70 border border-gray-300 dark:border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             <input
               type="text"
               value={config.label}
               onChange={(e) => handleConfigChange('label', e.target.value)}
-              className="w-full px-2 py-1 text-sm text-gray-600 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-2 py-1 text-sm text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-800/70 border border-gray-300 dark:border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             <select
               value={config.color}
               onChange={(e) => handleConfigChange('color', e.target.value)}
-              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-700 bg-white/80 dark:bg-gray-800/70 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="blue">Mavi</option>
               <option value="green">Yeşil</option>
@@ -128,23 +133,24 @@ export default function StatCardWidget({ config, isEditing = false, onConfigChan
           </div>
         ) : (
           <>
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {typeof config.value === 'number' 
                 ? config.value.toLocaleString('tr-TR')
                 : config.value
               }
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 dark:text-gray-300">
               {config.label}
             </div>
           </>
         )}
-      </div>
+        </div>
 
       {/* Edit Overlay */}
-      {isEditing && (
-        <div className="absolute inset-0 bg-black bg-opacity-10 rounded-lg pointer-events-none" />
-      )}
+        {isEditing && (
+          <div className="absolute inset-0 bg-black/5 dark:bg-white/5 rounded-xl pointer-events-none" />
+        )}
+      </div>
     </div>
   );
 } 
