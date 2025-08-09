@@ -2,7 +2,7 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0f172a; /* slate-900 */
 }
 
 @theme inline {
@@ -14,20 +14,55 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0b1220; /* subtle deep slate */
+    --foreground: #e5e7eb; /* gray-200 */
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, Segoe UI,
+    Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, Apple Color Emoji,
+    Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle background texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(40rem 20rem at 20% 0%, rgba(59,130,246,0.10), transparent 60%),
+    radial-gradient(30rem 15rem at 80% 10%, rgba(236,72,153,0.10), transparent 60%);
+  z-index: -1;
 }
 
 /* Dark mode transitions */
 * {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Base typographic rhythm */
+h1, h2, h3 {
+  letter-spacing: -0.02em;
+}
+
+a {
+  color: #2563eb;
+}
+.dark a {
+  color: #60a5fa;
+}
+
+/* Focus ring */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.4);
 }
 
 /* Custom scrollbar for dark mode */
@@ -61,6 +96,21 @@ body {
   background: #9ca3af;
 }
 
+/* App container utility for consistent paddings */
+.app-container {
+  max-width: 80rem; /* 1280px */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+@media (min-width: 640px) {
+  .app-container { padding-left: 1.5rem; padding-right: 1.5rem; }
+}
+@media (min-width: 1024px) {
+  .app-container { padding-left: 2rem; padding-right: 2rem; }
+}
+
 /* React Grid Layout Styles */
 .react-grid-layout {
   position: relative;
@@ -88,7 +138,7 @@ body {
 }
 
 .react-grid-item.react-grid-placeholder {
-  background: #0369a1;
+  background: #6366f1;
   opacity: 0.2;
   transition-duration: 100ms;
   z-index: 2;

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import PageTransition from '@/components/UI/PageTransition';
 import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import { useNotifications } from '@/hooks/useNotifications';
 import ThemeToggle from '@/components/UI/ThemeToggle';
@@ -73,7 +74,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50/60 dark:bg-gray-900">
       {/* PWA Install Banner */}
       <PWAInstallBanner />
 
@@ -86,7 +87,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:bg-gray-800/70 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
@@ -109,19 +110,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="mt-5 px-2 space-y-1">
           {navigationItems.map((item) => {
             const Icon = item.icon;
-            const isActive = router.pathname === item.href;
+            // next/navigation router does not expose pathname; use location
+            const isActive = typeof window !== 'undefined' && window.location.pathname === item.href;
             
             return (
               <button
                 key={item.name}
                 onClick={() => handleNavigation(item.href)}
-                className={`w-full flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                className={`w-full flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors group ${
                   isActive
-                    ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
+                    ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 ring-1 ring-inset ring-indigo-200/60 dark:ring-indigo-500/20'
                     : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
                 }`}
               >
-                <Icon className="mr-3 h-5 w-5" />
+                <Icon className="mr-3 h-5 w-5 opacity-80 group-hover:opacity-100" />
                 {item.name}
               </button>
             );
@@ -157,7 +159,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Main content */}
       <div className="lg:pl-64 flex flex-col flex-1">
         {/* Top navigation */}
-        <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="sticky top-0 z-10 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:bg-gray-800/70 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center">
               <button
@@ -197,7 +199,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Page content */}
         <main className="flex-1">
-          {children}
+          <PageTransition>
+            <div className="app-container py-6">
+              {children}
+            </div>
+          </PageTransition>
         </main>
       </div>
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from 'next-themes';
+import { ThemeProvider as CustomThemeProvider } from '@/context/ThemeContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { NotificationProvider } from '@/context/NotificationContext';
 import { NotificationContainer, NotificationDebugPanel } from '@/components/Notifications/NotificationContainer';
@@ -32,13 +33,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <AuthProvider>
-            <NotificationProvider settings={{ enableSounds: false, maxNotifications: 6 }}>
-              {children}
-              <NotificationContainer />
-              <NotificationDebugPanel />
-            </NotificationProvider>
-          </AuthProvider>
+          <CustomThemeProvider>
+            <AuthProvider>
+              <NotificationProvider settings={{ enableSounds: false, maxNotifications: 6 }}>
+                {children}
+                <NotificationContainer />
+                <NotificationDebugPanel />
+              </NotificationProvider>
+            </AuthProvider>
+          </CustomThemeProvider>
         </ThemeProvider>
       </body>
     </html>
