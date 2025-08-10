@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+let MongoMemoryServer; // Lazy-required if needed
 const path = require('path');
 const http = require('http');
 const swaggerUi = require('swagger-ui-express');
@@ -41,19 +42,53 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Serve static files
 app.use('/uploads', express.static(uploadsDir));
 
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/erp_db', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => {
-  logger.info('MongoDB bağlantısı başarılı');
-  console.log('MongoDB bağlantısı başarılı');
-})
-.catch(err => {
-  logger.error('MongoDB bağlantı hatası', { error: err.message });
-  console.error('MongoDB bağlantı hatası:', err);
-});
+// MongoDB connection with in-memory fallback for local dev
+async function connectDatabase() {
+  const explicitUri = process.env.MONGODB_URI;
+  const allowInMemory = (process.env.USE_IN_MEMORY_DB || 'true').toLowerCase() !== 'false';
+
+  if (explicitUri) {
+    try {
+      await mongoose.connect(explicitUri, { useNewUrlParser: true, useUnifiedTopology: true });
+      logger.info('MongoDB bağlantısı başarılı (env URI)');
+      console.log('MongoDB bağlantısı başarılı (env URI)');
+      return;
+    } catch (err) {
+      logger.error('MongoDB bağlantı hatası (env URI)', { error: err.message });
+      console.error('MongoDB bağlantı hatası (env URI):', err);
+      if (!allowInMemory) throw err;
+    }
+  }
+
+  // Try local default if no env URI provided
+  try {
+    await mongoose.connect('mongodb://localhost:27017/erp_db', { useNewUrlParser: true, useUnifiedTopology: true });
+    logger.info('MongoDB bağlantısı başarılı (localhost)');
+    console.log('MongoDB bağlantısı başarılı (localhost)');
+    return;
+  } catch (err) {
+    logger.warn('Yerel MongoDB yok veya bağlanılamadı, in-memory denenecek', { error: err.message });
+    console.warn('Yerel MongoDB yok veya bağlanılamadı, in-memory denenecek');
+  }
+
+  if (!allowInMemory) {
+    throw new Error('MongoDB bağlantısı kurulamadı ve in-memory devre dışı');
+  }
+
+  // Start in-memory MongoDB for development
+  try {
+    ({ MongoMemoryServer } = require('mongodb-memory-server'));
+    const mongoServer = await MongoMemoryServer.create();
+    const uri = mongoServer.getUri();
+    await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+    logger.info('In-memory MongoDB başlatıldı', { uri });
+    console.log('In-memory MongoDB başlatıldı');
+  } catch (err) {
+    logger.error('In-memory MongoDB başlatılamadı', { error: err.message });
+    console.error('In-memory MongoDB başlatılamadı:', err);
+    throw err;
+  }
+}
 
 // API Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
@@ -100,13 +135,25 @@ app.get('/', (req, res) => {
   res.json({ message: 'ERP API çalışıyor!' });
 });
 
-// Create HTTP server
-const server = http.createServer(app);
+async function start() {
+  try {
+    await connectDatabase();
+  } catch (err) {
+    // If DB cannot be connected, we still start the server to serve health/static, but most APIs will fail
+    logger.error('Veritabanı bağlantısı olmadan başlatılıyor', { error: err.message });
+    console.error('Veritabanı bağlantısı olmadan başlatılıyor');
+  }
 
-// Initialize Socket.IO
-socketManager.initialize(server);
+  // Create HTTP server
+  const server = http.createServer(app);
 
-server.listen(PORT, () => {
-  logger.info(`Sunucu başlatıldı`, { port: PORT });
-  console.log(`Sunucu ${PORT} portunda çalışıyor`);
-}); 
+  // Initialize Socket.IO
+  socketManager.initialize(server);
+
+  server.listen(PORT, () => {
+    logger.info(`Sunucu başlatıldı`, { port: PORT });
+    console.log(`Sunucu ${PORT} portunda çalışıyor`);
+  });
+}
+
+start();

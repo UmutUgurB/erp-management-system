@@ -32,7 +32,8 @@
     "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
-    "winston": "^3.17.0"
+    "winston": "^3.17.0",
+    "mongodb-memory-server": "^8.16.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
