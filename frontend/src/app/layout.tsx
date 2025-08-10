@@ -6,6 +6,8 @@ import { AuthProvider } from '@/context/AuthContext';
 import { NotificationProvider } from '@/context/NotificationContext';
 import { NotificationContainer, NotificationDebugPanel } from '@/components/Notifications/NotificationContainer';
 import "./globals.css";
+import RouteProgress from '@/components/UI/RouteProgress';
+import ScrollToTop from '@/components/UI/ScrollToTop';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,9 +38,11 @@ export default function RootLayout({
           <CustomThemeProvider>
             <AuthProvider>
               <NotificationProvider settings={{ enableSounds: false, maxNotifications: 6 }}>
-                {children}
+              <RouteProgress />
+              {children}
                 <NotificationContainer />
                 <NotificationDebugPanel />
+              <ScrollToTop />
               </NotificationProvider>
             </AuthProvider>
           </CustomThemeProvider>
