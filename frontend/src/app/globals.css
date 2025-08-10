@@ -101,6 +101,58 @@ a {
   box-shadow: 0 0 0 3px rgba(99,102,241,0.4);
 }
 
+/* Inputs and selects base styling */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+select,
+textarea {
+  background-color: rgba(255,255,255,0.9);
+  border: 1px solid rgba(17,24,39,0.12);
+  border-radius: 0.5rem;
+  color: #0f172a;
+}
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="number"],
+.dark input[type="search"],
+.dark input[type="tel"],
+.dark select,
+.dark textarea {
+  background-color: rgba(17,24,39,0.6);
+  border-color: rgba(255,255,255,0.12);
+  color: #e5e7eb;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280;
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #9ca3af;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  border-color: rgba(99,102,241,0.6);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.35);
+}
+
+/* Button micro-interactions */
+button {
+  transition: transform 0.12s ease, box-shadow 0.2s ease;
+  will-change: transform;
+}
+button:active {
+  transform: translateY(1px) scale(0.99);
+}
+
 /* Custom scrollbar for dark mode */
 ::-webkit-scrollbar {
   width: 8px;
