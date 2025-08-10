@@ -3,8 +3,7 @@ const router = express.Router();
 const Task = require('../models/Task');
 const Project = require('../models/Project');
 const User = require('../models/User');
-const { auth } = require('../middleware/auth');
-const authorize = require('../middleware/authorize');
+const { auth, authorize } = require('../middleware/auth');
 
 // Get all tasks with pagination and filtering
 router.get('/', auth, async (req, res) => {

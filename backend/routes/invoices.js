@@ -4,8 +4,7 @@ const Invoice = require('../models/Invoice');
 const Payment = require('../models/Payment');
 const Customer = require('../models/Customer');
 const Order = require('../models/Order');
-const { auth } = require('../middleware/auth');
-const authorize = require('../middleware/authorize');
+const { auth, authorize } = require('../middleware/auth');
 const { validateInvoice } = require('../utils/validation');
 
 // Get all invoices with pagination and filtering
