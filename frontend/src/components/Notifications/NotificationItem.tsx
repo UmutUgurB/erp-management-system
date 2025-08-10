@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Notification } from '@/types/notification';
 import { useNotification } from '@/context/NotificationContext';
 import {
@@ -21,6 +21,8 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
   const { removeNotification } = useNotification();
   const [isVisible, setIsVisible] = useState(false);
   const [progress, setProgress] = useState(100);
+  const itemRef = useRef<HTMLDivElement | null>(null);
+  const dragState = useRef({ startX: 0, dragging: false });
 
   // Animation on mount
   useEffect(() => {
@@ -48,6 +50,47 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
     }, 300);
   };
 
+  // Drag to dismiss (horizontal)
+  useEffect(() => {
+    const el = itemRef.current;
+    if (!el) return;
+
+    const onPointerDown = (e: PointerEvent) => {
+      dragState.current = { startX: e.clientX, dragging: true };
+      el.setPointerCapture(e.pointerId);
+    };
+    const onPointerMove = (e: PointerEvent) => {
+      if (!dragState.current.dragging) return;
+      const dx = e.clientX - dragState.current.startX;
+      el.style.transform = `translateX(${dx}px)`;
+      el.style.opacity = String(Math.max(0, 1 - Math.abs(dx) / 200));
+    };
+    const onPointerUp = (e: PointerEvent) => {
+      if (!dragState.current.dragging) return;
+      const dx = e.clientX - dragState.current.startX;
+      dragState.current.dragging = false;
+      el.releasePointerCapture(e.pointerId);
+      if (Math.abs(dx) > 120) {
+        handleDismiss();
+      } else {
+        el.style.transform = '';
+        el.style.opacity = '';
+      }
+    };
+
+    el.addEventListener('pointerdown', onPointerDown);
+    el.addEventListener('pointermove', onPointerMove);
+    el.addEventListener('pointerup', onPointerUp);
+    el.addEventListener('pointercancel', onPointerUp);
+
+    return () => {
+      el.removeEventListener('pointerdown', onPointerDown);
+      el.removeEventListener('pointermove', onPointerMove);
+      el.removeEventListener('pointerup', onPointerUp);
+      el.removeEventListener('pointercancel', onPointerUp);
+    };
+  }, []);
+
   const getIcon = () => {
     const iconProps = { className: "h-5 w-5" };
     
@@ -72,7 +115,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
   };
 
   const getStyles = () => {
-    const baseStyles = "relative overflow-hidden rounded-lg p-4 shadow-lg border-l-4 bg-white";
+    const baseStyles = "relative overflow-hidden rounded-xl p-4 shadow-lg border-l-4 bg-white/80 dark:bg-gray-800/70 backdrop-blur supports-[backdrop-filter]:bg-white/60 border border-white/60 dark:border-white/10";
     
     switch (notification.type) {
       case 'success':
@@ -128,6 +171,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
           ? 'translate-x-0 opacity-100 scale-100' 
           : 'translate-x-full opacity-0 scale-95'
       }`}
+      ref={itemRef}
     >
       <div className={getStyles()}>
         {/* Progress bar */}
@@ -153,7 +197,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
                 {notification.title}
               </p>
             )}
-            <p className="text-sm text-gray-700 leading-5">
+            <p className="text-sm text-gray-700 dark:text-gray-200 leading-5">
               {notification.message}
             </p>
 
@@ -173,7 +217,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
             )}
 
             {/* Timestamp */}
-            <div className="mt-2 flex items-center text-xs text-gray-500">
+            <div className="mt-2 flex items-center text-xs text-gray-500 dark:text-gray-400">
               <Clock className="h-3 w-3 mr-1" />
               <span>{notification.timestamp.toLocaleTimeString('tr-TR', { 
                 hour: '2-digit', 
@@ -187,7 +231,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
             <div className="flex-shrink-0">
               <button
                 onClick={handleDismiss}
-                className="inline-flex rounded-md p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors"
+                className="inline-flex rounded-md p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 transition-colors"
                 aria-label="Bildirimi kapat"
               >
                 <X className="h-4 w-4" />

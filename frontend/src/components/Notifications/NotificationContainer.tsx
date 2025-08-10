@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useNotification } from '@/context/NotificationContext';
 import { NotificationItem } from './NotificationItem';
 import { NotificationPosition } from '@/types/notification';
@@ -53,26 +54,31 @@ export const NotificationContainer: React.FC = () => {
           className={getPositionStyles(position as NotificationPosition)}
         >
           <div className="w-full max-w-sm">
-            {/* Clear all button for positions with multiple notifications */}
             {positionNotifications.length > 1 && (
               <div className="mb-2 flex justify-end pointer-events-auto">
                 <button
                   onClick={clearAll}
-                  className="text-xs text-gray-500 hover:text-gray-700 bg-white rounded-md px-2 py-1 shadow-sm border border-gray-200 transition-colors"
+                  className="text-xs text-gray-500 hover:text-gray-700 bg-white/80 dark:bg-gray-800/70 backdrop-blur rounded-md px-2 py-1 shadow-sm border border-gray-200 dark:border-gray-700 transition-colors"
                 >
                   Tümünü Temizle
                 </button>
               </div>
             )}
-            
-            {/* Notifications */}
+
             <div className="space-y-2 pointer-events-auto">
-              {positionNotifications.map((notification) => (
-                <NotificationItem
-                  key={notification.id}
-                  notification={notification}
-                />
-              ))}
+              <AnimatePresence initial={false}>
+                {positionNotifications.map((notification) => (
+                  <motion.div
+                    key={notification.id}
+                    initial={{ opacity: 0, x: 50, scale: 0.98 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: 50, scale: 0.98 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                  >
+                    <NotificationItem notification={notification} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           </div>
         </div>

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import PageTransition from '@/components/UI/PageTransition';
 import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotification } from '@/context/NotificationContext';
 import ThemeToggle from '@/components/UI/ThemeToggle';
 import NotificationManager from '@/components/UI/NotificationManager';
 import PWAInstallBanner, { PWAStatusIndicator } from '@/components/UI/PWAInstallBanner';
@@ -52,7 +52,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { isConnected } = useRealtimeNotifications();
   
   // Initialize notification system
-  const { notifications, removeNotification } = useNotifications();
+  const { notifications } = useNotification();
 
   useEffect(() => {
     // Get user from localStorage or context
@@ -208,10 +208,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       {/* Notification System */}
-      <NotificationManager 
-        notifications={notifications}
-        onRemove={removeNotification}
-      />
+      {/* Legacy NotificationManager kept for compatibility but not needed with NotificationContext */}
 
       {/* PWA Status Indicator */}
       <PWAStatusIndicator />
