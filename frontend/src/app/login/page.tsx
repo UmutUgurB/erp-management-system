@@ -7,12 +7,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@/context/AuthContext';
-import { Eye, EyeOff, LogIn, User, Shield } from 'lucide-react';
+import { Eye, EyeOff, LogIn, User, Shield, Info, KeyRound } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Geçerli bir email adresi giriniz'),
   password: z.string().min(6, 'Şifre en az 6 karakter olmalıdır'),
   rememberMe: z.boolean().optional(),
+  require2FA: z.boolean().optional(),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -21,6 +22,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showTwoFA, setShowTwoFA] = useState(false);
+  const [twoFACode, setTwoFACode] = useState('');
   const { login } = useAuth();
   const router = useRouter();
 
@@ -39,7 +42,11 @@ export default function LoginPage() {
     try {
       const success = await login(data.email, data.password);
       if (success) {
-        router.push('/dashboard');
+        if (data.require2FA) {
+          setShowTwoFA(true);
+        } else {
+          router.push('/dashboard');
+        }
       } else {
         setError('Email veya şifre hatalı');
       }
@@ -55,7 +62,20 @@ export default function LoginPage() {
     setValue('email', email);
     setValue('password', password);
     setValue('rememberMe', true);
+    setValue('require2FA', true);
     handleSubmit(onSubmit)();
+  };
+
+  const handleVerify2FA = async () => {
+    if (!twoFACode || twoFACode.length !== 6) {
+      setError('Lütfen 6 haneli doğrulama kodunu giriniz');
+      return;
+    }
+    if (twoFACode === '123456') {
+      router.push('/dashboard');
+    } else {
+      setError('Doğrulama kodu geçersiz');
+    }
   };
 
   return (
@@ -67,8 +87,8 @@ export default function LoginPage() {
         <div className="relative rounded-2xl p-[1px] bg-gradient-to-br from-indigo-200/80 via-transparent to-pink-200/80 dark:from-indigo-500/30 dark:to-pink-500/30">
           <motion.div
             initial={{ opacity: 0, y: 16, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.35, ease: 'easeOut' }}
+            animate={error ? { x: [0, -8, 8, -6, 6, -3, 3, 0] } : { opacity: 1, y: 0, scale: 1 }}
+            transition={error ? { duration: 0.4 } : { duration: 0.35, ease: 'easeOut' }}
             className="rounded-2xl bg-white/70 dark:bg-gray-800/60 backdrop-blur supports-[backdrop-filter]:bg-white/60 shadow-xl ring-1 ring-black/5"
           >
             <div className="w-full space-y-8 p-6 sm:p-8">
@@ -87,9 +107,17 @@ export default function LoginPage() {
               <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                Email Adresi
-              </label>
+              <div className="flex items-center justify-between">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                  Email Adresi
+                </label>
+                <div className="relative group">
+                  <Info className="h-4 w-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
+                  <div className="pointer-events-none absolute right-0 mt-2 w-56 rounded-md bg-gray-900 text-gray-100 text-xs p-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                    Geçerli bir email formatı kullanın. Örnek: ad@site.com
+                  </div>
+                </div>
+              </div>
               <input
                 {...register('email')}
                 type="email"
@@ -102,9 +130,17 @@ export default function LoginPage() {
             </div>
             
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                Şifre
-              </label>
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                  Şifre
+                </label>
+                <div className="relative group">
+                  <Info className="h-4 w-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
+                  <div className="pointer-events-none absolute right-0 mt-2 w-56 rounded-md bg-gray-900 text-gray-100 text-xs p-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                    En az 6 karakter girin. Güçlü şifre için rakam ve sembol ekleyin.
+                  </div>
+                </div>
+              </div>
               <div className="mt-1 relative">
                 <input
                   {...register('password')}
@@ -141,7 +177,47 @@ export default function LoginPage() {
                   Beni hatırla
                 </label>
               </div>
+              <div className="flex items-center">
+                <input
+                  {...register('require2FA')}
+                  id="require-2fa"
+                  type="checkbox"
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-700 rounded"
+                />
+                <label htmlFor="require-2fa" className="ml-2 block text-sm text-gray-700 dark:text-gray-300 flex items-center">
+                  <KeyRound className="h-4 w-4 mr-1 text-indigo-600" /> 2FA kullan
+                </label>
+              </div>
             </div>
+
+            {showTwoFA && (
+              <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
+                <div className="flex items-center mb-3">
+                  <KeyRound className="h-5 w-5 text-indigo-600 mr-2" />
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">İki Aşamalı Doğrulama</h3>
+                </div>
+                <p className="text-xs text-gray-600 dark:text-gray-300 mb-3">Uygulamanıza gönderilen 6 haneli kodu girin. Demo kod: 123456</p>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={6}
+                    value={twoFACode}
+                    onChange={(e) => setTwoFACode(e.target.value.replace(/[^0-9]/g, ''))}
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white/80 dark:bg-gray-800/70 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder="000000"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleVerify2FA}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700"
+                  >
+                    Doğrula
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {error && (
