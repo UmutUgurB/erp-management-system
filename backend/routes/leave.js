@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Leave = require('../models/Leave');
 const User = require('../models/User');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 
 // Get all leave requests
 router.get('/', auth, async (req, res) => {

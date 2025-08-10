@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Attendance = require('../models/Attendance');
 const Employee = require('../models/Employee');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 
 // Get all attendance records with filters
 router.get('/', auth, async (req, res) => {

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Performance = require('../models/Performance');
 const User = require('../models/User');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 
 // Get all performance evaluations
 router.get('/', auth, async (req, res) => {

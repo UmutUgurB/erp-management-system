@@ -3,7 +3,7 @@ const router = express.Router();
 const Payroll = require('../models/Payroll');
 const User = require('../models/User');
 const Attendance = require('../models/Attendance');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 
 // Get all payroll records
 router.get('/', auth, async (req, res) => {

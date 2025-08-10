@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Asset = require('../models/Asset');
 const User = require('../models/User');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 const authorize = require('../middleware/authorize');
 
 // Get all assets with pagination and filtering
