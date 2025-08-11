@@ -10,27 +10,27 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token (guard for SSR)
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (typeof window !== 'undefined') {
+      const token = window.localStorage.getItem('token');
+      if (token) {
+        (config.headers as any).Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor to handle errors
+// Response interceptor to handle errors (guard for SSR)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
+      window.localStorage.removeItem('token');
+      window.localStorage.removeItem('user');
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -39,13 +39,19 @@ api.interceptors.response.use(
 
 // Auth API
 export const authAPI = {
-  login: (credentials: { email: string; password: string }) =>
-    api.post('/auth/login', credentials),
-  
+  // Accept either (email, password) or ({email, password})
+  login: (emailOrCredentials: any, maybePassword?: string) => {
+    const payload = typeof emailOrCredentials === 'string'
+      ? { email: emailOrCredentials, password: maybePassword as string }
+      : emailOrCredentials;
+    return api.post('/auth/login', payload);
+  },
+
   register: (userData: { name: string; email: string; password: string; role: string }) =>
     api.post('/auth/register', userData),
-  
+
   getProfile: () => api.get('/auth/profile'),
+  getCurrentUser: () => api.get('/auth/profile'),
 };
 
 // Users API
