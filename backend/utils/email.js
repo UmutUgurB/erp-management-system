@@ -42,7 +42,7 @@ class EmailService {
       // Mock transport for local/dev without credentials
       this.transporter = nodemailer.createTransport({ jsonTransport: true });
       this.isMock = true;
-      logger.warn('Email service started in MOCK mode (no SMTP credentials or ENABLE_EMAILS!=true)');
+      logger.info('Email service started in MOCK mode (no SMTP credentials or ENABLE_EMAILS!=true)');
     }
   }
 
