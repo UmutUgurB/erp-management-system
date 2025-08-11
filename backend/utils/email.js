@@ -4,29 +4,46 @@ const { logger } = require('./logger');
 class EmailService {
   constructor() {
     this.transporter = null;
+    this.isMock = false;
     this.initialize();
   }
 
   initialize() {
-    // Create transporter
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: process.env.SMTP_PORT || 587,
-      secure: false, // true for 465, false for other ports
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+    const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, ENABLE_EMAILS } = process.env;
 
-    // Verify connection
-    this.transporter.verify((error, success) => {
-      if (error) {
-        logger.error('Email service initialization failed', { error: error.message });
-      } else {
-        logger.info('Email service initialized successfully');
-      }
-    });
+    const useRealTransport = (
+      (ENABLE_EMAILS || '').toLowerCase() === 'true' &&
+      Boolean(SMTP_USER) &&
+      Boolean(SMTP_PASS)
+    );
+
+    if (useRealTransport) {
+      // Real SMTP transport
+      this.transporter = nodemailer.createTransport({
+        host: SMTP_HOST || 'smtp.gmail.com',
+        port: Number(SMTP_PORT) || 587,
+        secure: String(SMTP_PORT) === '465',
+        auth: {
+          user: SMTP_USER,
+          pass: SMTP_PASS,
+        },
+      });
+
+      // Verify only in real mode
+      this.transporter.verify((error) => {
+        if (error) {
+          logger.error('Email service initialization failed', { error: error.message });
+        } else {
+          logger.info('Email service initialized successfully');
+        }
+      });
+      this.isMock = false;
+    } else {
+      // Mock transport for local/dev without credentials
+      this.transporter = nodemailer.createTransport({ jsonTransport: true });
+      this.isMock = true;
+      logger.warn('Email service started in MOCK mode (no SMTP credentials or ENABLE_EMAILS!=true)');
+    }
   }
 
   // Send welcome email
@@ -230,6 +247,9 @@ class EmailService {
         to: mailOptions.to,
         subject: mailOptions.subject
       });
+      if (this.isMock && info.message) {
+        logger.info('MOCK email content', { message: info.message.toString() });
+      }
       return { success: true, messageId: info.messageId };
     } catch (error) {
       logger.error('Email sending failed', {
