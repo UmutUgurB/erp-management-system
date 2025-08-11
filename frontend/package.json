@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:webpack": "cross-env NEXT_FORCE_WEBPACK=1 next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -44,6 +45,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.4.2",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "cross-env": "^7.0.3"
   }
 }

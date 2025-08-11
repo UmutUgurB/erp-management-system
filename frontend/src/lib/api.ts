@@ -98,6 +98,16 @@ export const attendanceAPI = {
   checkIn: (data: any) => api.post('/attendance/checkin', data),
   checkOut: (data: any) => api.post('/attendance/checkout', data),
   startBreak: (data: any) => api.post('/attendance/break/start', data),
+  endBreak: (data: any) => api.post('/attendance/break/end', data),
+  updateAttendance: (id: string, data: any) => api.put(`/attendance/${id}`, data),
+  deleteAttendance: (id: string) => api.delete(`/attendance/${id}`),
+  getStats: (filters?: any) => api.get('/attendance/stats/overview', { params: filters }),
+  getEmployeeStats: (employeeId: string, filters?: any) =>
+    api.get(`/attendance/stats/employee/${employeeId}`, { params: filters }),
+  bulkImport: (data: any) => api.post('/attendance/bulk-import', data),
+  getReports: (filters?: any) => api.get('/attendance/reports', { params: filters }),
+  exportReport: (format: string, filters?: any) =>
+    api.get(`/attendance/reports/export/${format}`, { params: filters }),
 };
 
 // Inventory API
@@ -199,17 +209,6 @@ export const assetAPI = {
   getStats: () => api.get('/assets/stats/overview'),
   getMyAssets: () => api.get('/assets/my/assets'),
   searchAssets: (query: string) => api.get(`/assets/search/${query}`),
-};
-  endBreak: (data: any) => api.post('/attendance/break/end', data),
-  updateAttendance: (id: string, data: any) => api.put(`/attendance/${id}`, data),
-  deleteAttendance: (id: string) => api.delete(`/attendance/${id}`),
-  getStats: (filters?: any) => api.get('/attendance/stats/overview', { params: filters }),
-  getEmployeeStats: (employeeId: string, filters?: any) =>
-    api.get(`/attendance/stats/employee/${employeeId}`, { params: filters }),
-  bulkImport: (data: any) => api.post('/attendance/bulk-import', data),
-  getReports: (filters?: any) => api.get('/attendance/reports', { params: filters }),
-  exportReport: (format: string, filters?: any) => 
-    api.get(`/attendance/reports/export/${format}`, { params: filters }),
 };
 
 // Payroll API
