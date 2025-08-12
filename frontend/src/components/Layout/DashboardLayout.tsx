@@ -73,6 +73,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setSidebarOpen(false);
   };
 
+  const getInitials = (fullName?: string) => {
+    if (!fullName || typeof fullName !== 'string') return 'K';
+    const parts = fullName.trim().split(/\s+/);
+    const first = parts[0]?.[0] || '';
+    const last = parts.length > 1 ? parts[parts.length - 1]?.[0] || '' : '';
+    return (first + last).toUpperCase() || 'K';
+  };
+
   return (
     <div className="min-h-screen bg-gray-50/60 dark:bg-gray-900">
       {/* PWA Install Banner */}
@@ -141,8 +149,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-xs font-semibold flex items-center justify-center">
+                {user?.name ? getInitials(user.name) : <User className="w-4 h-4 text-white/90" />}
               </div>
             </div>
             <div className="ml-3 flex-1">
