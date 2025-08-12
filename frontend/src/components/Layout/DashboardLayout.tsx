@@ -113,16 +113,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             // next/navigation router does not expose pathname; use location
             const isActive = typeof window !== 'undefined' && window.location.pathname === item.href;
             
-            return (
+              return (
               <button
                 key={item.name}
                 onClick={() => handleNavigation(item.href)}
-                className={`w-full flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors group ${
+                className={`relative w-full flex items-center pl-2 pr-2 py-2 text-sm font-medium rounded-md transition-colors group ${
                   isActive
                     ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 ring-1 ring-inset ring-indigo-200/60 dark:ring-indigo-500/20'
                     : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
                 }`}
               >
+                {/* Active indicator */}
+                <span
+                  className={`absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full bg-indigo-600 dark:bg-indigo-400 transition-opacity ${
+                    isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-40'
+                  }`}
+                  aria-hidden="true"
+                />
                 <Icon className="mr-3 h-5 w-5 opacity-80 group-hover:opacity-100" />
                 {item.name}
               </button>
