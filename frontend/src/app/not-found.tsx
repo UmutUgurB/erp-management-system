@@ -16,7 +16,7 @@ export default function NotFound() {
         >
           <Search className="h-8 w-8" />
         </motion.div>
-        <h1 className="mt-6 text-2xl font-semibold text-gray-900 dark:text-gray-100">Sayfa bulunamadı</n1>
+        <h1 className="mt-6 text-2xl font-semibold text-gray-900 dark:text-gray-100">Sayfa bulunamadı</h1>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
           Aradığınız sayfa taşınmış veya hiç var olmamış olabilir.
         </p>
