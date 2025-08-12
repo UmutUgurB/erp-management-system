@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import PageTransition from '@/components/UI/PageTransition';
 import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import { useNotification } from '@/context/NotificationContext';
@@ -46,7 +46,9 @@ const navigationItems = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [hasShadow, setHasShadow] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   // Initialize real-time notifications
   const { isConnected } = useRealtimeNotifications();
@@ -60,6 +62,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (userData) {
       setUser(JSON.parse(userData));
     }
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => setHasShadow(window.scrollY > 4);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   const handleLogout = () => {
@@ -118,8 +127,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="mt-5 px-2 space-y-1">
           {navigationItems.map((item) => {
             const Icon = item.icon;
-            // next/navigation router does not expose pathname; use location
-            const isActive = typeof window !== 'undefined' && window.location.pathname === item.href;
+            const isActive = pathname === item.href;
             
               return (
               <button
@@ -175,7 +183,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="lg:pl-64 flex flex-col flex-1">
         {/* Top navigation */}
         <div className="sticky top-0 z-10 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:bg-gray-800/70 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+          <div className={`flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8 transition-shadow ${hasShadow ? 'shadow-sm' : ''}`}>
             <div className="flex items-center">
               <button
                 onClick={() => setSidebarOpen(true)}
