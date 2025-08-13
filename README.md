@@ -11,6 +11,7 @@
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
   [![MongoDB](https://img.shields.io/badge/MongoDB-6.0-green.svg)](https://mongodb.com/)
   [![Express](https://img.shields.io/badge/Express-4.18-gray.svg)](https://expressjs.com/)
+  [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://docker.com/)
   [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
   
   [🚀 Live Demo](#) • [📖 Documentation](#) • [🐛 Report Bug](#) • [💡 Request Feature](#)
@@ -23,6 +24,7 @@
 - [✨ Features](#-features)
 - [🛠️ Tech Stack](#️-tech-stack)
 - [🚀 Quick Start](#-quick-start)
+- [🐳 Docker Setup](#-docker-setup)
 - [📁 Project Structure](#-project-structure)
 - [🔧 Configuration](#-configuration)
 - [📚 API Documentation](#-api-documentation)
@@ -39,12 +41,14 @@
 - **Role-based access control** (Admin, Manager, User)
 - **Protected routes** and middleware
 - **Session management** with automatic logout
+- **Two-factor authentication** support
 
 ### 👥 User Management
 - **User registration** and profile management
 - **Role assignment** and permissions
 - **User status** (Active/Inactive)
 - **Password hashing** with bcrypt
+- **Profile picture** upload support
 
 ### 📦 Product Management
 - **Product catalog** with categories and SKU management
@@ -52,6 +56,7 @@
 - **Price management** with cost and profit calculations
 - **Product status** (Active/Inactive)
 - **Advanced search** and filtering
+- **Bulk import/export** functionality
 
 ### 🛒 Order Management
 - **Order creation** with product selection
@@ -59,6 +64,7 @@
 - **Order status tracking** (Pending, Confirmed, Processing, Shipped, Delivered)
 - **Payment status** management
 - **Order history** and analytics
+- **Email notifications** for order updates
 
 ### 📦 Inventory Management
 - **Stock tracking** with real-time updates
@@ -67,6 +73,7 @@
 - **Low stock alerts** and notifications
 - **Inventory analytics** and reporting
 - **Barcode/QR code** support (planned)
+- **Automated reorder** suggestions
 
 ### 👥 Customer Management (CRM)
 - **Customer profiles** with detailed information
@@ -74,6 +81,7 @@
 - **Lead management** and conversion tracking
 - **Customer analytics** and reporting
 - **Contact management** with multiple contacts per customer
+- **Customer segmentation** and marketing tools
 
 ### 💰 Financial Management
 - **Invoice generation** and management
@@ -82,6 +90,7 @@
 - **Overdue payment** monitoring
 - **Currency support** (TRY, USD, EUR, GBP)
 - **Tax calculation** and management
+- **Profit margin** analysis
 
 ### 📋 Project Management
 - **Project lifecycle** management
@@ -90,6 +99,7 @@
 - **Budget management** and cost tracking
 - **Project analytics** and reporting
 - **Document management** for projects
+- **Gantt chart** visualization
 
 ### ✅ Task Management
 - **Task creation** and assignment
@@ -98,6 +108,7 @@
 - **Progress tracking** with percentage completion
 - **Task comments** and collaboration
 - **Time analytics** and reporting
+- **Kanban board** view
 
 ### 🏢 Asset Management
 - **Asset lifecycle** tracking
@@ -106,6 +117,7 @@
 - **Warranty management** with expiry alerts
 - **Asset assignment** to employees
 - **Asset analytics** and reporting
+- **Preventive maintenance** alerts
 
 ### 📊 Dashboard & Analytics
 - **Real-time statistics** and KPIs
@@ -115,6 +127,7 @@
 - **System status** monitoring
 - **Performance metrics** and monitoring
 - **Custom reports** with PDF export
+- **Data visualization** with multiple chart types
 
 ### 🎨 Modern UI/UX
 - **Responsive design** for all devices
@@ -127,6 +140,16 @@
 - **Advanced search** and filtering
 - **File upload** with drag & drop
 - **Data export/import** (CSV, Excel, PDF)
+- **Keyboard shortcuts** support
+- **Progressive Web App** (PWA) features
+
+### 🔔 Advanced Notifications
+- **Real-time notifications** with WebSocket
+- **Email notifications** for important events
+- **Push notifications** for mobile devices
+- **Customizable notification** preferences
+- **Notification history** and management
+- **Smart notification** scheduling
 
 ---
 
@@ -145,6 +168,7 @@
 - **Next-intl** - Internationalization
 - **jsPDF** - PDF generation
 - **ExcelJS** - Excel file handling
+- **Framer Motion** - Animations
 
 ### Backend
 - **Node.js** - JavaScript runtime
@@ -161,12 +185,15 @@
 - **Swagger** - API documentation
 - **Helmet** - Security headers
 - **Rate Limiting** - API protection
+- **Redis** - Caching (optional)
 
 ### Development Tools
 - **ESLint** - Code linting
 - **Prettier** - Code formatting
 - **Git** - Version control
 - **Postman** - API testing
+- **Docker** - Containerization
+- **Docker Compose** - Multi-container orchestration
 
 ---
 
@@ -187,13 +214,12 @@
 
 2. **Install dependencies**
    ```bash
-   # Install backend dependencies
-   cd backend
-   npm install
+   # Install all dependencies at once
+   npm run install:all
    
-   # Install frontend dependencies
-   cd ../frontend
-   npm install
+   # Or install separately
+   cd backend && npm install
+   cd ../frontend && npm install
    ```
 
 3. **Environment Setup**
@@ -223,13 +249,15 @@
 
 5. **Run the Application**
    ```bash
-   # Terminal 1 - Backend
-   cd backend
+   # Run both frontend and backend
    npm run dev
    
+   # Or run separately
+   # Terminal 1 - Backend
+   cd backend && npm run dev
+   
    # Terminal 2 - Frontend
-   cd frontend
-   npm run dev
+   cd frontend && npm run dev
    ```
 
 6. **Access the Application**
@@ -247,6 +275,48 @@ User: user@erp.com / user123
 
 ---
 
+## 🐳 Docker Setup
+
+### Quick Start with Docker
+
+```bash
+# Start all services
+npm run docker:up
+
+# View logs
+npm run docker:logs
+
+# Stop services
+npm run docker:down
+
+# Restart services
+npm run docker:restart
+```
+
+### Manual Docker Commands
+
+```bash
+# Build and start
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+
+# Rebuild and start
+docker-compose up -d --build
+```
+
+### Docker Services
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:5000
+- **MongoDB**: localhost:27017
+- **Redis**: localhost:6379 (optional)
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -256,6 +326,9 @@ erp-system/
 │   ├── middleware/         # Custom middleware
 │   ├── models/            # Mongoose schemas
 │   ├── routes/            # API routes
+│   ├── utils/             # Utility functions
+│   ├── scripts/           # Database scripts
+│   ├── uploads/           # File uploads
 │   ├── server.js          # Express server
 │   └── package.json
 │
@@ -264,12 +337,17 @@ erp-system/
 │   │   ├── app/           # App Router pages
 │   │   ├── components/    # React components
 │   │   ├── context/       # React context
+│   │   ├── hooks/         # Custom hooks
 │   │   ├── lib/           # Utilities and API
 │   │   ├── types/         # TypeScript types
+│   │   ├── i18n/          # Internationalization
 │   │   └── styles/        # Global styles
 │   ├── public/            # Static assets
 │   └── package.json
 │
+├── docker-compose.yml      # Docker services
+├── Dockerfile             # Backend Dockerfile
+├── .gitignore            # Git ignore rules
 └── README.md
 ```
 
@@ -307,6 +385,8 @@ NEXT_PUBLIC_API_URL=http://localhost:5000/api
 POST /api/auth/login          # User login
 POST /api/auth/register       # User registration
 GET  /api/auth/profile        # Get user profile
+POST /api/auth/logout         # User logout
+POST /api/auth/refresh        # Refresh token
 ```
 
 ### User Management
@@ -316,6 +396,7 @@ GET    /api/users/:id         # Get user by ID
 POST   /api/users             # Create user
 PUT    /api/users/:id         # Update user
 DELETE /api/users/:id         # Delete user
+PATCH  /api/users/:id/status  # Update user status
 ```
 
 ### Product Management
@@ -325,6 +406,8 @@ GET    /api/products/:id      # Get product by ID
 POST   /api/products          # Create product
 PUT    /api/products/:id      # Update product
 DELETE /api/products/:id      # Delete product
+GET    /api/products/search   # Search products
+POST   /api/products/bulk     # Bulk operations
 ```
 
 ### Order Management
@@ -335,6 +418,7 @@ POST   /api/orders            # Create order
 PUT    /api/orders/:id        # Update order
 DELETE /api/orders/:id        # Delete order
 PATCH  /api/orders/:id/status # Update order status
+GET    /api/orders/analytics  # Order analytics
 ```
 
 ### System Management
@@ -396,271 +480,24 @@ We welcome contributions! Please follow these steps:
 
 ---
 
-# 🏢 Modern ERP Management System
+## 📄 License
 
-Modern, full-stack ERP (Enterprise Resource Planning) sistemi. React, Node.js, MongoDB ve TypeScript kullanılarak geliştirilmiştir.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## ✨ Özellikler
+---
 
-### 👥 Kullanıcı Yönetimi
-- **Kullanıcı kayıt** ve giriş sistemi
-- **Rol tabanlı** yetkilendirme (admin, manager, user)
-- **JWT token** tabanlı kimlik doğrulama
-- **Şifre hashleme** ve güvenlik
-
-### 📦 Ürün Yönetimi
-- **Ürün kataloğu** yönetimi
-- **Kategori** ve **marka** organizasyonu
-- **Stok takibi** ve **minimum stok** uyarıları
-- **Ürün arama** ve filtreleme
-- **Toplu işlemler** (import/export)
-
-### 🛒 Sipariş Yönetimi
-- **Sipariş oluşturma** ve takibi
-- **Müşteri bilgileri** entegrasyonu
-- **Ödeme durumu** yönetimi
-- **Sipariş geçmişi** ve analitik
-
-### 📦 Envanter Yönetimi
-- **Stok takibi** gerçek zamanlı güncellemeler
-- **Envanter işlemleri** (stok-giriş, stok-çıkış, transfer, düzeltme)
-- **Stok sayımı** işlemleri varyans takibi
-- **Düşük stok uyarıları** ve bildirimler
-- **Envanter analitik** ve raporlama
-- **Barkod/QR kod** desteği (planlanan)
-
-### 👥 Müşteri Yönetimi (CRM)
-- **Müşteri profilleri** detaylı bilgilerle
-- **Müşteri etkileşimleri** ve iletişim geçmişi
-- **Lead yönetimi** ve dönüşüm takibi
-- **Müşteri analitik** ve raporlama
-- **İletişim yönetimi** müşteri başına birden fazla kişi
-
-### 💰 Finansal Yönetim
-- **Fatura oluşturma** ve yönetimi
-- **Ödeme takibi** birden fazla ödeme yöntemiyle
-- **Finansal raporlama** ve analitik
-- **Gecikmiş ödeme** izleme
-- **Para birimi desteği** (TRY, USD, EUR, GBP)
-- **Vergi hesaplama** ve yönetimi
-
-### 📋 Proje Yönetimi
-- **Proje yaşam döngüsü** yönetimi
-- **Ekip işbirliği** rol atamalarıyla
-- **Proje ilerleme** takibi
-- **Bütçe yönetimi** ve maliyet takibi
-- **Proje analitik** ve raporlama
-- **Proje doküman yönetimi**
-
-### ✅ Görev Yönetimi
-- **Görev oluşturma** ve atama
-- **Zaman takibi** başlat/durdur işlevselliği
-- **Görev bağımlılıkları** ve ilişkiler
-- **İlerleme takibi** yüzde tamamlanma
-- **Görev yorumları** ve işbirliği
-- **Zaman analitik** ve raporlama
-
-### 🏢 Varlık Yönetimi
-- **Varlık yaşam döngüsü** takibi
-- **Bakım planlama** ve geçmişi
-- **Varlık amortismanı** ve değer takibi
-- **Garanti yönetimi** süre dolumu uyarıları
-- **Varlık atama** çalışanlara
-- **Varlık analitik** ve raporlama
-
-### 📊 Dashboard & Analitik
-- **Gerçek zamanlı** istatistikler
-- **Grafik ve** chart'lar
-- **Özelleştirilebilir** widget'lar
-- **Raporlama** sistemi
-- **Export** özellikleri (PDF, Excel)
-
-### 🔔 Bildirim Sistemi
-- **Gerçek zamanlı** bildirimler
-- **Farklı bildirim türleri** (başarı, hata, uyarı, bilgi)
-- **Otomatik kapanma** ve manuel kapatma
-- **Animasyonlu** bildirimler
-- **İlerleme çubuğu** gösterimi
-
-## 🚀 Teknoloji Stack
-
-### Frontend
-- **Next.js 14** (App Router)
-- **TypeScript** - Tip güvenliği
-- **Tailwind CSS** - Modern UI
-- **React Hook Form** - Form yönetimi
-- **Zod** - Schema validasyonu
-- **Lucide React** - İkonlar
-- **Axios** - HTTP istekleri
-- **Recharts** - Veri görselleştirme
-- **Socket.IO Client** - Gerçek zamanlı iletişim
-- **Next-intl** - Çoklu dil desteği
-- **jsPDF** - PDF oluşturma
-- **ExcelJS** - Excel dosya işleme
-
-### Backend
-- **Node.js** - Runtime
-- **Express.js** - Web framework
-- **MongoDB** - Veritabanı
-- **Mongoose** - ODM
-- **JWT** - Kimlik doğrulama
-- **bcrypt** - Şifre hashleme
-- **CORS** - Cross-origin resource sharing
-- **Socket.IO** - Gerçek zamanlı iletişim
-- **Multer** - Dosya yükleme
-- **Winston** - Loglama
-- **Nodemailer** - Email gönderimi
-- **Swagger** - API dokümantasyonu
-- **Helmet** - Güvenlik
-- **Rate Limiting** - API koruması
-
-### DevOps & Deployment
-- **Docker** - Containerization
-- **Docker Compose** - Multi-container orchestration
-- **Nginx** - Reverse proxy
-- **Redis** - Caching (opsiyonel)
-- **Health checks** - Servis sağlığı kontrolü
-
-## 🐳 Docker ile Kurulum
-
-### Gereksinimler
-- Docker
-- Docker Compose
-
-### Hızlı Başlangıç
-
-```bash
-# Projeyi klonlayın
-git clone https://github.com/yourusername/erp-management-system.git
-cd erp-management-system
-
-# Docker ile başlatın
-npm run docker:up
-
-# Veya manuel olarak
-docker-compose up -d
-```
-
-### Docker Komutları
-
-```bash
-# Tüm servisleri başlat
-npm run docker:up
-
-# Servisleri durdur
-npm run docker:down
-
-# Logları görüntüle
-npm run docker:logs
-
-# Servisleri yeniden başlat
-npm run docker:restart
-
-# Temizlik (volumes dahil)
-npm run docker:clean
-```
-
-### Servisler
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:5000
-- **MongoDB**: localhost:27017
-- **Redis**: localhost:6379 (opsiyonel)
-- **Nginx**: http://localhost:80 (opsiyonel)
-
-## 🛠️ Geliştirme Kurulumu
-
-### Gereksinimler
-- Node.js 18+
-- MongoDB 6.0+
-- npm veya yarn
-
-### Kurulum Adımları
-
-```bash
-# Projeyi klonlayın
-git clone https://github.com/yourusername/erp-management-system.git
-cd erp-management-system
-
-# Tüm bağımlılıkları yükleyin
-npm run install:all
-
-# Geliştirme sunucularını başlatın
-npm run dev
-```
-
-### Ortam Değişkenleri
-
-Backend için `.env` dosyası oluşturun:
-
-```env
-NODE_ENV=development
-PORT=5000
-MONGODB_URI=mongodb://localhost:27017/erp_system
-JWT_SECRET=your-super-secret-jwt-key
-CORS_ORIGIN=http://localhost:3000
-```
-
-Frontend için `.env.local` dosyası oluşturun:
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:5000/api
-NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
-```
-
-## 📝 API Dokümantasyonu
-
-API dokümantasyonu Swagger ile sağlanmaktadır:
-- **Development**: http://localhost:5000/api-docs
-- **Production**: https://your-domain.com/api-docs
-
-## 🔧 Geliştirme Komutları
-
-```bash
-# Geliştirme
-npm run dev
-
-# Build
-npm run build
-
-# Test
-npm run test
-
-# Lint
-npm run lint
-
-# Docker
-npm run docker:up
-```
-
-## 📊 Demo Hesaplar
-
-- **Admin**: admin@example.com / 123456
-- **Manager**: manager@example.com / 123456
-
-## 🤝 Katkıda Bulunma
-
-1. Fork yapın
-2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Commit yapın (`git commit -m 'Add amazing feature'`)
-4. Push yapın (`git push origin feature/amazing-feature`)
-5. Pull Request oluşturun
-
-## 📄 Lisans
-
-Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için `LICENSE` dosyasına bakın.
-
-## 📞 İletişim
+## 📞 Contact
 
 - **Email**: your.email@example.com
 - **LinkedIn**: [Your Name](https://linkedin.com/in/yourprofile)
 - **GitHub**: [@yourusername](https://github.com/yourusername)
 
-## 🙏 Teşekkürler
+## 🙏 Acknowledgments
 
-Bu proje aşağıdaki açık kaynak projelerin kullanımıyla mümkün olmuştur:
+This project was made possible by the following open-source projects:
 - Next.js
 - Express.js
 - MongoDB
 - Tailwind CSS
-- Ve diğer tüm bağımlılıklar
+- And all other dependencies
 
