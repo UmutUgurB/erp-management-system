@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -23,7 +23,10 @@ import {
   CheckCircle,
   Loader2,
   ArrowRight,
-  Zap
+  Zap,
+  Copy,
+  Check,
+  Star
 } from 'lucide-react';
 
 const loginSchema = z.object({
@@ -35,6 +38,22 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
+// Password strength checker
+const getPasswordStrength = (password: string) => {
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (/[a-z]/.test(password)) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+  
+  if (score <= 1) return { strength: 'Zayıf', color: 'bg-red-500', width: 'w-1/5' };
+  if (score <= 2) return { strength: 'Orta', color: 'bg-yellow-500', width: 'w-2/5' };
+  if (score <= 3) return { strength: 'İyi', color: 'bg-blue-500', width: 'w-3/5' };
+  if (score <= 4) return { strength: 'Güçlü', color: 'bg-green-500', width: 'w-4/5' };
+  return { strength: 'Çok Güçlü', color: 'bg-emerald-500', width: 'w-full' };
+};
+
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,8 +64,10 @@ export default function LoginPage() {
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [lockoutTime, setLockoutTime] = useState(0);
+  const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
   const { login } = useAuth();
   const router = useRouter();
+  const emailInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -61,6 +82,29 @@ export default function LoginPage() {
 
   const watchedEmail = watch('email');
   const watchedPassword = watch('password');
+  const passwordStrength = getPasswordStrength(watchedPassword);
+
+  // Auto-focus email input on mount
+  useEffect(() => {
+    if (emailInputRef.current) {
+      emailInputRef.current.focus();
+    }
+  }, []);
+
+  // Load last used email from localStorage
+  useEffect(() => {
+    const lastEmail = localStorage.getItem('lastEmail');
+    if (lastEmail) {
+      setValue('email', lastEmail);
+    }
+  }, [setValue]);
+
+  // Save email to localStorage when it changes
+  useEffect(() => {
+    if (watchedEmail && watchedEmail.includes('@')) {
+      localStorage.setItem('lastEmail', watchedEmail);
+    }
+  }, [watchedEmail]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -173,6 +217,16 @@ export default function LoginPage() {
     setSuccess('Şifre sıfırlama linki email adresinize gönderildi.');
   };
 
+  const copyToClipboard = async (text: string, accountType: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedAccount(accountType);
+      setTimeout(() => setCopiedAccount(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
       <div className="group relative max-w-md w-full">
@@ -274,6 +328,7 @@ export default function LoginPage() {
                       </div>
                       <input
                         {...register('email')}
+                        ref={emailInputRef}
                         type="email"
                         className="pl-10 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 text-gray-900 dark:text-gray-100 rounded-md bg-white/80 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm transition-all duration-200"
                         placeholder="ornek@email.com"
@@ -329,6 +384,28 @@ export default function LoginPage() {
                         )}
                       </button>
                     </div>
+                    
+                    {/* Password Strength Indicator */}
+                    {watchedPassword && watchedPassword.length > 0 && (
+                      <div className="mt-2">
+                        <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+                          <span>Şifre gücü:</span>
+                          <span className={`font-medium ${
+                            passwordStrength.strength === 'Zayıf' ? 'text-red-500' :
+                            passwordStrength.strength === 'Orta' ? 'text-yellow-500' :
+                            passwordStrength.strength === 'İyi' ? 'text-blue-500' :
+                            passwordStrength.strength === 'Güçlü' ? 'text-green-500' :
+                            'text-emerald-500'
+                          }`}>
+                            {passwordStrength.strength}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                          <div className={`h-2 rounded-full transition-all duration-300 ${passwordStrength.color} ${passwordStrength.width}`}></div>
+                        </div>
+                      </div>
+                    )}
+                    
                     <AnimatePresence>
                       {errors.password && (
                         <motion.p 
@@ -475,28 +552,57 @@ export default function LoginPage() {
 
                 {/* Demo Accounts */}
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 flex items-center justify-center">
+                    <Star className="h-4 w-4 mr-1 text-yellow-500" />
                     Demo Hesaplar:
                   </p>
                   <div className="space-y-2">
-                    <button
-                      type="button"
-                      onClick={() => handleDemoLogin('admin@example.com', '123456')}
-                      disabled={isLoading || isLocked}
-                      className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-800/70 hover:bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-all duration-200"
-                    >
-                      <Shield className="w-4 h-4 mr-2 text-indigo-600" />
-                      Admin Hesabı
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDemoLogin('manager@example.com', '123456')}
-                      disabled={isLoading || isLocked}
-                      className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-800/70 hover:bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-all duration-200"
-                    >
-                      <User className="w-4 h-4 mr-2 text-green-600" />
-                      Manager Hesabı
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => handleDemoLogin('admin@example.com', '123456')}
+                        disabled={isLoading || isLocked}
+                        className="flex-1 flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-800/70 hover:bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-all duration-200"
+                      >
+                        <Shield className="w-4 h-4 mr-2 text-indigo-600" />
+                        Admin Hesabı
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard('admin@example.com / 123456', 'admin')}
+                        className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        title="Bilgileri kopyala"
+                      >
+                        {copiedAccount === 'admin' ? (
+                          <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => handleDemoLogin('manager@example.com', '123456')}
+                        disabled={isLoading || isLocked}
+                        className="flex-1 flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-800/70 hover:bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-all duration-200"
+                      >
+                        <User className="w-4 h-4 mr-2 text-green-600" />
+                        Manager Hesabı
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard('manager@example.com / 123456', 'manager')}
+                        className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        title="Bilgileri kopyala"
+                      >
+                        {copiedAccount === 'manager' ? (
+                          <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </motion.form>
