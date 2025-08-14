@@ -19,6 +19,24 @@
 
 ---
 
+## 🌟 What's New
+
+<div align="center">
+  <img src="https://via.placeholder.com/600x300/4f46e5/ffffff?text=Latest+Features" alt="Latest Features" width="100%">
+</div>
+
+### ✨ Recent Updates
+- 🎨 **Enhanced Login Page** - Password strength indicator, social login, 2FA support
+- 🚀 **Advanced Dashboard** - Beautiful welcome cards, real-time metrics, AI integration
+- 🎭 **Smooth Animations** - Framer Motion powered transitions and micro-interactions
+- 🔐 **Security Features** - Login attempt lockout, advanced authentication
+- 📱 **Responsive Design** - Mobile-first approach with PWA support
+- 🌙 **Dark Mode** - Beautiful dark/light theme switching
+- ⌨️ **Keyboard Shortcuts** - Power user productivity features
+- 🎯 **Performance** - Optimized loading states and smooth transitions
+
+---
+
 ## 📋 Table of Contents
 
 - [✨ Features](#-features)
@@ -42,6 +60,8 @@
 - **Protected routes** and middleware
 - **Session management** with automatic logout
 - **Two-factor authentication** support
+- **Login attempt lockout** system for security
+- **Password strength indicator** with real-time feedback
 
 ### 👥 User Management
 - **User registration** and profile management
@@ -49,6 +69,7 @@
 - **User status** (Active/Inactive)
 - **Password hashing** with bcrypt
 - **Profile picture** upload support
+- **Last login tracking** and activity monitoring
 
 ### 📦 Product Management
 - **Product catalog** with categories and SKU management
@@ -57,6 +78,7 @@
 - **Product status** (Active/Inactive)
 - **Advanced search** and filtering
 - **Bulk import/export** functionality
+- **Product images** and media management
 
 ### 🛒 Order Management
 - **Order creation** with product selection
@@ -65,6 +87,7 @@
 - **Payment status** management
 - **Order history** and analytics
 - **Email notifications** for order updates
+- **Order templates** for quick creation
 
 ### 📦 Inventory Management
 - **Stock tracking** with real-time updates
@@ -74,6 +97,7 @@
 - **Inventory analytics** and reporting
 - **Barcode/QR code** support (planned)
 - **Automated reorder** suggestions
+- **Multi-location** inventory support
 
 ### 👥 Customer Management (CRM)
 - **Customer profiles** with detailed information
@@ -82,6 +106,7 @@
 - **Customer analytics** and reporting
 - **Contact management** with multiple contacts per customer
 - **Customer segmentation** and marketing tools
+- **Customer portal** for self-service
 
 ### 💰 Financial Management
 - **Invoice generation** and management
@@ -91,6 +116,7 @@
 - **Currency support** (TRY, USD, EUR, GBP)
 - **Tax calculation** and management
 - **Profit margin** analysis
+- **Budget planning** and tracking
 
 ### 📋 Project Management
 - **Project lifecycle** management
@@ -100,6 +126,7 @@
 - **Project analytics** and reporting
 - **Document management** for projects
 - **Gantt chart** visualization
+- **Resource allocation** and scheduling
 
 ### ✅ Task Management
 - **Task creation** and assignment
@@ -109,6 +136,7 @@
 - **Task comments** and collaboration
 - **Time analytics** and reporting
 - **Kanban board** view
+- **Task templates** and recurring tasks
 
 ### 🏢 Asset Management
 - **Asset lifecycle** tracking
@@ -118,6 +146,7 @@
 - **Asset assignment** to employees
 - **Asset analytics** and reporting
 - **Preventive maintenance** alerts
+- **Asset barcode** scanning
 
 ### 📊 Dashboard & Analytics
 - **Real-time statistics** and KPIs
@@ -128,6 +157,7 @@
 - **Performance metrics** and monitoring
 - **Custom reports** with PDF export
 - **Data visualization** with multiple chart types
+- **AI-powered insights** and predictions
 
 ### 🎨 Modern UI/UX
 - **Responsive design** for all devices
@@ -142,6 +172,7 @@
 - **Data export/import** (CSV, Excel, PDF)
 - **Keyboard shortcuts** support
 - **Progressive Web App** (PWA) features
+- **Smooth animations** and micro-interactions
 
 ### 🔔 Advanced Notifications
 - **Real-time notifications** with WebSocket
@@ -150,6 +181,15 @@
 - **Customizable notification** preferences
 - **Notification history** and management
 - **Smart notification** scheduling
+- **Notification templates** for consistency
+
+### 🤖 AI & Machine Learning
+- **AI-powered analytics** and insights
+- **Predictive modeling** for sales and inventory
+- **Natural language processing** for search
+- **Automated reporting** and recommendations
+- **Smart notifications** and alerts
+- **Pattern recognition** in data
 
 ---
 
@@ -168,7 +208,7 @@
 - **Next-intl** - Internationalization
 - **jsPDF** - PDF generation
 - **ExcelJS** - Excel file handling
-- **Framer Motion** - Animations
+- **Framer Motion** - Animations and transitions
 
 ### Backend
 - **Node.js** - JavaScript runtime
@@ -226,7 +266,7 @@
    ```bash
    # Backend (.env)
    cd backend
-   cp .env.example .env
+   cp env.example .env
    ```
    
    Edit `.env` file:
@@ -268,9 +308,9 @@
 
 ### Demo Users
 ```
-Admin: admin@erp.com / admin123
-Manager: manager@erp.com / manager123
-User: user@erp.com / user123
+Admin: admin@example.com / 123456
+Manager: manager@example.com / 123456
+User: user@example.com / 123456
 ```
 
 ---
@@ -439,16 +479,34 @@ GET    /api/backup/download/:filename # Download backup
 ## 🎨 Screenshots
 
 ### Dashboard
-![Dashboard](https://via.placeholder.com/800x400/1f2937/ffffff?text=Dashboard+Screenshot)
+<div align="center">
+  <img src="https://via.placeholder.com/800x400/4f46e5/ffffff?text=Modern+Dashboard+with+Real-time+Metrics" alt="Dashboard" width="100%">
+  <p><em>Beautiful dashboard with real-time metrics and AI-powered insights</em></p>
+</div>
+
+### Login Page
+<div align="center">
+  <img src="https://via.placeholder.com/800x400/10b981/ffffff?text=Enhanced+Login+with+2FA+Support" alt="Login" width="100%">
+  <p><em>Enhanced login page with password strength indicator and social login</em></p>
+</div>
 
 ### Product Management
-![Products](https://via.placeholder.com/800x400/1f2937/ffffff?text=Product+Management)
+<div align="center">
+  <img src="https://via.placeholder.com/800x400/f59e0b/ffffff?text=Product+Management+Interface" alt="Products" width="100%">
+  <p><em>Comprehensive product management with advanced filtering</em></p>
+</div>
 
 ### Order Creation
-![Orders](https://via.placeholder.com/800x400/1f2937/ffffff?text=Order+Creation)
+<div align="center">
+  <img src="https://via.placeholder.com/800x400/ef4444/ffffff?text=Order+Management+System" alt="Orders" width="100%">
+  <p><em>Intuitive order creation with real-time calculations</em></p>
+</div>
 
 ### User Management
-![Users](https://via.placeholder.com/800x400/1f2937/ffffff?text=User+Management)
+<div align="center">
+  <img src="https://via.placeholder.com/800x400/8b5cf6/ffffff?text=User+Management+Panel" alt="Users" width="100%">
+  <p><em>Advanced user management with role-based permissions</em></p>
+</div>
 
 ---
 

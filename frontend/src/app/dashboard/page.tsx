@@ -417,21 +417,85 @@ export default function DashboardPage() {
         ) : (
           <>
             {/* Welcome Card */}
-            <CardGradient className="mb-8">
-              <div className="text-center">
-                <div className="flex items-center justify-center space-x-2 mb-4">
-                  <Star className="w-6 h-6 text-yellow-500" />
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                    Hoş Geldiniz! 🎉
-                  </h2>
-                  <Award className="w-6 h-6 text-yellow-500" />
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-8"
+            >
+              <CardGradient className="relative overflow-hidden">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full blur-3xl"></div>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full blur-3xl"></div>
+                  <div className="absolute bottom-0 left-1/2 w-32 h-32 bg-gradient-to-br from-green-400 to-teal-500 rounded-full blur-3xl"></div>
                 </div>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Bugün sisteminizde <span className="font-semibold text-indigo-600">{data.orders.pending}</span> bekleyen sipariş ve 
-                  <span className="font-semibold text-green-600"> {data.customers.new}</span> yeni müşteri var.
-                </p>
-              </div>
-            </CardGradient>
+                
+                <div className="relative text-center p-8">
+                  <div className="flex items-center justify-center space-x-3 mb-6">
+                    <motion.div
+                      animate={{ rotate: [0, 10, -10, 0] }}
+                      transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                    >
+                      <Star className="w-8 h-8 text-yellow-500 drop-shadow-lg" />
+                    </motion.div>
+                    <motion.h2 
+                      className="text-2xl font-bold text-gray-900 dark:text-gray-100"
+                      initial={{ scale: 0.8 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      Hoş Geldiniz! 🎉
+                    </motion.h2>
+                    <motion.div
+                      animate={{ rotate: [0, -10, 10, 0] }}
+                      transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                    >
+                      <Award className="w-8 h-8 text-yellow-500 drop-shadow-lg" />
+                    </motion.div>
+                  </div>
+                  
+                  <motion.p 
+                    className="text-lg text-gray-600 dark:text-gray-400 mb-6"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    Bugün sisteminizde{' '}
+                    <span className="font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/30 px-2 py-1 rounded-lg">
+                      {data.orders.pending} bekleyen sipariş
+                    </span>{' '}
+                    ve{' '}
+                    <span className="font-bold text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-lg">
+                      {data.customers.new} yeni müşteri
+                    </span>{' '}
+                    var.
+                  </motion.p>
+                  
+                  <motion.div 
+                    className="flex items-center justify-center space-x-4 text-sm text-gray-500 dark:text-gray-400"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <Clock className="w-4 h-4" />
+                      <span>{new Date().toLocaleDateString('tr-TR', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}</span>
+                    </div>
+                    <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                    <div className="flex items-center space-x-1">
+                      <Target className="w-4 h-4" />
+                      <span>Hedef: %{Math.round((data.orders.completed / data.orders.total) * 100)} tamamlandı</span>
+                    </div>
+                  </motion.div>
+                </div>
+              </CardGradient>
+            </motion.div>
 
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
