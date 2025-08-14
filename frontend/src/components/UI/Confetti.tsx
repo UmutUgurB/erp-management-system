@@ -3,14 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
-interface ConfettiProps {
-  isActive: boolean;
-  duration?: number;
-  particleCount?: number;
-  colors?: string[];
-}
-
-interface Particle {
+interface ConfettiPiece {
   id: number;
   x: number;
   y: number;
@@ -20,64 +13,82 @@ interface Particle {
   delay: number;
 }
 
+interface ConfettiProps {
+  isActive: boolean;
+  duration?: number;
+  pieceCount?: number;
+  colors?: string[];
+  onComplete?: () => void;
+}
+
 export default function Confetti({ 
   isActive, 
   duration = 3000, 
-  particleCount = 50,
-  colors = ['#f56565', '#ed8936', '#ecc94b', '#48bb78', '#38b2ac', '#4299e1', '#667eea', '#9f7aea', '#ed64a6']
+  pieceCount = 50,
+  colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd'],
+  onComplete 
 }: ConfettiProps) {
-  const [particles, setParticles] = useState<Particle[]>([]);
+  const [pieces, setPieces] = useState<ConfettiPiece[]>([]);
 
   useEffect(() => {
-    if (isActive) {
-      const newParticles: Particle[] = Array.from({ length: particleCount }, (_, i) => ({
-        id: i,
-        x: Math.random() * window.innerWidth,
-        y: -20,
-        rotation: Math.random() * 360,
-        scale: Math.random() * 0.5 + 0.5,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        delay: Math.random() * 0.5,
-      }));
-      setParticles(newParticles);
-
-      const timer = setTimeout(() => {
-        setParticles([]);
-      }, duration);
-
-      return () => clearTimeout(timer);
+    if (!isActive) {
+      setPieces([]);
+      return;
     }
-  }, [isActive, duration, particleCount, colors]);
 
-  if (!isActive) return null;
+    // Generate confetti pieces
+    const newPieces: ConfettiPiece[] = Array.from({ length: pieceCount }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: -20,
+      rotation: Math.random() * 360,
+      scale: Math.random() * 0.5 + 0.5,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      delay: Math.random() * 0.5
+    }));
+
+    setPieces(newPieces);
+
+    // Cleanup after animation
+    const timer = setTimeout(() => {
+      setPieces([]);
+      onComplete?.();
+    }, duration);
+
+    return () => clearTimeout(timer);
+  }, [isActive, pieceCount, colors, duration, onComplete]);
+
+  if (!isActive || pieces.length === 0) return null;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-50">
-      {particles.map((particle) => (
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      {pieces.map((piece) => (
         <motion.div
-          key={particle.id}
+          key={piece.id}
           className="absolute w-2 h-2 rounded-sm"
           style={{
-            backgroundColor: particle.color,
-            left: particle.x,
-            top: particle.y,
+            left: `${piece.x}%`,
+            backgroundColor: piece.color,
+            boxShadow: `0 0 6px ${piece.color}`,
           }}
           initial={{
-            y: -20,
-            x: particle.x,
-            rotate: particle.rotation,
-            scale: particle.scale,
+            y: piece.y,
+            x: piece.x,
+            rotation: piece.rotation,
+            scale: piece.scale,
+            opacity: 1
           }}
           animate={{
-            y: window.innerHeight + 20,
-            x: particle.x + (Math.random() - 0.5) * 100,
-            rotate: particle.rotation + 360,
-            scale: [particle.scale, particle.scale * 1.2, particle.scale * 0.8],
+            y: [piece.y, piece.y + 120],
+            x: [piece.x, piece.x + (Math.random() - 0.5) * 40],
+            rotation: [piece.rotation, piece.rotation + 360],
+            scale: [piece.scale, piece.scale * 0.8],
+            opacity: [1, 0]
           }}
           transition={{
             duration: duration / 1000,
-            delay: particle.delay,
-            ease: 'easeOut',
+            delay: piece.delay,
+            ease: "easeOut"
           }}
         />
       ))}
@@ -85,42 +96,51 @@ export default function Confetti({
   );
 }
 
-// Success celebration component
-export function SuccessCelebration({ isActive, onComplete }: { isActive: boolean; onComplete?: () => void }) {
-  const [showConfetti, setShowConfetti] = useState(false);
-
-  useEffect(() => {
-    if (isActive) {
-      setShowConfetti(true);
-      const timer = setTimeout(() => {
-        setShowConfetti(false);
-        onComplete?.();
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [isActive, onComplete]);
-
+// Specialized confetti components
+export function SuccessConfetti({ isActive, onComplete }: { isActive: boolean; onComplete?: () => void }) {
   return (
-    <>
-      <Confetti isActive={showConfetti} />
-      {isActive && (
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0, opacity: 0 }}
-          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50"
-        >
-          <div className="bg-green-500 text-white px-6 py-3 rounded-full shadow-lg">
-            <motion.div
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 0.5, repeat: 3 }}
-              className="text-2xl"
-            >
-              🎉
-            </motion.div>
-          </div>
-        </motion.div>
-      )}
-    </>
+    <Confetti
+      isActive={isActive}
+      colors={['#10b981', '#059669', '#34d399', '#6ee7b7']}
+      pieceCount={60}
+      duration={4000}
+      onComplete={onComplete}
+    />
   );
+}
+
+export function CelebrationConfetti({ isActive, onComplete }: { isActive: boolean; onComplete?: () => void }) {
+  return (
+    <Confetti
+      isActive={isActive}
+      colors={['#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4']}
+      pieceCount={80}
+      duration={5000}
+      onComplete={onComplete}
+    />
+  );
+}
+
+export function BirthdayConfetti({ isActive, onComplete }: { isActive: boolean; onComplete?: () => void }) {
+  return (
+    <Confetti
+      isActive={isActive}
+      colors={['#fbbf24', '#f59e0b', '#d97706', '#92400e', '#78350f']}
+      pieceCount={100}
+      duration={6000}
+      onComplete={onComplete}
+    />
+  );
+}
+
+// Hook for easy confetti usage
+export function useConfetti() {
+  const [isActive, setIsActive] = useState(false);
+
+  const trigger = (duration = 3000) => {
+    setIsActive(true);
+    setTimeout(() => setIsActive(false), duration);
+  };
+
+  return { isActive, trigger };
 } 
