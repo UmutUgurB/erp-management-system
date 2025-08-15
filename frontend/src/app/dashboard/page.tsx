@@ -10,6 +10,7 @@ import { useToast } from '@/components/UI/Toast';
 import { useConfetti } from '@/components/UI/Confetti';
 import ProgressBar, { CircularProgressBar, GradientProgressBar } from '@/components/UI/ProgressBar';
 import QuickActions from '@/components/UI/QuickActions';
+import ActivityTimeline from '@/components/UI/ActivityTimeline';
 
 export default function DashboardPage() {
   const { addToast } = useToast();
@@ -579,6 +580,15 @@ export default function DashboardPage() {
               </motion.div>
             ))}
           </div>
+        </motion.div>
+
+        {/* Enhanced Activity Timeline */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+        >
+          <ActivityTimeline maxItems={6} />
         </motion.div>
       </div>
       
