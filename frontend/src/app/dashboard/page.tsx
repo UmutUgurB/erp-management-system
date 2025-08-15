@@ -9,6 +9,7 @@ import AdvancedSearch from '@/components/UI/AdvancedSearch';
 import { useToast } from '@/components/UI/Toast';
 import { useConfetti } from '@/components/UI/Confetti';
 import ProgressBar, { CircularProgressBar, GradientProgressBar } from '@/components/UI/ProgressBar';
+import QuickActions from '@/components/UI/QuickActions';
 
 export default function DashboardPage() {
   const { addToast } = useToast();
@@ -144,6 +145,9 @@ export default function DashboardPage() {
           </div>
           
           <div className="flex items-center space-x-3">
+            {/* Quick Actions Menu */}
+            <QuickActions />
+            
             <motion.button
               onClick={() => setShowAdvancedStats(!showAdvancedStats)}
               className="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
