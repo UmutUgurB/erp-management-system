@@ -29,7 +29,13 @@ import {
   Star,
   Sparkles,
   Heart,
-  Target
+  Target,
+  Moon,
+  Sun,
+  Palette,
+  Music,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 
 const loginSchema = z.object({
@@ -68,7 +74,10 @@ export default function LoginPage() {
   const [isLocked, setIsLocked] = useState(false);
   const [lockoutTime, setLockoutTime] = useState(0);
   const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
-  const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, size: number, delay: number}>>([]);
+  const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, size: number, delay: number, type: string}>>([]);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState('default');
   const { login } = useAuth();
   const router = useRouter();
   const emailInputRef = useRef<HTMLInputElement>(null);
@@ -142,17 +151,29 @@ export default function LoginPage() {
     }
   }, [lockoutTime]);
 
-  // Generate floating particles
+  // Generate enhanced floating particles
   useEffect(() => {
-    const newParticles = Array.from({ length: 15 }, (_, i) => ({
+    const particleTypes = ['star', 'circle', 'diamond', 'triangle'];
+    const newParticles = Array.from({ length: 25 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
       y: Math.random() * 100,
-      size: Math.random() * 4 + 2,
-      delay: Math.random() * 2
+      size: Math.random() * 6 + 2,
+      delay: Math.random() * 3,
+      type: particleTypes[Math.floor(Math.random() * particleTypes.length)]
     }));
     setParticles(newParticles);
   }, []);
+
+  // Theme switching
+  const themes = {
+    default: 'from-blue-50 via-indigo-50 to-purple-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900',
+    sunset: 'from-orange-50 via-red-50 to-pink-50 dark:from-orange-900 dark:via-red-950 dark:to-pink-900',
+    ocean: 'from-cyan-50 via-blue-50 to-indigo-50 dark:from-cyan-900 dark:via-blue-950 dark:to-indigo-900',
+    forest: 'from-green-50 via-emerald-50 to-teal-50 dark:from-green-900 dark:via-emerald-950 dark:to-teal-900'
+  };
+
+  const currentThemeClass = themes[currentTheme as keyof typeof themes] || themes.default;
 
   const onSubmit = async (data: LoginForm) => {
     if (isLocked) return;
@@ -244,13 +265,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 relative overflow-hidden">
-      {/* Floating Particles */}
+    <div className={`min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br ${currentThemeClass} relative overflow-hidden transition-all duration-1000`}>
+      {/* Enhanced Floating Particles */}
       <div className="absolute inset-0 pointer-events-none">
         {particles.map((particle) => (
           <motion.div
             key={particle.id}
-            className="absolute w-1 h-1 bg-gradient-to-r from-indigo-400/60 to-purple-400/60 rounded-full"
+            className={`absolute ${
+              particle.type === 'star' ? 'text-yellow-400/40' :
+              particle.type === 'circle' ? 'text-blue-400/40' :
+              particle.type === 'diamond' ? 'text-purple-400/40' :
+              'text-green-400/40'
+            }`}
             style={{
               left: `${particle.x}%`,
               top: `${particle.y}%`,
@@ -258,20 +284,76 @@ export default function LoginPage() {
               height: `${particle.size}px`
             }}
             animate={{
-              y: [0, -20, 0],
-              x: [0, 10, 0],
-              opacity: [0.3, 0.8, 0.3],
-              scale: [0.8, 1.2, 0.8]
+              y: [0, -30, 0],
+              x: [0, 15, 0],
+              opacity: [0.2, 0.8, 0.2],
+              scale: [0.8, 1.3, 0.8],
+              rotate: particle.type === 'star' ? [0, 180, 360] : [0, 90, 180, 270, 360]
             }}
             transition={{
-              duration: 4 + Math.random() * 2,
+              duration: 5 + Math.random() * 3,
               delay: particle.delay,
               repeat: Infinity,
               ease: "easeInOut"
             }}
-          />
+          >
+            {particle.type === 'star' && <Star className="w-full h-full" />}
+            {particle.type === 'circle' && <div className="w-full h-full rounded-full bg-current" />}
+            {particle.type === 'diamond' && <div className="w-full h-full bg-current transform rotate-45" />}
+            {particle.type === 'triangle' && <div className="w-full h-full bg-current clip-path-polygon" style={{clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'}} />}
+          </motion.div>
         ))}
       </div>
+
+      {/* Theme Switcher */}
+      <motion.div 
+        className="absolute top-4 right-4 flex items-center space-x-2 z-20"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <motion.button
+          onClick={() => setIsDarkMode(!isDarkMode)}
+          className="p-2 rounded-full bg-white/20 dark:bg-gray-800/20 backdrop-blur-sm border border-white/30 dark:border-gray-700/30 text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-gray-800/30 transition-all duration-200"
+          whileHover={{ scale: 1.1, rotate: 180 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        </motion.button>
+        
+        <motion.button
+          onClick={() => setIsMuted(!isMuted)}
+          className="p-2 rounded-full bg-white/20 dark:bg-gray-800/20 backdrop-blur-sm border border-white/30 dark:border-gray-700/30 text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-gray-800/30 transition-all duration-200"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+        </motion.button>
+        
+        <motion.div
+          className="relative group"
+          whileHover={{ scale: 1.05 }}
+        >
+          <motion.button
+            onClick={() => {
+              const themeKeys = Object.keys(themes);
+              const currentIndex = themeKeys.indexOf(currentTheme);
+              const nextIndex = (currentIndex + 1) % themeKeys.length;
+              setCurrentTheme(themeKeys[nextIndex]);
+            }}
+            className="p-2 rounded-full bg-white/20 dark:bg-gray-800/20 backdrop-blur-sm border border-white/30 dark:border-gray-700/30 text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-gray-800/30 transition-all duration-200"
+            whileHover={{ scale: 1.1, rotate: 90 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <Palette className="w-4 h-4" />
+          </motion.button>
+          
+          {/* Theme Tooltip */}
+          <div className="absolute right-0 mt-2 w-32 bg-gray-900 text-white text-xs p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-30">
+            Tema Değiştir
+          </div>
+        </motion.div>
+      </motion.div>
 
       {/* Enhanced Background Decorations */}
       <div className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-indigo-400/20 blur-3xl dark:bg-indigo-500/10 animate-pulse" />
@@ -281,7 +363,7 @@ export default function LoginPage() {
       {/* New floating elements */}
       <motion.div
         className="absolute top-20 left-20 w-16 h-16 text-indigo-400/30 dark:text-indigo-500/20"
-        animate={{ rotate: 360 }}
+        animate={{ rotate: 360, scale: [1, 1.2, 1] }}
         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
       >
         <Sparkles className="w-full h-full" />
@@ -289,23 +371,43 @@ export default function LoginPage() {
       
       <motion.div
         className="absolute bottom-20 right-20 w-12 h-12 text-pink-400/30 dark:text-pink-500/20"
-        animate={{ rotate: -360 }}
-        transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+        animate={{ rotate: -360, y: [0, -20, 0] }}
+        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
       >
         <Heart className="w-full h-full" />
       </motion.div>
       
       <motion.div
         className="absolute top-1/3 right-1/4 w-8 h-8 text-green-400/30 dark:text-green-500/20"
-        animate={{ scale: [1, 1.5, 1] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        animate={{ scale: [1, 1.5, 1], rotate: [0, 180, 360] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       >
         <Target className="w-full h-full" />
       </motion.div>
 
+      {/* Music Visualizer Bars */}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-end space-x-1 z-10">
+        {[...Array(8)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="w-1 bg-white/30 dark:bg-gray-300/30 rounded-full"
+            animate={{
+              height: [10, 30, 10],
+              opacity: [0.3, 1, 0.3]
+            }}
+            transition={{
+              duration: 1 + Math.random() * 2,
+              delay: i * 0.1,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+        ))}
+      </div>
+
       <div className="group relative max-w-md w-full">
-        {/* Enhanced gradient border */}
-        <div className="relative rounded-2xl p-[2px] bg-gradient-to-br from-indigo-200/80 via-purple-200/80 to-pink-200/80 dark:from-indigo-500/30 dark:via-purple-500/30 dark:to-pink-500/30 shadow-2xl">
+        {/* Enhanced glassmorphism border */}
+        <div className="relative rounded-2xl p-[2px] bg-gradient-to-br from-indigo-200/80 via-purple-200/80 to-pink-200/80 dark:from-indigo-500/30 dark:via-purple-500/30 dark:to-pink-500/30 shadow-2xl backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, y: 16, scale: 0.98 }}
             animate={error ? { x: [0, -8, 8, -6, 6, -3, 3, 0] } : { opacity: 1, y: 0, scale: 1 }}
@@ -314,6 +416,9 @@ export default function LoginPage() {
           >
             {/* Inner glow effect */}
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 rounded-2xl" />
+            
+            {/* Animated border glow */}
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 opacity-0 hover:opacity-100 transition-opacity duration-500" />
             
             <div className="w-full space-y-8 p-6 sm:p-8 relative z-10">
               {/* Enhanced Header */}
@@ -329,6 +434,19 @@ export default function LoginPage() {
                 >
                   {/* Animated background pattern */}
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-400/20 to-purple-400/20 animate-pulse" />
+                  
+                  {/* Floating particles inside logo */}
+                  <motion.div
+                    className="absolute inset-0"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                  >
+                    <div className="absolute top-2 left-2 w-2 h-2 bg-white/30 rounded-full" />
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-white/30 rounded-full" />
+                    <div className="absolute bottom-2 left-2 w-2 h-2 bg-white/30 rounded-full" />
+                    <div className="absolute bottom-2 right-2 w-2 h-2 bg-white/30 rounded-full" />
+                  </motion.div>
+                  
                   <LogIn className="h-8 w-8 text-white relative z-10" />
                 </motion.div>
                 
@@ -351,7 +469,7 @@ export default function LoginPage() {
                 </motion.p>
                 
                 <motion.div 
-                  className="mt-2 flex items-center justify-center space-x-1 text-xs text-gray-500 dark:text-gray-400 bg-gray-100/50 dark:bg-gray-700/50 px-3 py-1 rounded-full"
+                  className="mt-2 flex items-center justify-center space-x-1 text-xs text-gray-500 dark:text-gray-400 bg-gray-100/50 dark:bg-gray-700/50 px-3 py-1 rounded-full backdrop-blur-sm"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.4 }}
