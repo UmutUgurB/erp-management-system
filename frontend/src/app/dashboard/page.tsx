@@ -636,12 +636,12 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
-
-      {/* Keyboard Shortcuts Modal */}
-      <KeyboardShortcuts
-        isOpen={showKeyboardShortcuts}
-        onClose={() => setShowKeyboardShortcuts(false)}
-      />
     </DashboardLayout>
+
+    {/* Keyboard Shortcuts Modal - Moved outside DashboardLayout for higher z-index */}
+    <KeyboardShortcuts
+      isOpen={showKeyboardShortcuts}
+      onClose={() => setShowKeyboardShortcuts(false)}
+    />
   );
 } 
