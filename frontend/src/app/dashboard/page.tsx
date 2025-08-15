@@ -11,6 +11,7 @@ import { useConfetti } from '@/components/UI/Confetti';
 import ProgressBar, { CircularProgressBar, GradientProgressBar } from '@/components/UI/ProgressBar';
 import QuickActions from '@/components/UI/QuickActions';
 import ActivityTimeline from '@/components/UI/ActivityTimeline';
+import WeatherWidget from '@/components/UI/WeatherWidget';
 
 export default function DashboardPage() {
   const { addToast } = useToast();
@@ -589,6 +590,15 @@ export default function DashboardPage() {
           transition={{ delay: 0.9 }}
         >
           <ActivityTimeline maxItems={6} />
+        </motion.div>
+
+        {/* Weather Widget */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.0 }}
+        >
+          <WeatherWidget autoRefresh={true} refreshInterval={30} />
         </motion.div>
       </div>
       
