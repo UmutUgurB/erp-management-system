@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/Layout/DashboardLayout';
 import { CardGradient } from '@/components/Dashboard/DashboardBuilder';
 import { motion } from 'framer-motion';
-import { Star, Award, Clock, Target, Search, Filter, TrendingUp, Bell, Zap, Sparkles, Heart, Target as TargetIcon, Rocket, Trophy, Users, BarChart3, Eye, EyeOff, Settings, RefreshCw, Download, Share2, Bookmark, MoreHorizontal } from 'lucide-react';
+import { Star, Award, Clock, Target, Search, Filter, TrendingUp, Bell, Zap, Sparkles, Heart, Target as TargetIcon, Rocket, Trophy, Users, BarChart3, Eye, EyeOff, Settings, RefreshCw, Download, Share2, Bookmark, MoreHorizontal, Keyboard } from 'lucide-react';
 import AdvancedSearch from '@/components/UI/AdvancedSearch';
 import { useToast } from '@/components/UI/Toast';
 import { useConfetti } from '@/components/UI/Confetti';
@@ -12,6 +12,7 @@ import ProgressBar, { CircularProgressBar, GradientProgressBar } from '@/compone
 import QuickActions from '@/components/UI/QuickActions';
 import ActivityTimeline from '@/components/UI/ActivityTimeline';
 import WeatherWidget from '@/components/UI/WeatherWidget';
+import KeyboardShortcuts from '@/components/UI/KeyboardShortcuts';
 
 export default function DashboardPage() {
   const { addToast } = useToast();
@@ -19,6 +20,20 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAdvancedStats, setShowAdvancedStats] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+
+  // Keyboard shortcuts handler
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'F1') {
+        event.preventDefault();
+        setShowKeyboardShortcuts(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleSearch = (query: string, filters: any) => {
     console.log('Search:', query, filters);
@@ -149,6 +164,17 @@ export default function DashboardPage() {
           <div className="flex items-center space-x-3">
             {/* Quick Actions Menu */}
             <QuickActions />
+            
+            {/* Keyboard Shortcuts Button */}
+            <motion.button
+              onClick={() => setShowKeyboardShortcuts(true)}
+              className="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title="Klavye Kısayolları (F1)"
+            >
+              <Keyboard className="w-4 h-4" />
+            </motion.button>
             
             <motion.button
               onClick={() => setShowAdvancedStats(!showAdvancedStats)}
@@ -610,6 +636,12 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcuts
+        isOpen={showKeyboardShortcuts}
+        onClose={() => setShowKeyboardShortcuts(false)}
+      />
     </DashboardLayout>
   );
 } 
