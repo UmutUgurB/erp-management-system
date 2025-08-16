@@ -173,9 +173,9 @@ export default function OrdersPage() {
     <DashboardLayout>
       <div className="px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="sm:flex sm:items-center">
+        <div className="sm:flex sm:items-center sm:justify-between">
           <div className="sm:flex-auto">
-            <h1 className="text-2xl font-semibold text-gray-900">Sipariş Yönetimi</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Sipariş Yönetimi</h1>
             <p className="mt-2 text-sm text-gray-700">
               Tüm siparişleri görüntüleyin, düzenleyin ve yönetin.
             </p>
@@ -185,17 +185,165 @@ export default function OrdersPage() {
               <button
                 type="button"
                 onClick={openCreateModal}
-                className="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto"
+                className="inline-flex items-center justify-center rounded-md border border-transparent bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 text-sm font-medium text-white shadow-lg hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto transition-all duration-200 transform hover:scale-105"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-5 w-5 mr-2" />
                 Yeni Sipariş
               </button>
             </div>
           )}
         </div>
 
+        {/* Analytics Dashboard */}
+        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Total Orders */}
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">Toplam Sipariş</p>
+                <p className="text-3xl font-bold">{orders.length}</p>
+              </div>
+              <div className="p-3 bg-blue-400 rounded-full">
+                <ShoppingCart className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center text-blue-100 text-sm">
+                <span className="text-green-300">↗</span>
+                <span className="ml-1">+12%</span>
+                <span className="ml-2">geçen aya göre</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Pending Orders */}
+          <div className="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-yellow-100 text-sm font-medium">Bekleyen Siparişler</p>
+                <p className="text-3xl font-bold">
+                  {orders.filter(o => o.status === 'pending').length}
+                </p>
+              </div>
+              <div className="p-3 bg-yellow-400 rounded-full">
+                <Calendar className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center text-yellow-100 text-sm">
+                <span className="text-red-300">↘</span>
+                <span className="ml-1">-5%</span>
+                <span className="ml-2">geçen aya göre</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Total Revenue */}
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Toplam Gelir</p>
+                <p className="text-3xl font-bold">
+                  ₺{orders.reduce((sum, o) => sum + o.totalAmount, 0).toLocaleString('tr-TR')}
+                </p>
+              </div>
+              <div className="p-3 bg-green-400 rounded-full">
+                <DollarSign className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center text-green-100 text-sm">
+                <span className="text-green-300">↗</span>
+                <span className="ml-1">+18%</span>
+                <span className="ml-2">geçen aya göre</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Average Order Value */}
+          <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm font-medium">Ortalama Sipariş</p>
+                <p className="text-3xl font-bold">
+                  ₺{orders.length > 0 ? (orders.reduce((sum, o) => sum + o.totalAmount, 0) / orders.length).toLocaleString('tr-TR', { minimumFractionDigits: 0 }) : '0'}
+                </p>
+              </div>
+              <div className="p-3 bg-purple-400 rounded-full">
+                <User className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center text-purple-100 text-sm">
+                <span className="text-green-300">↗</span>
+                <span className="ml-1">+8%</span>
+                <span className="ml-2">geçen aya göre</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Status Distribution Chart */}
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Sipariş Durumu Dağılımı</h3>
+            <div className="space-y-3">
+              {ORDER_STATUS_OPTIONS.map((status) => {
+                const count = orders.filter(o => o.status === status.value).length;
+                const percentage = orders.length > 0 ? (count / orders.length) * 100 : 0;
+                return (
+                  <div key={status.value} className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className={`w-3 h-3 rounded-full mr-3 ${status.color === 'yellow' ? 'bg-yellow-400' : status.color === 'blue' ? 'bg-blue-400' : status.color === 'purple' ? 'bg-purple-400' : status.color === 'indigo' ? 'bg-indigo-400' : status.color === 'green' ? 'bg-green-400' : 'bg-red-400'}`}></div>
+                      <span className="text-sm text-gray-600">{status.label}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm font-medium text-gray-900">{count}</span>
+                      <span className="text-sm text-gray-500">({percentage.toFixed(1)}%)</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Aylık Sipariş Trendi</h3>
+            <div className="h-48 flex items-end justify-between space-x-2">
+              {Array.from({ length: 6 }, (_, i) => {
+                const month = new Date();
+                month.setMonth(month.getMonth() - (5 - i));
+                const monthOrders = orders.filter(o => {
+                  const orderDate = new Date(o.createdAt);
+                  return orderDate.getMonth() === month.getMonth() && orderDate.getFullYear() === month.getFullYear();
+                }).length;
+                const maxOrders = Math.max(...Array.from({ length: 6 }, (_, j) => {
+                  const m = new Date();
+                  m.setMonth(m.getMonth() - (5 - j));
+                  return orders.filter(o => {
+                    const orderDate = new Date(o.createdAt);
+                    return orderDate.getMonth() === m.getMonth() && orderDate.getFullYear() === m.getFullYear();
+                  }).length;
+                }));
+                const height = maxOrders > 0 ? (monthOrders / maxOrders) * 100 : 0;
+                return (
+                  <div key={i} className="flex flex-col items-center space-y-2">
+                    <div 
+                      className="w-8 bg-gradient-to-t from-indigo-500 to-purple-500 rounded-t-lg transition-all duration-300 hover:scale-110"
+                      style={{ height: `${height}%` }}
+                    ></div>
+                    <span className="text-xs text-gray-500">
+                      {month.toLocaleDateString('tr-TR', { month: 'short' })}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
         {/* Filters */}
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
+        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-gray-400" />
