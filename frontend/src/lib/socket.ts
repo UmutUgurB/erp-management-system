@@ -6,24 +6,37 @@ class SocketClient {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000; // 1 second
+  private isConnecting = false;
 
   connect(token: string) {
     if (this.socket && this.isConnected) {
       return;
     }
 
+    if (this.isConnecting) {
+      return;
+    }
+
+    this.isConnecting = true;
+
     try {
-      this.socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000', {
+      // Check if backend is available before connecting
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      
+      this.socket = io(backendUrl, {
         auth: { token },
         transports: ['websocket', 'polling'],
         reconnection: true,
         reconnectionAttempts: this.maxReconnectAttempts,
         reconnectionDelay: this.reconnectDelay,
+        timeout: 10000, // 10 second timeout
+        forceNew: true,
       });
 
       this.setupEventListeners();
     } catch (error) {
       console.error('Socket connection failed:', error);
+      this.isConnecting = false;
     }
   }
 
@@ -31,36 +44,47 @@ class SocketClient {
     if (!this.socket) return;
 
     this.socket.on('connect', () => {
-      console.log('Socket connected');
+      console.log('Socket connected successfully');
       this.isConnected = true;
+      this.isConnecting = false;
       this.reconnectAttempts = 0;
     });
 
     this.socket.on('disconnect', (reason) => {
       console.log('Socket disconnected:', reason);
       this.isConnected = false;
+      this.isConnecting = false;
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
+      console.warn('Socket connection error:', error.message);
+      this.isConnecting = false;
       this.reconnectAttempts++;
       
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-        console.error('Max reconnection attempts reached');
+        console.warn('Max reconnection attempts reached, stopping reconnection');
+        this.socket?.disconnect();
       }
     });
 
     this.socket.on('reconnect', (attemptNumber) => {
       console.log('Socket reconnected after', attemptNumber, 'attempts');
       this.isConnected = true;
+      this.isConnecting = false;
     });
 
     this.socket.on('reconnect_error', (error) => {
-      console.error('Socket reconnection error:', error);
+      console.warn('Socket reconnection error:', error.message);
     });
 
     this.socket.on('reconnect_failed', () => {
-      console.error('Socket reconnection failed');
+      console.warn('Socket reconnection failed, giving up');
+      this.isConnecting = false;
+    });
+
+    // Add error handler for general socket errors
+    this.socket.on('error', (error) => {
+      console.warn('Socket error:', error);
     });
   }
 

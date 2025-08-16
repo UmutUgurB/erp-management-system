@@ -27,7 +27,10 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('');
   const { user } = useAuth();
-  const { success, error, warning } = useNotification();
+  const notification = useNotification();
+  
+  // Destructure with safety check
+  const { success, error, warning } = notification || {};
   
   // Order modal management
   const {
@@ -56,9 +59,14 @@ export default function OrdersPage() {
       const response = await ordersAPI.getOrders(params);
       setOrders(response.data.orders || []);
     } catch (error) {
-      error('Siparişler yüklenirken hata oluştu', {
-        title: 'Yükleme Hatası'
-      });
+      // Safety check for error function
+      if (typeof error === 'function') {
+        error('Siparişler yüklenirken hata oluştu', {
+          title: 'Yükleme Hatası'
+        });
+      } else {
+        console.error('Siparişler yüklenirken hata:', error);
+      }
     } finally {
       setLoading(false);
     }
@@ -69,21 +77,33 @@ export default function OrdersPage() {
 
     try {
       await ordersAPI.deleteOrder(id);
-      success(`${orderNumber} başarıyla silindi`, {
-        title: 'Sipariş Silindi',
-        actions: [
-          {
-            label: 'Geri Al',
-            action: () => warning('Geri alma özelliği yakında eklenecek'),
-            style: 'secondary'
-          }
-        ]
-      });
+      // Safety check for success function
+      if (typeof success === 'function') {
+        success(`${orderNumber} başarıyla silindi`, {
+          title: 'Sipariş Silindi',
+          actions: [
+            {
+              label: 'Geri Al',
+              action: () => {
+                if (typeof warning === 'function') {
+                  warning('Geri alma özelliği yakında eklenecek');
+                }
+              },
+              style: 'secondary'
+            }
+          ]
+        });
+      }
       fetchOrders();
     } catch (error: any) {
-      error(error.response?.data?.message || 'Sipariş silinirken hata oluştu', {
-        title: 'Silme Hatası'
-      });
+      // Safety check for error function
+      if (typeof error === 'function') {
+        error(error.response?.data?.message || 'Sipariş silinirken hata oluştu', {
+          title: 'Silme Hatası'
+        });
+      } else {
+        console.error('Sipariş silinirken hata:', error);
+      }
     }
   };
 
