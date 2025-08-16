@@ -74,6 +74,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      // Demo hesaplar için mock login
+      if (email === 'admin@example.com' && password === '123456') {
+        const mockUser = {
+          id: 'demo-admin-001',
+          name: 'Admin User',
+          email: 'admin@example.com',
+          role: 'admin',
+          department: 'IT',
+          isActive: true
+        };
+        
+        const mockToken = 'demo-token-admin-' + Date.now();
+        
+        localStorage.setItem('token', mockToken);
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        setUser(mockUser);
+        
+        // Connect to WebSocket
+        socketClient.connect(mockToken);
+        
+        notification.success('Giriş başarılı!', {
+          title: 'Hoş Geldiniz',
+          duration: 3000
+        });
+        return true;
+      }
+      
+      if (email === 'manager@example.com' && password === '123456') {
+        const mockUser = {
+          id: 'demo-manager-001',
+          name: 'Manager User',
+          email: 'manager@example.com',
+          role: 'manager',
+          department: 'Management',
+          isActive: true
+        };
+        
+        const mockToken = 'demo-token-manager-' + Date.now();
+        
+        localStorage.setItem('token', mockToken);
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        setUser(mockUser);
+        
+        // Connect to WebSocket
+        socketClient.connect(mockToken);
+        
+        notification.success('Giriş başarılı!', {
+          title: 'Hoş Geldiniz',
+          duration: 3000
+        });
+        return true;
+      }
+      
+      // Gerçek API çağrısı (demo hesaplar değilse)
       const response = await authAPI.login(email, password);
       const { token, user: userData } = response.data;
       
