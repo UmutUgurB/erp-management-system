@@ -166,6 +166,31 @@ export default function DashboardPage() {
               ease: "easeInOut"
             }}
           />
+          {/* New floating elements */}
+          <motion.div
+            className="absolute top-1/2 left-1/4 w-16 h-16 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 rounded-full blur-2xl"
+            animate={{
+              y: [0, -20, 0],
+              rotate: [0, 180, 360],
+            }}
+            transition={{
+              duration: 12,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          <motion.div
+            className="absolute top-1/3 right-1/4 w-20 h-20 bg-gradient-to-r from-cyan-400/20 to-blue-400/20 rounded-full blur-2xl"
+            animate={{
+              scale: [1, 1.4, 1],
+              opacity: [0.2, 0.6, 0.2],
+            }}
+            transition={{
+              duration: 7,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
         </div>
 
         {/* Enhanced Header Section */}
@@ -185,19 +210,34 @@ export default function DashboardPage() {
               >
                 Hoş Geldiniz! 👋
               </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-gray-600 dark:text-gray-300 text-lg"
-              >
-                Bugün {new Date().toLocaleDateString('tr-TR', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })} - Sistem durumu mükemmel! 🚀
-              </motion.p>
+                             <motion.p
+                 initial={{ opacity: 0, x: -20 }}
+                 animate={{ opacity: 1, x: 0 }}
+                 transition={{ duration: 0.6, delay: 0.2 }}
+                 className="text-gray-600 dark:text-gray-300 text-lg"
+               >
+                 Bugün {new Date().toLocaleDateString('tr-TR', { 
+                   weekday: 'long', 
+                   year: 'numeric', 
+                   month: 'long', 
+                   day: 'numeric' 
+                 })} - Sistem durumu mükemmel! 🚀
+               </motion.p>
+               <motion.div
+                 initial={{ opacity: 0, x: -20 }}
+                 animate={{ opacity: 1, x: 0 }}
+                 transition={{ duration: 0.6, delay: 0.25 }}
+                 className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"
+               >
+                 <Clock className="w-4 h-4" />
+                 <span className="font-mono">
+                   {new Date().toLocaleTimeString('tr-TR', { 
+                     hour: '2-digit', 
+                     minute: '2-digit', 
+                     second: '2-digit' 
+                   })}
+                 </span>
+               </motion.div>
             </div>
 
             {/* Enhanced Action Buttons */}
@@ -283,7 +323,7 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
-          className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+          className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6"
         >
           {[
             {
@@ -321,6 +361,15 @@ export default function DashboardPage() {
               icon: Package,
               color: 'from-purple-500 to-pink-600',
               bgColor: 'bg-purple-50 dark:bg-purple-900/20'
+            },
+            {
+              title: 'Aktif Projeler',
+              value: '24',
+              change: '+3.2%',
+              changeType: 'positive',
+              icon: Target,
+              color: 'from-indigo-500 to-cyan-600',
+              bgColor: 'bg-indigo-50 dark:bg-indigo-900/20'
             }
           ].map((stat, index) => (
             <motion.div
@@ -392,24 +441,32 @@ export default function DashboardPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        Veritabanı: Aktif
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        API: Çalışıyor
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        WebSocket: Bağlı
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        Backup: Güncel
-                      </div>
-                    </div>
+                                         <div className="grid grid-cols-2 gap-4">
+                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                         <CheckCircle className="w-4 h-4 text-green-500" />
+                         Veritabanı: Aktif
+                       </div>
+                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                         <CheckCircle className="w-4 h-4 text-green-500" />
+                         API: Çalışıyor
+                       </div>
+                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                         <CheckCircle className="w-4 h-4 text-green-500" />
+                         WebSocket: Bağlı
+                       </div>
+                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                         <CheckCircle className="w-4 h-4 text-green-500" />
+                         Backup: Güncel
+                       </div>
+                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                         <CheckCircle className="w-4 h-4 text-green-500" />
+                         SSL: Güvenli
+                       </div>
+                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                         <CheckCircle className="w-4 h-4 text-green-500" />
+                         Cache: Aktif
+                       </div>
+                     </div>
                   </div>
                   <div className="text-right">
                     <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
@@ -504,22 +561,27 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* Enhanced Floating Action Button */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 1 }}
-          className="fixed bottom-6 right-6 z-50"
-        >
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={handleShowConfetti}
-            className="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            <Sparkles className="w-6 h-6" />
-          </motion.button>
-        </motion.div>
+                 {/* Enhanced Floating Action Button */}
+         <motion.div
+           initial={{ opacity: 0, scale: 0 }}
+           animate={{ opacity: 1, scale: 1 }}
+           transition={{ duration: 0.6, delay: 1 }}
+           className="fixed bottom-6 right-6 z-50 group"
+         >
+           <motion.button
+             whileHover={{ scale: 1.1 }}
+             whileTap={{ scale: 0.9 }}
+             onClick={handleShowConfetti}
+             className="relative p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+           >
+             <Sparkles className="w-6 h-6" />
+             {/* Tooltip */}
+             <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+               🎉 Confetti Göster
+               <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+             </div>
+           </motion.button>
+         </motion.div>
 
         {/* Enhanced Search Overlay */}
         <AnimatePresence>
