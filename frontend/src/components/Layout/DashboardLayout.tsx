@@ -27,6 +27,7 @@ import {
   FileText,
   Bell,
   User,
+  HelpCircle,
 } from 'lucide-react';
 
 const navigationItems = [
@@ -40,6 +41,7 @@ const navigationItems = [
   { name: 'Görevler', href: '/dashboard/tasks', icon: CheckSquare },
   { name: 'Varlıklar', href: '/dashboard/assets', icon: Building },
   { name: 'Raporlar', href: '/dashboard/reports', icon: BarChart3 },
+  { name: 'Destek', href: '/support', icon: HelpCircle },
   { name: 'Ayarlar', href: '/dashboard/settings', icon: Settings },
 ];
 
