@@ -48,7 +48,12 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 // Password strength checker
-const getPasswordStrength = (password: string) => {
+const getPasswordStrength = (password: string | undefined) => {
+  // Return default values if password is undefined or null
+  if (!password) {
+    return { strength: 'Şifre girin', color: 'bg-gray-300', width: 'w-0' };
+  }
+  
   let score = 0;
   if (password.length >= 8) score++;
   if (/[a-z]/.test(password)) score++;
