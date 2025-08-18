@@ -15,6 +15,8 @@ import {
   Trash2,
   AlertTriangle,
   Filter,
+  CheckSquare,
+  DollarSign,
 } from 'lucide-react';
 
 export default function ProductsPage() {
@@ -142,11 +144,11 @@ export default function ProductsPage() {
 
   return (
     <DashboardLayout>
-      <div className="px-4 sm:px-6 lg:px-8">
+      <div className="space-y-6">
         {/* Header */}
-        <div className="sm:flex sm:items-center">
+        <div className="sm:flex sm:items-center sm:justify-between">
           <div className="sm:flex-auto">
-            <h1 className="text-2xl font-semibold text-gray-900">Ürün Yönetimi</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Ürün Yönetimi</h1>
             <p className="mt-2 text-sm text-gray-700">
               Tüm ürünleri görüntüleyin, düzenleyin ve yönetin.
             </p>
@@ -156,17 +158,164 @@ export default function ProductsPage() {
               <button
                 type="button"
                 onClick={openCreateModal}
-                className="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto"
+                className="inline-flex items-center justify-center rounded-md border border-transparent bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 text-sm font-medium text-white shadow-lg hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto transition-all duration-200 transform hover:scale-105"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-5 w-5 mr-2" />
                 Yeni Ürün
               </button>
             </div>
           )}
         </div>
 
+        {/* Product Statistics */}
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Total Products */}
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">Toplam Ürün</p>
+                <p className="text-3xl font-bold">{products.length}</p>
+              </div>
+              <div className="p-3 bg-blue-400 rounded-full">
+                <Package className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center text-blue-100 text-sm">
+                <span className="text-green-300">↗</span>
+                <span className="ml-1">+8%</span>
+                <span className="ml-2">geçen aya göre</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Active Products */}
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Aktif Ürünler</p>
+                <p className="text-3xl font-bold">
+                  {products.filter(p => p.status === 'active').length}
+                </p>
+              </div>
+              <div className="p-3 bg-green-400 rounded-full">
+                <CheckSquare className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center text-green-100 text-sm">
+                <span className="text-green-300">↗</span>
+                <span className="ml-1">+12%</span>
+                <span className="ml-2">geçen aya göre</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Low Stock Products */}
+          <div className="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-yellow-100 text-sm font-medium">Düşük Stok</p>
+                <p className="text-3xl font-bold">
+                  {products.filter(p => p.stockStatus === 'low_stock').length}
+                </p>
+              </div>
+              <div className="p-3 bg-yellow-400 rounded-full">
+                <AlertTriangle className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center text-yellow-100 text-sm">
+                <span className="text-red-300">↘</span>
+                <span className="ml-1">-3%</span>
+                <span className="ml-2">geçen aya göre</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Total Value */}
+          <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm font-medium">Toplam Değer</p>
+                <p className="text-3xl font-bold">
+                  ₺{products.reduce((sum, p) => sum + (p.price * p.stock), 0).toLocaleString('tr-TR')}
+                </p>
+              </div>
+              <div className="p-3 bg-purple-400 rounded-full">
+                <DollarSign className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center text-purple-100 text-sm">
+                <span className="text-green-300">↗</span>
+                <span className="ml-1">+15%</span>
+                <span className="ml-2">geçen aya göre</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Category Distribution */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Kategori Dağılımı</h3>
+            <div className="space-y-3">
+              {Array.from(new Set(products.map(p => p.category))).map((category) => {
+                const count = products.filter(p => p.category === category).length;
+                const percentage = products.length > 0 ? (count / products.length) * 100 : 0;
+                return (
+                  <div key={category} className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-indigo-400 rounded-full mr-3"></div>
+                      <span className="text-sm text-gray-600">{category || 'Kategorisiz'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm font-medium text-gray-900">{count}</span>
+                      <span className="text-sm text-gray-500">({percentage.toFixed(1)}%)</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Stok Durumu</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-green-400 rounded-full mr-3"></div>
+                  <span className="text-sm text-gray-600">Yeterli Stok</span>
+                </div>
+                <span className="text-sm font-medium text-gray-900">
+                  {products.filter(p => p.stockStatus === 'in_stock').length}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-yellow-400 rounded-full mr-3"></div>
+                  <span className="text-sm text-gray-600">Düşük Stok</span>
+                </div>
+                <span className="text-sm font-medium text-gray-900">
+                  {products.filter(p => p.stockStatus === 'low_stock').length}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-red-400 rounded-full mr-3"></div>
+                  <span className="text-sm text-gray-600">Stok Tükendi</span>
+                </div>
+                <span className="text-sm font-medium text-gray-900">
+                  {products.filter(p => p.stockStatus === 'out_of_stock').length}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Filters */}
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-gray-400" />

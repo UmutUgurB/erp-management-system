@@ -193,91 +193,132 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Enhanced Header Section */}
+        {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="relative z-10"
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-8 shadow-2xl"
         >
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="space-y-2">
-              <motion.h1
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent"
-              >
-                Hoş Geldiniz! 👋
-              </motion.h1>
-                             <motion.p
-                 initial={{ opacity: 0, x: -20 }}
-                 animate={{ opacity: 1, x: 0 }}
-                 transition={{ duration: 0.6, delay: 0.2 }}
-                 className="text-gray-600 dark:text-gray-300 text-lg"
-               >
-                 Bugün {new Date().toLocaleDateString('tr-TR', { 
-                   weekday: 'long', 
-                   year: 'numeric', 
-                   month: 'long', 
-                   day: 'numeric' 
-                 })} - Sistem durumu mükemmel! 🚀
-               </motion.p>
-               <motion.div
-                 initial={{ opacity: 0, x: -20 }}
-                 animate={{ opacity: 1, x: 0 }}
-                 transition={{ duration: 0.6, delay: 0.25 }}
-                 className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"
-               >
-                 <Clock className="w-4 h-4" />
-                 <span className="font-mono">
-                   {new Date().toLocaleTimeString('tr-TR', { 
-                     hour: '2-digit', 
-                     minute: '2-digit', 
-                     second: '2-digit' 
-                   })}
-                 </span>
-               </motion.div>
-            </div>
-
-            {/* Enhanced Action Buttons */}
+          {/* Floating background elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-wrap items-center gap-3"
+              className="absolute top-10 left-1/4 w-20 h-20 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.3, 0.6, 0.3],
+              }}
+              transition={{
+                duration: 8,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
+            <motion.div
+              className="absolute top-20 right-1/4 w-24 h-24 bg-gradient-to-r from-green-400/20 to-blue-400/20 rounded-full blur-3xl"
+              animate={{
+                scale: [1.2, 1, 1.2],
+                opacity: [0.4, 0.7, 0.4],
+              }}
+              transition={{
+                duration: 6,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
+            <motion.div
+              className="absolute bottom-10 left-1/3 w-16 h-16 bg-gradient-to-r from-pink-400/20 to-orange-400/20 rounded-full blur-2xl"
+              animate={{
+                y: [0, -15, 0],
+                rotate: [0, 180, 360],
+              }}
+              transition={{
+                duration: 10,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
+          </div>
+
+          <div className="relative z-10 text-center space-y-6">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="inline-flex items-center justify-center w-28 h-28 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 rounded-full mx-auto relative shadow-2xl"
             >
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowQuickActions(!showQuickActions)}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+              <Rocket className="w-14 h-14 text-white" />
+              {/* Enhanced glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 rounded-full blur-2xl opacity-60 animate-pulse"></div>
+            </motion.div>
+            
+            <motion.h1
+              initial={{ opacity: 0, y: 0 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="text-6xl font-bold bg-gradient-to-r from-gray-900 via-indigo-800 via-purple-800 to-pink-800 bg-clip-text text-transparent relative z-10"
+            >
+              Hoş Geldiniz
+            </motion.h1>
+            
+            <motion.p
+              initial={{ opacity: 0, y: 0 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="text-xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto relative z-10"
+            >
+              ERP sisteminizde günlük işlemlerinizi yönetin, analizleri inceleyin ve performansınızı takip edin.
+            </motion.p>
+
+            {/* Enhanced stats badges */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="flex flex-wrap items-center justify-center gap-4 relative z-10"
+            >
+              <div className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-800 dark:text-green-400 rounded-full text-sm font-medium shadow-lg backdrop-blur-sm">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                Sistem Aktif
+              </div>
+              <div className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-800 dark:text-blue-400 rounded-full text-sm font-medium shadow-lg backdrop-blur-sm">
+                <Clock className="w-4 h-4" />
+                Son Güncelleme: {new Date().toLocaleTimeString('tr-TR')}
+              </div>
+              <div className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 text-purple-800 dark:text-purple-400 rounded-full text-sm font-medium shadow-lg backdrop-blur-sm">
+                <Users className="w-4 h-4" />
+                15,000+ Aktif Kullanıcı
+              </div>
+            </motion.div>
+
+            {/* Quick action buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="flex flex-wrap items-center justify-center gap-4 relative z-10"
+            >
+              <button
+                onClick={() => setShowQuickActions(true)}
+                className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 backdrop-blur-sm"
               >
-                <Zap className="w-4 h-4" />
+                <Zap className="w-5 h-5 inline mr-2" />
                 Hızlı İşlemler
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="relative flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+              </button>
+              <button
+                onClick={() => setShowNotifications(true)}
+                className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-full font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 backdrop-blur-sm"
               >
-                <Bell className="w-4 h-4" />
+                <Bell className="w-5 h-5 inline mr-2" />
                 Bildirimler
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50"
+              </button>
+              <button
+                onClick={handleShowConfetti}
+                className="px-6 py-3 bg-gradient-to-r from-pink-600 to-rose-600 text-white rounded-full font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 backdrop-blur-sm"
               >
-                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? 'Yenileniyor...' : 'Yenile'}
-              </motion.button>
+                <Sparkles className="w-5 h-5 inline mr-2" />
+                Kutlama
+              </button>
             </motion.div>
           </div>
         </motion.div>
