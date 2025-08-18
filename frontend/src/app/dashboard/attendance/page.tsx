@@ -116,46 +116,197 @@ export default function AttendancePage() {
 
   return (
     <DashboardLayout>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="px-4 sm:px-6 lg:px-8"
-      >
+      <div className="space-y-6">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="sm:flex sm:items-center sm:justify-between"
-        >
+        <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-800 bg-clip-text text-transparent">
               Devam Takibi
             </h1>
-            <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-              Günlük devam durumu ve istatistikler
+            <p className="text-muted-foreground mt-2">
+              Çalışan giriş/çıkış takibi, devam analizi ve zaman yönetimi
             </p>
           </div>
-          <div className="mt-4 sm:mt-0">
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => handleDateChange(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            />
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-sm text-gray-500">Bugün</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {new Date().toLocaleDateString('tr-TR', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </p>
+            </div>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Quick Stats */}
+        {/* Enhanced Stats Cards */}
+        {stats && (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-sm font-medium">Toplam Çalışan</p>
+                  <p className="text-3xl font-bold">{stats.totalEmployees}</p>
+                </div>
+                <div className="p-3 bg-blue-400 rounded-full">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className="flex items-center text-blue-100 text-sm">
+                  <span className="text-green-300">↗</span>
+                  <span className="ml-1">+5%</span>
+                  <span className="ml-2">geçen haftaya göre</span>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100 text-sm font-medium">Giriş Yapan</p>
+                  <p className="text-3xl font-bold">{stats.checkedInEmployees}</p>
+                </div>
+                <div className="p-3 bg-green-400 rounded-full">
+                  <Clock className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className="flex items-center text-green-100 text-sm">
+                  <span className="text-green-300">↗</span>
+                  <span className="ml-1">+8%</span>
+                  <span className="ml-2">geçen haftaya göre</span>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg p-6 text-white"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100 text-sm font-medium">Devam Oranı</p>
+                  <p className="text-3xl font-bold">{Math.round((stats.checkedInEmployees / stats.totalEmployees) * 100)}%</p>
+                </div>
+                <div className="p-3 bg-purple-400 rounded-full">
+                  <TrendingUp className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className="flex items-center text-purple-100 text-sm">
+                  <span className="text-green-300">↗</span>
+                  <span className="ml-1">+3%</span>
+                  <span className="ml-2">geçen haftaya göre</span>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl shadow-lg p-6 text-white"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-100 text-sm font-medium">Geciken</p>
+                  <p className="text-3xl font-bold">{stats.lateEmployees}</p>
+                </div>
+                <div className="p-3 bg-orange-400 rounded-full">
+                  <AlertTriangle className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className="flex items-center text-orange-100 text-sm">
+                  <span className="text-red-300">↘</span>
+                  <span className="ml-1">-12%</span>
+                  <span className="ml-2">geçen haftaya göre</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Attendance Insights */}
         {stats && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-8"
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-6"
           >
-            <AttendanceOverview stats={stats} selectedDate={selectedDate} />
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Giriş Saati Dağılımı</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-green-400 rounded-full mr-3"></div>
+                    <span className="text-sm text-gray-600">Zamanında (08:00-08:30)</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">
+                    {Math.round((stats.onTimeEmployees || 0) / stats.totalEmployees * 100)}%
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-yellow-400 rounded-full mr-3"></div>
+                    <span className="text-sm text-gray-600">5-15 dk gecikme</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">
+                    {Math.round((stats.slightlyLateEmployees || 0) / stats.totalEmployees * 100)}%
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-red-400 rounded-full mr-3"></div>
+                    <span className="text-sm text-gray-600">15+ dk gecikme</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">
+                    {Math.round((stats.lateEmployees || 0) / stats.totalEmployees * 100)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Haftalık Devam Trendi</h3>
+              <div className="h-48 flex items-end justify-between space-x-2">
+                {Array.from({ length: 7 }, (_, i) => {
+                  const day = new Date();
+                  day.setDate(day.getDate() - (6 - i));
+                  const dayAttendance = Math.floor(Math.random() * 20) + 15; // Mock data
+                  const maxAttendance = 35;
+                  const height = (dayAttendance / maxAttendance) * 100;
+                  return (
+                    <div key={i} className="flex flex-col items-center space-y-2">
+                      <div 
+                        className="w-8 bg-gradient-to-t from-blue-500 to-indigo-500 rounded-t-lg transition-all duration-300 hover:scale-110"
+                        style={{ height: `${height}%` }}
+                      ></div>
+                      <span className="text-xs text-gray-500">
+                        {day.toLocaleDateString('tr-TR', { weekday: 'short' })}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </motion.div>
         )}
 
@@ -201,7 +352,7 @@ export default function AttendancePage() {
             <AttendanceStats stats={stats} />
           </motion.div>
         )}
-      </motion.div>
+      </div>
     </DashboardLayout>
   );
 } 
