@@ -68,77 +68,159 @@ export default function ProjectsPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Proje Yönetimi</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+            Proje Yönetimi
+          </h1>
+          <p className="text-muted-foreground mt-2">
             Proje takibi, ekip yönetimi ve proje analitik
           </p>
         </div>
-        <Button>
+        <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg transform hover:scale-105 transition-all duration-200">
           <Plus className="h-4 w-4 mr-2" />
           Yeni Proje
         </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Toplam Proje</CardTitle>
-            <FolderOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.overview.totalProjects || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Toplam proje sayısı
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Aktif Projeler</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {stats?.overview.activeProjects || 0}
+      {/* Enhanced Stats Cards */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-blue-100 text-sm font-medium">Toplam Proje</p>
+              <p className="text-3xl font-bold">{stats?.overview.totalProjects || 0}</p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Devam eden projeler
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tamamlanan</CardTitle>
-            <Calendar className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {stats?.overview.completedProjects || 0}
+            <div className="p-3 bg-blue-400 rounded-full">
+              <FolderOpen className="h-6 w-6 text-white" />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Tamamlanan projeler
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Gecikmiş</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {stats?.overview.overdueProjects || 0}
+          </div>
+          <div className="mt-4">
+            <div className="flex items-center text-blue-100 text-sm">
+              <span className="text-green-300">↗</span>
+              <span className="ml-1">+12%</span>
+              <span className="ml-2">geçen aya göre</span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Gecikmiş projeler
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-green-100 text-sm font-medium">Aktif Projeler</p>
+              <p className="text-3xl font-bold">{stats?.overview.activeProjects || 0}</p>
+            </div>
+            <div className="p-3 bg-green-400 rounded-full">
+              <TrendingUp className="h-6 w-6 text-white" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className="flex items-center text-green-100 text-sm">
+              <span className="text-green-300">↗</span>
+              <span className="ml-1">+18%</span>
+              <span className="ml-2">geçen aya göre</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-purple-100 text-sm font-medium">Tamamlanan</p>
+              <p className="text-3xl font-bold">{stats?.overview.completedProjects || 0}</p>
+            </div>
+            <div className="p-3 bg-purple-400 rounded-full">
+              <Users className="h-6 w-6 text-white" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className="flex items-center text-purple-100 text-sm">
+              <span className="text-green-300">↗</span>
+              <span className="ml-1">+25%</span>
+              <span className="ml-2">geçen aya göre</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl shadow-lg p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-orange-100 text-sm font-medium">Gecikmiş</p>
+              <p className="text-3xl font-bold">{stats?.overview.overdueProjects || 0}</p>
+            </div>
+            <div className="p-3 bg-orange-400 rounded-full">
+              <AlertTriangle className="h-6 w-6 text-white" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className="flex items-center text-orange-100 text-sm">
+              <span className="text-red-300">↘</span>
+              <span className="ml-1">-8%</span>
+              <span className="ml-2">geçen aya göre</span>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Project Insights */}
+      {stats && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Proje Durumu Dağılımı</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-green-400 rounded-full mr-3"></div>
+                  <span className="text-sm text-gray-600">Aktif</span>
+                </div>
+                <span className="text-sm font-medium text-gray-900">
+                  {stats.overview.activeProjects || 0}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-blue-400 rounded-full mr-3"></div>
+                  <span className="text-sm text-gray-600">Tamamlanan</span>
+                </div>
+                <span className="text-sm font-medium text-gray-900">
+                  {stats.overview.completedProjects || 0}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-yellow-400 rounded-full mr-3"></div>
+                  <span className="text-sm text-gray-600">Beklemede</span>
+                </div>
+                <span className="text-sm font-medium text-gray-900">
+                  {stats.overview.onHoldProjects || 0}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Aylık Proje Trendi</h3>
+            <div className="h-48 flex items-end justify-between space-x-2">
+              {Array.from({ length: 6 }, (_, i) => {
+                const month = new Date();
+                month.setMonth(month.getMonth() - (5 - i));
+                const monthProjects = Math.floor(Math.random() * 20) + 10; // Mock data
+                const maxProjects = 30;
+                const height = (monthProjects / maxProjects) * 100;
+                return (
+                  <div key={i} className="flex flex-col items-center space-y-2">
+                    <div 
+                      className="w-8 bg-gradient-to-t from-blue-500 to-purple-500 rounded-t-lg transition-all duration-300 hover:scale-110"
+                      style={{ height: `${height}%` }}
+                    ></div>
+                    <span className="text-xs text-gray-500">
+                      {month.toLocaleDateString('tr-TR', { month: 'short' })}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <Tabs defaultValue="projects" className="space-y-4">

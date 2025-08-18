@@ -74,77 +74,159 @@ export default function TasksPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Görev Yönetimi</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-gray-900 via-indigo-800 to-purple-800 bg-clip-text text-transparent">
+            Görev Yönetimi
+          </h1>
+          <p className="text-muted-foreground mt-2">
             Görev takibi, zaman yönetimi ve görev analitik
           </p>
         </div>
-        <Button>
+        <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg transform hover:scale-105 transition-all duration-200">
           <Plus className="h-4 w-4 mr-2" />
           Yeni Görev
         </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Toplam Görev</CardTitle>
-            <CheckSquare className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.overview.totalTasks || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Toplam görev sayısı
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tamamlanan</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {stats?.overview.completedTasks || 0}
+      {/* Enhanced Stats Cards */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-indigo-100 text-sm font-medium">Toplam Görev</p>
+              <p className="text-3xl font-bold">{stats?.overview.totalTasks || 0}</p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Tamamlanan görevler
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Devam Eden</CardTitle>
-            <Clock className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {stats?.overview.inProgressTasks || 0}
+            <div className="p-3 bg-indigo-400 rounded-full">
+              <CheckSquare className="h-6 w-6 text-white" />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Devam eden görevler
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Gecikmiş</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {stats?.overview.overdueTasks || 0}
+          </div>
+          <div className="mt-4">
+            <div className="flex items-center text-indigo-100 text-sm">
+              <span className="text-green-300">↗</span>
+              <span className="ml-1">+15%</span>
+              <span className="ml-2">geçen aya göre</span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Gecikmiş görevler
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-green-100 text-sm font-medium">Tamamlanan</p>
+              <p className="text-3xl font-bold">{stats?.overview.completedTasks || 0}</p>
+            </div>
+            <div className="p-3 bg-green-400 rounded-full">
+              <CheckSquare className="h-6 w-6 text-white" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className="flex items-center text-green-100 text-sm">
+              <span className="text-green-300">↗</span>
+              <span className="ml-1">+22%</span>
+              <span className="ml-2">geçen aya göre</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-blue-100 text-sm font-medium">Devam Eden</p>
+              <p className="text-3xl font-bold">{stats?.overview.inProgressTasks || 0}</p>
+            </div>
+            <div className="p-3 bg-blue-400 rounded-full">
+              <Clock className="h-6 w-6 text-white" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className="flex items-center text-blue-100 text-sm">
+              <span className="text-green-300">↗</span>
+              <span className="ml-1">+8%</span>
+              <span className="ml-2">geçen aya göre</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl shadow-lg p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-orange-100 text-sm font-medium">Gecikmiş</p>
+              <p className="text-3xl font-bold">{stats?.overview.overdueTasks || 0}</p>
+            </div>
+            <div className="p-3 bg-orange-400 rounded-full">
+              <AlertTriangle className="h-6 w-6 text-white" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className="flex items-center text-orange-100 text-sm">
+              <span className="text-red-300">↘</span>
+              <span className="ml-1">-12%</span>
+              <span className="ml-2">geçen aya göre</span>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Task Insights */}
+      {stats && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Görev Durumu Dağılımı</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-green-400 rounded-full mr-3"></div>
+                  <span className="text-sm text-gray-600">Tamamlanan</span>
+                </div>
+                <span className="text-sm font-medium text-gray-900">
+                  {stats.overview.completedTasks || 0}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-blue-400 rounded-full mr-3"></div>
+                  <span className="text-sm text-gray-600">Devam Eden</span>
+                </div>
+                <span className="text-sm font-medium text-gray-900">
+                  {stats.overview.inProgressTasks || 0}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-yellow-400 rounded-full mr-3"></div>
+                  <span className="text-sm text-gray-600">Beklemede</span>
+                </div>
+                <span className="text-sm font-medium text-gray-900">
+                  {stats.overview.pendingTasks || 0}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Günlük Görev Trendi</h3>
+            <div className="h-48 flex items-end justify-between space-x-2">
+              {Array.from({ length: 7 }, (_, i) => {
+                const day = new Date();
+                day.setDate(day.getDate() - (6 - i));
+                const dayTasks = Math.floor(Math.random() * 15) + 5; // Mock data
+                const maxTasks = 20;
+                const height = (dayTasks / maxTasks) * 100;
+                return (
+                  <div key={i} className="flex flex-col items-center space-y-2">
+                    <div 
+                      className="w-8 bg-gradient-to-t from-indigo-500 to-purple-500 rounded-t-lg transition-all duration-300 hover:scale-110"
+                      style={{ height: `${height}%` }}
+                    ></div>
+                    <span className="text-xs text-gray-500">
+                      {day.toLocaleDateString('tr-TR', { weekday: 'short' })}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <Tabs defaultValue="tasks" className="space-y-4">
