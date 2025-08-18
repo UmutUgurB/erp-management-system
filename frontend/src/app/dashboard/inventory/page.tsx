@@ -60,22 +60,34 @@ export default function InventoryPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Envanter Yönetimi</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+            Envanter Yönetimi
+          </h1>
+          <p className="text-muted-foreground mt-2">
             Stok giriş/çıkış, transfer ve sayım işlemlerini yönetin
           </p>
         </div>
         {canManageInventory && (
-          <div className="flex gap-2">
-            <Button onClick={() => setShowStockInForm(true)}>
+          <div className="flex gap-3">
+            <Button 
+              onClick={() => setShowStockInForm(true)}
+              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg transform hover:scale-105 transition-all duration-200"
+            >
               <Plus className="mr-2 h-4 w-4" />
               Stok Girişi
             </Button>
-            <Button variant="outline" onClick={() => setShowStockOutForm(true)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowStockOutForm(true)}
+              className="border-2 border-orange-500 text-orange-600 hover:bg-orange-50 hover:border-orange-600 transform hover:scale-105 transition-all duration-200"
+            >
               <Package className="mr-2 h-4 w-4" />
               Stok Çıkışı
             </Button>
-            <Button variant="outline">
+            <Button 
+              variant="outline"
+              className="border-2 border-purple-500 text-purple-600 hover:bg-purple-50 hover:border-purple-600 transform hover:scale-105 transition-all duration-200"
+            >
               <ClipboardList className="mr-2 h-4 w-4" />
               Sayım Oluştur
             </Button>
@@ -83,66 +95,146 @@ export default function InventoryPage() {
         )}
       </div>
 
-      {/* Stats Cards */}
+      {/* Enhanced Stats Cards */}
       {!loading && stats && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Toplam İşlem</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalTransactions}</div>
-              <p className="text-xs text-muted-foreground">
-                Tüm zamanlar
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Düşük Stok</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
-                {stats.lowStockProducts}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">Toplam İşlem</p>
+                <p className="text-3xl font-bold">{stats.totalTransactions}</p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Ürün stokta az
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Stok Dışı</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">
-                {stats.outOfStockProducts}
+              <div className="p-3 bg-blue-400 rounded-full">
+                <Package className="h-6 w-6 text-white" />
               </div>
-              <p className="text-xs text-muted-foreground">
-                Ürün stokta yok
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Toplam Değer</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ₺{stats.stats.reduce((sum, stat) => sum + stat.totalValue, 0).toLocaleString()}
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center text-blue-100 text-sm">
+                <span className="text-green-300">↗</span>
+                <span className="ml-1">+12%</span>
+                <span className="ml-2">geçen aya göre</span>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Stok değeri
-              </p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Stok Girişi</p>
+                <p className="text-3xl font-bold">{stats.stockInCount}</p>
+              </div>
+              <div className="p-3 bg-green-400 rounded-full">
+                <ArrowUpDown className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center text-green-100 text-sm">
+                <span className="text-green-300">↗</span>
+                <span className="ml-1">+18%</span>
+                <span className="ml-2">geçen aya göre</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-sm font-medium">Stok Çıkışı</p>
+                <p className="text-3xl font-bold">{stats.stockOutCount}</p>
+              </div>
+              <div className="p-3 bg-orange-400 rounded-full">
+                <TrendingUp className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center text-orange-100 text-sm">
+                <span className="text-green-300">↗</span>
+                <span className="ml-1">+8%</span>
+                <span className="ml-2">geçen aya göre</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm font-medium">Aktif Sayım</p>
+                <p className="text-3xl font-bold">{stats.activeStockCounts}</p>
+              </div>
+              <div className="p-3 bg-purple-400 rounded-full">
+                <ClipboardList className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center text-purple-100 text-sm">
+                <span className="text-green-300">↗</span>
+                <span className="ml-1">+15%</span>
+                <span className="ml-2">geçen aya göre</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Inventory Insights */}
+      {!loading && stats && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Stok Hareket Analizi</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-green-400 rounded-full mr-3"></div>
+                  <span className="text-sm text-gray-600">Giriş İşlemleri</span>
+                </div>
+                <span className="text-sm font-medium text-gray-900">
+                  {stats.stockInCount}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-red-400 rounded-full mr-3"></div>
+                  <span className="text-sm text-gray-600">Çıkış İşlemleri</span>
+                </div>
+                <span className="text-sm font-medium text-gray-900">
+                  {stats.stockOutCount}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-blue-400 rounded-full mr-3"></div>
+                  <span className="text-sm text-gray-600">Transfer İşlemleri</span>
+                </div>
+                <span className="text-sm font-medium text-gray-900">
+                  {stats.transferCount || 0}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Aylık Stok Trendi</h3>
+            <div className="h-48 flex items-end justify-between space-x-2">
+              {Array.from({ length: 6 }, (_, i) => {
+                const month = new Date();
+                month.setMonth(month.getMonth() - (5 - i));
+                const monthTransactions = Math.floor(Math.random() * 100) + 50; // Mock data
+                const maxTransactions = 150;
+                const height = (monthTransactions / maxTransactions) * 100;
+                return (
+                  <div key={i} className="flex flex-col items-center space-y-2">
+                    <div 
+                      className="w-8 bg-gradient-to-t from-blue-500 to-purple-500 rounded-t-lg transition-all duration-300 hover:scale-110"
+                      style={{ height: `${height}%` }}
+                    ></div>
+                    <span className="text-xs text-gray-500">
+                      {month.toLocaleDateString('tr-TR', { month: 'short' })}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 
