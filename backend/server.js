@@ -115,6 +115,7 @@ app.use('/api/invoices', apiRateLimitMiddleware, require('./routes/invoices'));
 app.use('/api/projects', apiRateLimitMiddleware, require('./routes/projects'));
 app.use('/api/tasks', apiRateLimitMiddleware, require('./routes/tasks'));
 app.use('/api/assets', apiRateLimitMiddleware, require('./routes/assets'));
+app.use('/api/ai-analytics', apiRateLimitMiddleware, require('./routes/aiAnalytics'));
 
 // Health check endpoint
 app.get('/health', (req, res) => {

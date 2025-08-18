@@ -5,6 +5,10 @@ const typeDefs = gql`
   scalar Date
   scalar JSON
   scalar Upload
+  scalar Time
+  scalar DateTime
+  scalar Decimal
+  scalar Currency
 
   type User {
     id: ID!
@@ -953,6 +957,16 @@ const typeDefs = gql`
     # Notifications
     notifications(pagination: PaginationInput): [Notification!]!
     unreadNotifications: [Notification!]!
+
+    # Advanced Analytics
+    systemHealth: SystemHealth!
+    performanceMetrics: PerformanceMetrics!
+    predictiveAnalytics: PredictiveAnalytics!
+    realTimeMetrics: RealTimeMetrics!
+    businessIntelligence: BusinessIntelligence!
+    marketAnalysis: MarketAnalysis!
+    competitorAnalysis: CompetitorAnalysis!
+    trendAnalysis: TrendAnalysis!
     notificationsByType(type: NotificationType!): [Notification!]!
 
     # Audit Logs
@@ -1248,6 +1262,310 @@ const typeDefs = gql`
     lastBackup: String
     nextScheduledBackup: String
     backupSuccessRate: Float!
+  }
+
+  # Advanced Analytics Types
+  type SystemHealth {
+    cpuUsage: Float!
+    memoryUsage: Float!
+    diskUsage: Float!
+    networkLatency: Float!
+    uptime: Float!
+    lastCheck: String!
+    alerts: [SystemAlert!]!
+  }
+
+  type SystemAlert {
+    id: ID!
+    type: AlertType!
+    severity: AlertSeverity!
+    message: String!
+    timestamp: String!
+    isResolved: Boolean!
+    resolutionTime: String
+  }
+
+  type PerformanceMetrics {
+    responseTime: Float!
+    throughput: Float!
+    errorRate: Float!
+    availability: Float!
+    userSatisfaction: Float!
+    lastUpdated: String!
+  }
+
+  type PredictiveAnalytics {
+    salesForecast: [ForecastData!]!
+    inventoryPrediction: [InventoryPrediction!]!
+    customerBehavior: [BehaviorPattern!]!
+    riskAssessment: [RiskFactor!]!
+  }
+
+  type ForecastData {
+    period: String!
+    predictedValue: Float!
+    confidence: Float!
+    upperBound: Float!
+    lowerBound: Float!
+  }
+
+  type InventoryPrediction {
+    productId: ID!
+    predictedDemand: Int!
+    reorderPoint: Int!
+    suggestedOrderQuantity: Int!
+    confidence: Float!
+  }
+
+  type BehaviorPattern {
+    customerId: ID!
+    pattern: String!
+    confidence: Float!
+    nextAction: String!
+    probability: Float!
+  }
+
+  type RiskFactor {
+    factor: String!
+    riskLevel: RiskLevel!
+    impact: String!
+    mitigation: String!
+    probability: Float!
+  }
+
+  # Enums for new types
+  enum AlertType {
+    SYSTEM_ERROR
+    PERFORMANCE_DEGRADATION
+    SECURITY_THREAT
+    CAPACITY_WARNING
+    MAINTENANCE_REQUIRED
+  }
+
+  enum AlertSeverity {
+    LOW
+    MEDIUM
+    HIGH
+    CRITICAL
+  }
+
+  enum RiskLevel {
+    MINIMAL
+    LOW
+    MEDIUM
+    HIGH
+    EXTREME
+  }
+
+  # Additional Analytics Types
+  type RealTimeMetrics {
+    activeUsers: Int!
+    currentOrders: Int!
+    systemLoad: Float!
+    databaseConnections: Int!
+    apiRequests: Int!
+    lastUpdated: String!
+  }
+
+  type BusinessIntelligence {
+    kpis: [KPIMetric!]!
+    trends: [TrendData!]!
+    insights: [BusinessInsight!]!
+    recommendations: [Recommendation!]!
+  }
+
+  type KPIMetric {
+    name: String!
+    value: Float!
+    target: Float!
+    unit: String!
+    trend: TrendDirection!
+    change: Float!
+  }
+
+  type TrendData {
+    metric: String!
+    period: String!
+    values: [Float!]!
+    growth: Float!
+    seasonality: Float!
+  }
+
+  type BusinessInsight {
+    id: ID!
+    type: InsightType!
+    title: String!
+    description: String!
+    impact: ImpactLevel!
+    confidence: Float!
+    actionable: Boolean!
+  }
+
+  type Recommendation {
+    id: ID!
+    category: RecommendationCategory!
+    title: String!
+    description: String!
+    priority: Priority!
+    effort: EffortLevel!
+    expectedBenefit: Float!
+  }
+
+  type MarketAnalysis {
+    marketSize: Float!
+    marketShare: Float!
+    growthRate: Float!
+    keyTrends: [String!]!
+    opportunities: [MarketOpportunity!]!
+    threats: [MarketThreat!]!
+  }
+
+  type MarketOpportunity {
+    id: ID!
+    title: String!
+    description: String!
+    potential: Float!
+    timeframe: String!
+    risk: RiskLevel!
+  }
+
+  type MarketThreat {
+    id: ID!
+    title: String!
+    description: String!
+    impact: ImpactLevel!
+    probability: Float!
+    mitigation: String!
+  }
+
+  type CompetitorAnalysis {
+    competitors: [Competitor!]!
+    competitiveAdvantages: [String!]!
+    marketPosition: MarketPosition!
+    pricingStrategy: PricingStrategy!
+  }
+
+  type Competitor {
+    id: ID!
+    name: String!
+    marketShare: Float!
+    strengths: [String!]!
+    weaknesses: [String!]!
+    pricing: PricingInfo!
+  }
+
+  type PricingInfo {
+    strategy: String!
+    averagePrice: Float!
+    priceRange: PriceRange!
+    discountPolicy: String!
+  }
+
+  type PriceRange {
+    min: Float!
+    max: Float!
+    median: Float!
+  }
+
+  type TrendAnalysis {
+    shortTerm: [TrendPoint!]!
+    mediumTerm: [TrendPoint!]!
+    longTerm: [TrendPoint!]!
+    seasonality: SeasonalityPattern!
+    anomalies: [Anomaly!]!
+  }
+
+  type TrendPoint {
+    period: String!
+    value: Float!
+    confidence: Float!
+    change: Float!
+  }
+
+  type SeasonalityPattern {
+    pattern: String!
+    strength: Float!
+    peaks: [String!]!
+    troughs: [String!]!
+  }
+
+  type Anomaly {
+    id: ID!
+    type: AnomalyType!
+    severity: AnomalySeverity!
+    description: String!
+    timestamp: String!
+    impact: Float!
+  }
+
+  # Additional Enums
+  enum TrendDirection {
+    UP
+    DOWN
+    STABLE
+    VOLATILE
+  }
+
+  enum InsightType {
+    PERFORMANCE
+    OPPORTUNITY
+    RISK
+    EFFICIENCY
+    CUSTOMER
+    FINANCIAL
+  }
+
+  enum ImpactLevel {
+    LOW
+    MEDIUM
+    HIGH
+    CRITICAL
+  }
+
+  enum RecommendationCategory {
+    OPERATIONAL
+    STRATEGIC
+    TECHNICAL
+    FINANCIAL
+    MARKETING
+    CUSTOMER_SERVICE
+  }
+
+  enum EffortLevel {
+    LOW
+    MEDIUM
+    HIGH
+    VERY_HIGH
+  }
+
+  enum MarketPosition {
+    LEADER
+    CHALLENGER
+    FOLLOWER
+    NICHE
+  }
+
+  enum PricingStrategy {
+    PREMIUM
+    COMPETITIVE
+    PENETRATION
+    SKIMMING
+    VALUE_BASED
+  }
+
+  enum AnomalyType {
+    SPIKE
+    DROP
+    PATTERN_CHANGE
+    OUTLIER
+    SEASONAL_DEVIATION
+  }
+
+  enum AnomalySeverity {
+    MINOR
+    MODERATE
+    MAJOR
+    CRITICAL
   }
 
   input ProductUpdateInput {
