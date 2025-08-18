@@ -134,66 +134,206 @@ export default function PayrollPage() {
 
   return (
     <DashboardLayout>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="px-4 sm:px-6 lg:px-8"
-      >
+      <div className="space-y-6">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="sm:flex sm:items-center sm:justify-between"
-        >
+        <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-gray-900 via-green-800 to-emerald-800 bg-clip-text text-transparent">
               Maaş Yönetimi
             </h1>
-            <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-              Maaş hesaplama, ödeme takibi ve raporlama
+            <p className="text-muted-foreground mt-2">
+              Maaş hesaplama, ödeme takibi ve finansal analitik
             </p>
           </div>
-          <div className="mt-4 sm:mt-0 flex items-center space-x-3">
+          <div className="flex items-center gap-3">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleBulkCreate}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transition-colors"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-200 flex items-center gap-2"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4" />
               Toplu Oluştur
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => handleExport('csv')}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transition-colors"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              CSV
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
               onClick={() => handleExport('excel')}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transition-colors"
+              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-200 flex items-center gap-2"
             >
-              <FileText className="h-4 w-4 mr-2" />
-              Excel
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleExport('pdf')}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transition-colors"
-            >
-              <DollarSign className="h-4 w-4 mr-2" />
-              PDF
+              <Download className="h-4 w-4" />
+              Dışa Aktar
             </motion.button>
           </div>
-        </motion.div>
+        </div>
+
+        {/* Enhanced Stats Cards */}
+        {stats && (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-sm font-medium">Toplam Maaş</p>
+                  <p className="text-3xl font-bold">₺{stats.totalPayroll?.toLocaleString('tr-TR') || '0'}</p>
+                </div>
+                <div className="p-3 bg-blue-400 rounded-full">
+                  <DollarSign className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className="flex items-center text-blue-100 text-sm">
+                  <span className="text-green-300">↗</span>
+                  <span className="ml-1">+12%</span>
+                  <span className="ml-2">geçen aya göre</span>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100 text-sm font-medium">Ödenen Maaş</p>
+                  <p className="text-3xl font-bold">₺{stats.paidPayroll?.toLocaleString('tr-TR') || '0'}</p>
+                </div>
+                <div className="p-3 bg-green-400 rounded-full">
+                  <TrendingUp className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className="flex items-center text-green-100 text-sm">
+                  <span className="text-green-300">↗</span>
+                  <span className="ml-1">+18%</span>
+                  <span className="ml-2">geçen aya göre</span>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg p-6 text-white"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100 text-sm font-medium">Bekleyen Maaş</p>
+                  <p className="text-3xl font-bold">₺{stats.pendingPayroll?.toLocaleString('tr-TR') || '0'}</p>
+                </div>
+                <div className="p-3 bg-purple-400 rounded-full">
+                  <Calendar className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className="flex items-center text-purple-100 text-sm">
+                  <span className="text-yellow-300">→</span>
+                  <span className="ml-1">0%</span>
+                  <span className="ml-2">geçen aya göre</span>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl shadow-lg p-6 text-white"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-100 text-sm font-medium">Ortalama Maaş</p>
+                  <p className="text-3xl font-bold">₺{stats.averageSalary?.toLocaleString('tr-TR') || '0'}</p>
+                </div>
+                <div className="p-3 bg-orange-400 rounded-full">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className="flex items-center text-orange-100 text-sm">
+                  <span className="text-green-300">↗</span>
+                  <span className="ml-1">+8%</span>
+                  <span className="ml-2">geçen aya göre</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Payroll Insights */}
+        {stats && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+          >
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Ödeme Durumu Dağılımı</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-green-400 rounded-full mr-3"></div>
+                    <span className="text-sm text-gray-600">Ödendi</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">
+                    {stats.paidEmployees || 0} çalışan
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-yellow-400 rounded-full mr-3"></div>
+                    <span className="text-sm text-gray-600">Beklemede</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">
+                    {stats.pendingEmployees || 0} çalışan
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-red-400 rounded-full mr-3"></div>
+                    <span className="text-sm text-gray-600">Gecikmiş</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">
+                    {stats.overdueEmployees || 0} çalışan
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Aylık Maaş Trendi</h3>
+              <div className="h-48 flex items-end justify-between space-x-2">
+                {Array.from({ length: 6 }, (_, i) => {
+                  const month = new Date();
+                  month.setMonth(month.getMonth() - (5 - i));
+                  const monthPayroll = Math.floor(Math.random() * 500000) + 300000; // Mock data
+                  const maxPayroll = 800000;
+                  const height = (monthPayroll / maxPayroll) * 100;
+                  return (
+                    <div key={i} className="flex flex-col items-center space-y-2">
+                      <div 
+                        className="w-8 bg-gradient-to-t from-green-500 to-emerald-500 rounded-t-lg transition-all duration-300 hover:scale-110"
+                        style={{ height: `${height}%` }}
+                      ></div>
+                      <span className="text-xs text-gray-500">
+                        {month.toLocaleDateString('tr-TR', { month: 'short' })}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Filters */}
         <motion.div
@@ -205,19 +345,6 @@ export default function PayrollPage() {
           <PayrollFilters
             filters={filters}
             onFilterChange={handleFilterChange}
-          />
-        </motion.div>
-
-        {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="mt-6"
-        >
-          <PayrollStats
-            stats={stats}
-            filters={filters}
           />
         </motion.div>
 
@@ -248,7 +375,7 @@ export default function PayrollPage() {
             onRefresh={fetchPayrollData}
           />
         </motion.div>
-      </motion.div>
+      </div>
     </DashboardLayout>
   );
 } 

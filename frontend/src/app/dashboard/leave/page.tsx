@@ -279,8 +279,7 @@ const LeavePage = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <Calendar className="w-8 h-8 text-blue-600" />
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-purple-800 to-pink-800 bg-clip-text text-transparent">
                 İzin Yönetimi
               </h1>
               <p className="text-gray-600 mt-2">
@@ -289,31 +288,25 @@ const LeavePage = () => {
             </div>
             
             <div className="flex items-center gap-3">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => fetchLeaves()}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-sm"
               >
                 <RefreshCw className="w-4 h-4" />
                 Yenile
-              </button>
+              </motion.button>
               
-              <div className="relative">
-                <button
-                  onClick={() => handleExport('csv')}
-                  className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <Download className="w-4 h-4" />
-                  Dışa Aktar
-                </button>
-              </div>
-              
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setShowForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-200 flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 Yeni İzin Talebi
-              </button>
+              </motion.button>
             </div>
           </div>
         </motion.div>
