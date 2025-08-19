@@ -2,16 +2,18 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart3, Users, DollarSign, TrendingUp, Calendar, Activity, Target, Award, Download, MessageCircle, Search, Bell, Zap } from 'lucide-react';
+import { BarChart3, Users, DollarSign, TrendingUp, Calendar, Activity, Target, Award, Download, MessageCircle, Search, Bell, Zap, Brain, Workflow } from 'lucide-react';
 import WidgetSystem from '@/components/Dashboard/WidgetSystem';
 import DataExport from '@/components/UI/DataExport';
 import AdvancedSearch from '@/components/UI/AdvancedSearch';
 import ChatSupport from '@/components/UI/ChatSupport';
 import AdvancedNotificationSystem from '@/components/UI/AdvancedNotificationSystem';
 import RealTimeUpdates from '@/components/Dashboard/RealTimeUpdates';
+import AdvancedAnalytics from '@/components/Dashboard/AdvancedAnalytics';
+import SmartWorkflow from '@/components/Dashboard/SmartWorkflow';
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'widgets' | 'realtime'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'widgets' | 'realtime' | 'analytics' | 'workflow'>('overview');
   const [showDataExport, setShowDataExport] = useState(false);
   const [showChatSupport, setShowChatSupport] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,7 +47,7 @@ export default function DashboardPage() {
                 className={`px-3 py-1 text-sm rounded-md transition-colors ${
                   activeTab === 'overview'
                     ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
                 }`}
               >
                 Genel Bakış
@@ -55,7 +57,7 @@ export default function DashboardPage() {
                 className={`px-3 py-1 text-sm rounded-md transition-colors ${
                   activeTab === 'widgets'
                     ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
                 }`}
               >
                 Widgets
@@ -65,10 +67,32 @@ export default function DashboardPage() {
                 className={`px-3 py-1 text-sm rounded-md transition-colors ${
                   activeTab === 'realtime'
                     ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
                 }`}
               >
                 Gerçek Zamanlı
+              </button>
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  activeTab === 'analytics'
+                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                }`}
+              >
+                <Brain className="w-4 h-4 inline mr-1" />
+                Analitik
+              </button>
+              <button
+                onClick={() => setActiveTab('workflow')}
+                className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  activeTab === 'workflow'
+                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                }`}
+              >
+                <Workflow className="w-4 h-4 inline mr-1" />
+                İş Akışı
               </button>
             </div>
           </div>
@@ -224,6 +248,14 @@ export default function DashboardPage() {
 
         {activeTab === 'realtime' && (
           <RealTimeUpdates />
+        )}
+
+        {activeTab === 'analytics' && (
+          <AdvancedAnalytics />
+        )}
+
+        {activeTab === 'workflow' && (
+          <SmartWorkflow />
         )}
       </div>
 
