@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Employee, EmployeeFormData, Department, SkillLevel } from '@/types/employee';
 import { X, Plus, Trash2, Save } from 'lucide-react';
-import Modal from '@/components/UI/Modal';
+import { Modal } from '@/components/UI/Modal';
 
 interface EmployeeModalProps {
   employee?: Employee | null;

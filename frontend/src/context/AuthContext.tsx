@@ -1,23 +1,43 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '@/lib/api';
-import { useNotification } from '@/context/NotificationContext';
-import socketClient from '@/lib/socket';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface User {
   id: string;
-  name: string;
   email: string;
-  role: 'admin' | 'manager' | 'employee';
-  department: string;
+  name: string;
+  role: string;
+  avatar?: string;
+  isEmailVerified: boolean;
+  twoFactorEnabled: boolean;
+  lastLogin?: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  isAuthenticated: boolean;
   isLoading: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (userData: RegisterData) => Promise<boolean>;
+  logout: () => void;
+  updateUser: (userData: Partial<User>) => void;
+  refreshUser: () => Promise<void>;
+}
+
+interface RegisterData {
+  email: string;
+  password: string;
+  name: string;
+  role?: string;
+}
+
+interface LoginResponse {
+  user: User;
+  accessToken: string;
+  refreshToken: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,148 +53,187 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Use notification context with fallback
-  const getNotification = () => {
-    try {
-      return useNotification();
-    } catch {
-      // Fallback for when NotificationProvider is not available
-      return {
-        success: (msg: string) => console.log('Success:', msg),
-        error: (msg: string) => console.error('Error:', msg),
-        info: (msg: string) => console.info('Info:', msg),
-      };
-    }
-  };
+  const router = useRouter();
 
-  const notification = getNotification();
-
+  // Check if user is already logged in
   useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+          // Verify token and get user data
+          await refreshUser();
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     checkAuthStatus();
   }, []);
 
-  const checkAuthStatus = async () => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const token = localStorage.getItem('token');
-      if (token) {
-        const response = await authAPI.getCurrentUser();
-        setUser(response.data.user);
-        
-        // Connect to WebSocket if user is authenticated
-        socketClient.connect(token);
+      setIsLoading(true);
+      
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Login failed');
       }
+
+      const data: LoginResponse = await response.json();
+      
+      // Store tokens
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
+      
+      // Set user
+      setUser(data.user);
+      
+      // Redirect to dashboard
+      router.push('/dashboard');
+      
+      return true;
     } catch (error) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      console.error('Login error:', error);
+      return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const register = async (userData: RegisterData): Promise<boolean> => {
     try {
-      // Demo hesaplar için mock login
-      if (email === 'admin@example.com' && password === '123456') {
-        const mockUser = {
-          id: 'demo-admin-001',
-          name: 'Admin User',
-          email: 'admin@example.com',
-          role: 'admin',
-          department: 'IT',
-          isActive: true
-        };
-        
-        const mockToken = 'demo-token-admin-' + Date.now();
-        
-        localStorage.setItem('token', mockToken);
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        setUser(mockUser);
-        
-        // Connect to WebSocket
-        socketClient.connect(mockToken);
-        
-        notification.success('Giriş başarılı!', {
-          title: 'Hoş Geldiniz',
-          duration: 3000
-        });
-        return true;
-      }
+      setIsLoading(true);
       
-      if (email === 'manager@example.com' && password === '123456') {
-        const mockUser = {
-          id: 'demo-manager-001',
-          name: 'Manager User',
-          email: 'manager@example.com',
-          role: 'manager',
-          department: 'Management',
-          isActive: true
-        };
-        
-        const mockToken = 'demo-token-manager-' + Date.now();
-        
-        localStorage.setItem('token', mockToken);
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        setUser(mockUser);
-        
-        // Connect to WebSocket
-        socketClient.connect(mockToken);
-        
-        notification.success('Giriş başarılı!', {
-          title: 'Hoş Geldiniz',
-          duration: 3000
-        });
-        return true;
-      }
-      
-      // Gerçek API çağrısı (demo hesaplar değilse)
-      const response = await authAPI.login(email, password);
-      const { token, user: userData } = response.data;
-      
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
-      
-      // Connect to WebSocket
-      socketClient.connect(token);
-      
-      notification.success('Giriş başarılı!', {
-        title: 'Hoş Geldiniz',
-        duration: 3000
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Registration failed');
+      }
+
+      const data: LoginResponse = await response.json();
+      
+      // Store tokens
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
+      
+      // Set user
+      setUser(data.user);
+      
+      // Redirect to dashboard
+      router.push('/dashboard');
+      
       return true;
-    } catch (error: any) {
-      notification.error(
-        error.response?.data?.message || 'Giriş başarısız', 
-        {
-          title: 'Giriş Hatası',
-          duration: 5000
-        }
-      );
+    } catch (error) {
+      console.error('Registration error:', error);
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     setUser(null);
-    
-    // Disconnect WebSocket
-    socketClient.disconnect();
-    
-    notification.info('Güvenli bir şekilde çıkış yaptınız', {
-      title: 'Çıkış Yapıldı',
-      duration: 3000
-    });
+    router.push('/login');
   };
 
-  const value = {
+  const updateUser = (userData: Partial<User>) => {
+    if (user) {
+      setUser({ ...user, ...userData });
+    }
+  };
+
+  const refreshUser = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) return;
+
+      const response = await fetch('/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const userData: User = await response.json();
+        setUser(userData);
+      } else {
+        // Token expired, try to refresh
+        await refreshToken();
+      }
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+      logout();
+    }
+  };
+
+  const refreshToken = async () => {
+    try {
+      const refreshTokenValue = localStorage.getItem('refreshToken');
+      if (!refreshTokenValue) {
+        throw new Error('No refresh token');
+      }
+
+      const response = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken: refreshTokenValue }),
+      });
+
+      if (response.ok) {
+        const data: { accessToken: string; refreshToken: string } = await response.json();
+        localStorage.setItem('accessToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        
+        // Get user data with new token
+        await refreshUser();
+      } else {
+        throw new Error('Token refresh failed');
+      }
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      logout();
+    }
+  };
+
+  const value: AuthContextType = {
     user,
-    login,
-    logout,
+    isAuthenticated: !!user,
     isLoading,
+    login,
+    register,
+    logout,
+    updateUser,
+    refreshUser,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 }; 

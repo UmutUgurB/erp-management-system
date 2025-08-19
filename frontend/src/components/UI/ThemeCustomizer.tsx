@@ -11,7 +11,7 @@ import {
   Zap,
   Eye,
   Minimize2,
-  CornerSquare,
+  Square,
   Settings,
   Download,
   Upload,
@@ -237,7 +237,7 @@ const ThemeCustomizer: React.FC<ThemeCustomizerProps> = ({ isOpen, onClose }) =>
               {/* Border Radius */}
               <div>
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <CornerSquare className="w-5 h-5" />
+                  <Square className="w-5 h-5" />
                   Border Radius
                 </h3>
                 <div className="grid grid-cols-4 gap-2">

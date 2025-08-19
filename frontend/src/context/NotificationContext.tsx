@@ -1,185 +1,304 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { 
-  Notification, 
-  NotificationContextType, 
-  NotificationSettings,
-  NotificationType 
-} from '@/types/notification';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { Notification } from '@/components/UI/NotificationSystem';
 
-const defaultSettings: NotificationSettings = {
-  defaultDuration: 5000,
-  defaultPosition: 'top-right',
-  maxNotifications: 5,
-  enableSounds: false,
-  enableAnimations: true,
+interface NotificationState {
+  notifications: Notification[];
+  settings: {
+    soundEnabled: boolean;
+    autoClose: boolean;
+    defaultDuration: number;
+    maxNotifications: number;
+  };
+}
+
+type NotificationAction =
+  | { type: 'ADD_NOTIFICATION'; payload: Omit<Notification, 'id' | 'timestamp' | 'read'> }
+  | { type: 'MARK_AS_READ'; payload: string }
+  | { type: 'DISMISS_NOTIFICATION'; payload: string }
+  | { type: 'CLEAR_ALL_NOTIFICATIONS' }
+  | { type: 'UPDATE_SETTINGS'; payload: Partial<NotificationState['settings']> }
+  | { type: 'LOAD_NOTIFICATIONS'; payload: Notification[] }
+  | { type: 'REMOVE_EXPIRED_NOTIFICATIONS' };
+
+const initialState: NotificationState = {
+  notifications: [],
+  settings: {
+    soundEnabled: true,
+    autoClose: true,
+    defaultDuration: 5000,
+    maxNotifications: 100,
+  },
 };
+
+const notificationReducer = (state: NotificationState, action: NotificationAction): NotificationState => {
+  switch (action.type) {
+    case 'ADD_NOTIFICATION':
+      const newNotification: Notification = {
+        ...action.payload,
+        id: uuidv4(),
+        timestamp: new Date(),
+        read: false,
+      };
+      
+      const updatedNotifications = [newNotification, ...state.notifications];
+      
+      // Keep only the latest notifications up to maxNotifications
+      const limitedNotifications = updatedNotifications.slice(0, state.settings.maxNotifications);
+      
+      return {
+        ...state,
+        notifications: limitedNotifications,
+      };
+
+    case 'MARK_AS_READ':
+      return {
+        ...state,
+        notifications: state.notifications.map(notification =>
+          notification.id === action.payload
+            ? { ...notification, read: true }
+            : notification
+        ),
+      };
+
+    case 'DISMISS_NOTIFICATION':
+      return {
+        ...state,
+        notifications: state.notifications.filter(
+          notification => notification.id !== action.payload
+        ),
+      };
+
+    case 'CLEAR_ALL_NOTIFICATIONS':
+      return {
+        ...state,
+        notifications: [],
+      };
+
+    case 'UPDATE_SETTINGS':
+      return {
+        ...state,
+        settings: { ...state.settings, ...action.payload },
+      };
+
+    case 'LOAD_NOTIFICATIONS':
+      return {
+        ...state,
+        notifications: action.payload,
+      };
+
+    case 'REMOVE_EXPIRED_NOTIFICATIONS':
+      const now = new Date();
+      const validNotifications = state.notifications.filter(notification => {
+        if (!notification.duration) return true;
+        const expirationTime = new Date(notification.timestamp.getTime() + notification.duration);
+        return now < expirationTime;
+      });
+      
+      return {
+        ...state,
+        notifications: validNotifications,
+      };
+
+    default:
+      return state;
+  }
+};
+
+interface NotificationContextType {
+  state: NotificationState;
+  addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
+  markAsRead: (id: string) => void;
+  dismissNotification: (id: string) => void;
+  clearAllNotifications: () => void;
+  updateSettings: (settings: Partial<NotificationState['settings']>) => void;
+  getUnreadCount: () => number;
+  playNotificationSound: () => void;
+}
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-export const useNotification = () => {
+export const useNotifications = () => {
   const context = useContext(NotificationContext);
-  if (context === undefined) {
-    throw new Error('useNotification must be used within a NotificationProvider');
+  if (!context) {
+    throw new Error('useNotifications must be used within a NotificationProvider');
   }
   return context;
 };
 
+export const useNotification = () => {
+  const context = useContext(NotificationContext);
+  if (!context) {
+    throw new Error('useNotification must be used within a NotificationProvider');
+  }
+  
+  return {
+    notifications: context.state.notifications,
+    success: (title: string, message?: string) => context.addNotification({ type: 'success', title, message }),
+    error: (title: string, message?: string) => context.addNotification({ type: 'error', title, message }),
+    warning: (title: string, message?: string) => context.addNotification({ type: 'warning', title, message }),
+    info: (title: string, message?: string) => context.addNotification({ type: 'info', title, message }),
+    showNotification: (type: 'success' | 'error' | 'warning' | 'info', title: string, message?: string) => 
+      context.addNotification({ type, title, message }),
+    removeNotification: context.dismissNotification,
+    clearAll: context.clearAllNotifications
+  };
+};
+
 interface NotificationProviderProps {
   children: React.ReactNode;
-  settings?: Partial<NotificationSettings>;
 }
 
-export const NotificationProvider: React.FC<NotificationProviderProps> = ({ 
-  children, 
-  settings: customSettings 
-}) => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [settings] = useState<NotificationSettings>({ 
-    ...defaultSettings, 
-    ...customSettings 
-  });
+export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
+  const [state, dispatch] = useReducer(notificationReducer, initialState);
 
-  // Generate unique ID
-  const generateId = () => `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  // Load notifications from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedNotifications = localStorage.getItem('erp-notifications');
+      const savedSettings = localStorage.getItem('erp-notification-settings');
+      
+      if (savedNotifications) {
+        const parsedNotifications = JSON.parse(savedNotifications).map((n: any) => ({
+          ...n,
+          timestamp: new Date(n.timestamp),
+        }));
+        dispatch({ type: 'LOAD_NOTIFICATIONS', payload: parsedNotifications });
+      }
+      
+      if (savedSettings) {
+        const parsedSettings = JSON.parse(savedSettings);
+        dispatch({ type: 'UPDATE_SETTINGS', payload: parsedSettings });
+      }
+    } catch (error) {
+      console.error('Error loading notifications from localStorage:', error);
+    }
+  }, []);
 
-  // Play notification sound
-  const playSound = useCallback((type: NotificationType) => {
-    if (!settings.enableSounds) return;
+  // Save notifications to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('erp-notifications', JSON.stringify(state.notifications));
+    } catch (error) {
+      console.error('Error saving notifications to localStorage:', error);
+    }
+  }, [state.notifications]);
+
+  // Save settings to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('erp-notification-settings', JSON.stringify(state.settings));
+    } catch (error) {
+      console.error('Error saving notification settings to localStorage:', error);
+    }
+  }, [state.settings]);
+
+  // Clean up expired notifications every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      dispatch({ type: 'REMOVE_EXPIRED_NOTIFICATIONS' });
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const addNotification = useCallback((notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
+    dispatch({ type: 'ADD_NOTIFICATION', payload: notification });
+    
+    // Auto-close notification if enabled
+    if (state.settings.autoClose && notification.duration !== 0) {
+      const duration = notification.duration || state.settings.defaultDuration;
+      setTimeout(() => {
+        dispatch({ type: 'DISMISS_NOTIFICATION', payload: notification.id || '' });
+      }, duration);
+    }
+  }, [state.settings.autoClose, state.settings.defaultDuration]);
+
+  const markAsRead = useCallback((id: string) => {
+    dispatch({ type: 'MARK_AS_READ', payload: id });
+  }, []);
+
+  const dismissNotification = useCallback((id: string) => {
+    dispatch({ type: 'DISMISS_NOTIFICATION', payload: id });
+  }, []);
+
+  const clearAllNotifications = useCallback(() => {
+    dispatch({ type: 'CLEAR_ALL_NOTIFICATIONS' });
+  }, []);
+
+  const updateSettings = useCallback((settings: Partial<NotificationState['settings']>) => {
+    dispatch({ type: 'UPDATE_SETTINGS', payload: settings });
+  }, []);
+
+  const getUnreadCount = useCallback(() => {
+    return state.notifications.filter(notification => !notification.read).length;
+  }, [state.notifications]);
+
+  const playNotificationSound = useCallback(() => {
+    if (!state.settings.soundEnabled) return;
     
     try {
-      // Create audio context for different notification sounds
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      // Different frequencies for different notification types
-      const frequencies = {
-        success: 800,
-        error: 300,
-        warning: 600,
-        info: 500,
-        loading: 400,
-      };
-      
-      oscillator.frequency.setValueAtTime(frequencies[type], audioContext.currentTime);
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.01);
-      gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.1);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
+      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
+      audio.volume = 0.3;
+      audio.play().catch(() => {});
     } catch (error) {
-      // Fallback for browsers that don't support Web Audio API
-      console.warn('Notification sounds not supported in this browser');
+      console.error('Error playing notification sound:', error);
     }
-  }, [settings.enableSounds]);
+  }, [state.settings.soundEnabled]);
 
-  // Add notification
-  const addNotification = useCallback((notification: Omit<Notification, 'id' | 'timestamp'>) => {
-    const id = generateId();
-    const newNotification: Notification = {
-      ...notification,
-      id,
-      timestamp: new Date(),
-      duration: notification.duration ?? settings.defaultDuration,
-      position: notification.position ?? settings.defaultPosition,
-      dismissible: notification.dismissible ?? true,
-    };
-
-    setNotifications(prev => {
-      const updated = [newNotification, ...prev];
-      // Limit max notifications
-      return updated.slice(0, settings.maxNotifications);
+  // Convenience methods for common notification types
+  const addSuccessNotification = useCallback((title: string, message: string, options?: Partial<Notification>) => {
+    addNotification({
+      type: 'success',
+      title,
+      message,
+      ...options,
     });
+  }, [addNotification]);
 
-    // Play sound
-    if (notification.sound !== false) {
-      playSound(notification.type);
-    }
-
-    // Auto dismiss
-    if (newNotification.duration > 0) {
-      setTimeout(() => {
-        removeNotification(id);
-      }, newNotification.duration);
-    }
-
-    return id;
-  }, [settings, playSound]);
-
-  // Remove notification
-  const removeNotification = useCallback((id: string) => {
-    setNotifications(prev => {
-      const notification = prev.find(n => n.id === id);
-      if (notification?.onDismiss) {
-        notification.onDismiss();
-      }
-      return prev.filter(n => n.id !== id);
+  const addErrorNotification = useCallback((title: string, message: string, options?: Partial<Notification>) => {
+    addNotification({
+      type: 'error',
+      title,
+      message,
+      ...options,
     });
-  }, []);
-
-  // Clear all notifications
-  const clearAll = useCallback(() => {
-    setNotifications([]);
-  }, []);
-
-  // Update notification
-  const updateNotification = useCallback((id: string, updates: Partial<Notification>) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id 
-          ? { ...notification, ...updates }
-          : notification
-      )
-    );
-  }, []);
-
-  // Quick methods
-  const success = useCallback((message: string, options?: Partial<Notification>) => {
-    return addNotification({ type: 'success', message, ...options });
   }, [addNotification]);
 
-  const error = useCallback((message: string, options?: Partial<Notification>) => {
-    return addNotification({ type: 'error', message, duration: 7000, ...options });
+  const addWarningNotification = useCallback((title: string, message: string, options?: Partial<Notification>) => {
+    addNotification({
+      type: 'warning',
+      title,
+      message,
+      ...options,
+    });
   }, [addNotification]);
 
-  const warning = useCallback((message: string, options?: Partial<Notification>) => {
-    return addNotification({ type: 'warning', message, duration: 6000, ...options });
+  const addInfoNotification = useCallback((title: string, message: string, options?: Partial<Notification>) => {
+    addNotification({
+      type: 'info',
+      title,
+      message,
+      ...options,
+    });
   }, [addNotification]);
-
-  const info = useCallback((message: string, options?: Partial<Notification>) => {
-    return addNotification({ type: 'info', message, ...options });
-  }, [addNotification]);
-
-  const loading = useCallback((message: string, options?: Partial<Notification>) => {
-    return addNotification({ type: 'loading', message, duration: 0, ...options });
-  }, [addNotification]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      setNotifications([]);
-    };
-  }, []);
 
   const value: NotificationContextType = {
-    notifications,
+    state,
     addNotification,
-    removeNotification,
-    clearAll,
-    updateNotification,
-    success,
-    error,
-    warning,
-    info,
-    loading,
+    markAsRead,
+    dismissNotification,
+    clearAllNotifications,
+    updateSettings,
+    getUnreadCount,
+    playNotificationSound,
+    // Convenience methods
+    addSuccessNotification,
+    addErrorNotification,
+    addWarningNotification,
+    addInfoNotification,
   };
 
   return (

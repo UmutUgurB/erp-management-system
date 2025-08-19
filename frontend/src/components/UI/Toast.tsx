@@ -7,10 +7,10 @@ import {
   AlertCircle, 
   Info, 
   X, 
-  Warning,
   Bell,
   Star,
-  Zap
+  Zap,
+  AlertTriangle
 } from 'lucide-react';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info' | 'celebration';
@@ -133,7 +133,7 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
         return {
           bg: 'bg-yellow-50 dark:bg-yellow-900/20',
           border: 'border-yellow-200 dark:border-yellow-800',
-          icon: <Warning className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />,
+          icon: <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />,
           iconBg: 'bg-yellow-100 dark:bg-yellow-800/40'
         };
       case 'info':

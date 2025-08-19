@@ -103,7 +103,7 @@ const PerformanceTable: React.FC<PerformanceTableProps> = ({
           Henüz performans değerlendirmesi bulunmuyor
         </h3>
         <p className="text-gray-500 dark:text-gray-400">
-          İlk performans değerlendirmesini oluşturmak için yukarıdaki "Yeni Değerlendirme" butonuna tıklayın.
+          İlk performans değerlendirmesini oluşturmak için yukarıdaki &quot;Yeni Değerlendirme&quot; butonuna tıklayın.
         </p>
       </div>
     );
