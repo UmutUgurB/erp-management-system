@@ -35,7 +35,9 @@ import {
   Palette,
   Music,
   Volume2,
-  VolumeX
+  VolumeX,
+  RefreshCw,
+  Sparkles as SparklesIcon
 } from 'lucide-react';
 
 const loginSchema = z.object({
@@ -68,6 +70,101 @@ const getPasswordStrength = (password: string | undefined) => {
   return { strength: 'Çok Güçlü', color: 'bg-emerald-500', width: 'w-full' };
 };
 
+// Smart password generator
+const generateSmartPassword = (length: number = 12, includeSpecial: boolean = true) => {
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const numbers = '0123456789';
+  const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+  
+  let chars = lowercase + uppercase + numbers;
+  if (includeSpecial) chars += symbols;
+  
+  let password = '';
+  
+  // Ensure at least one character from each category
+  password += lowercase[Math.floor(Math.random() * lowercase.length)];
+  password += uppercase[Math.floor(Math.random() * uppercase.length)];
+  password += numbers[Math.floor(Math.random() * numbers.length)];
+  if (includeSpecial) {
+    password += symbols[Math.floor(Math.random() * symbols.length)];
+  }
+  
+  // Fill the rest randomly
+  for (let i = password.length; i < length; i++) {
+    password += chars[Math.floor(Math.random() * chars.length)];
+  }
+  
+  // Shuffle the password
+  return password.split('').sort(() => Math.random() - 0.5).join('');
+};
+
+// Security score calculator
+const calculateSecurityScore = (email: string, password: string, require2FA: boolean, rememberMe: boolean) => {
+  let score = 0;
+  let tips: string[] = [];
+  
+  // Email validation
+  if (email && email.includes('@') && email.includes('.')) {
+    score += 20;
+  } else {
+    tips.push('Geçerli bir email adresi girin');
+  }
+  
+  // Password strength
+  if (password) {
+    if (password.length >= 8) score += 15;
+    if (password.length >= 12) score += 10;
+    if (/[a-z]/.test(password)) score += 5;
+    if (/[A-Z]/.test(password)) score += 5;
+    if (/[0-9]/.test(password)) score += 5;
+    if (/[^A-Za-z0-9]/.test(password)) score += 10;
+    
+    if (password.length < 8) tips.push('Şifre en az 8 karakter olmalı');
+    if (!/[a-z]/.test(password)) tips.push('Küçük harf ekleyin');
+    if (!/[A-Z]/.test(password)) tips.push('Büyük harf ekleyin');
+    if (!/[0-9]/.test(password)) tips.push('Rakam ekleyin');
+    if (!/[^A-Za-z0-9]/.test(password)) tips.push('Özel karakter ekleyin');
+  } else {
+    tips.push('Şifre girin');
+  }
+  
+  // 2FA bonus
+  if (require2FA) {
+    score += 25;
+  } else {
+    tips.push('İki aşamalı doğrulama kullanmayı düşünün');
+  }
+  
+  // Remember me penalty
+  if (rememberMe) {
+    score -= 5;
+    tips.push('"Beni hatırla" seçeneği güvenliği azaltır');
+  }
+  
+  // Cap score at 100
+  score = Math.max(0, Math.min(100, score));
+  
+  // Determine security level
+  let level = '';
+  let color = '';
+  if (score >= 80) {
+    level = 'Mükemmel';
+    color = 'text-emerald-500';
+  } else if (score >= 60) {
+    level = 'İyi';
+    color = 'text-green-500';
+  } else if (score >= 40) {
+    level = 'Orta';
+    color = 'text-yellow-500';
+  } else {
+    level = 'Zayıf';
+    color = 'text-red-500';
+  }
+  
+  return { score, level, color, tips };
+};
+
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -83,6 +180,11 @@ export default function LoginPage() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTheme, setCurrentTheme] = useState('default');
+  const [showPasswordSuggestions, setShowPasswordSuggestions] = useState(false);
+  const [passwordSuggestions, setPasswordSuggestions] = useState<string[]>([]);
+  const [copiedPassword, setCopiedPassword] = useState<string | null>(null);
+  const [showLoginHistory, setShowLoginHistory] = useState(false);
+  const [loginHistory, setLoginHistory] = useState<Array<{timestamp: Date, email: string, status: 'success' | 'failed' | 'locked', ip?: string}>>([]);
   const { login } = useAuth();
   const router = useRouter();
   const emailInputRef = useRef<HTMLInputElement>(null);
@@ -192,6 +294,7 @@ export default function LoginPage() {
       if (success) {
         setSuccess('Giriş başarılı! Yönlendiriliyorsunuz...');
         setLoginAttempts(0);
+        addLoginAttempt(data.email, 'success');
         
         if (data.require2FA) {
           setShowTwoFA(true);
@@ -203,11 +306,13 @@ export default function LoginPage() {
       } else {
         const newAttempts = loginAttempts + 1;
         setLoginAttempts(newAttempts);
+        addLoginAttempt(data.email, 'failed');
         
         if (newAttempts >= 3) {
           setIsLocked(true);
           setLockoutTime(30);
           setError('Çok fazla başarısız giriş denemesi. 30 saniye bekleyin.');
+          addLoginAttempt(data.email, 'locked');
         } else {
           setError(`Email veya şifre hatalı. Kalan deneme: ${3 - newAttempts}`);
         }
@@ -215,6 +320,7 @@ export default function LoginPage() {
     } catch (error) {
       console.error('Login error:', error);
       setError('Giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.');
+      addLoginAttempt(data.email, 'failed');
     } finally {
       setIsLoading(false);
     }
@@ -225,6 +331,7 @@ export default function LoginPage() {
     setValue('password', password);
     setValue('rememberMe', true);
     setValue('require2FA', true);
+    addLoginAttempt(email, 'success');
     setTimeout(() => handleSubmit(onSubmit)(), 100);
   };
 
@@ -267,6 +374,63 @@ export default function LoginPage() {
     } catch (err) {
       console.error('Failed to copy:', err);
     }
+  };
+
+  // Generate password suggestions
+  const generatePasswordSuggestions = () => {
+    const suggestions = [
+      generateSmartPassword(12, true),
+      generateSmartPassword(16, true),
+      generateSmartPassword(14, false),
+      generateSmartPassword(20, true)
+    ];
+    setPasswordSuggestions(suggestions);
+    setShowPasswordSuggestions(true);
+  };
+
+  // Use suggested password
+  const useSuggestedPassword = (password: string) => {
+    setValue('password', password);
+    setShowPasswordSuggestions(false);
+    setSuccess('Önerilen şifre kullanıldı!');
+    setTimeout(() => setSuccess(''), 3000);
+  };
+
+  // Copy password to clipboard
+  const copyPasswordToClipboard = async (password: string) => {
+    try {
+      await navigator.clipboard.writeText(password);
+      setCopiedPassword(password);
+      setTimeout(() => setCopiedPassword(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy password:', err);
+    }
+  };
+
+  // Add login attempt to history
+  const addLoginAttempt = (email: string, status: 'success' | 'failed' | 'locked') => {
+    const newAttempt = {
+      timestamp: new Date(),
+      email,
+      status,
+      ip: '192.168.1.1' // Mock IP for demo
+    };
+    
+    setLoginHistory(prev => [newAttempt, ...prev.slice(0, 9)]); // Keep last 10 attempts
+  };
+
+  // Format timestamp
+  const formatTimestamp = (timestamp: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - timestamp.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (minutes < 1) return 'Az önce';
+    if (minutes < 60) return `${minutes} dakika önce`;
+    if (hours < 24) return `${hours} saat önce`;
+    return `${days} gün önce`;
   };
 
   return (
@@ -648,6 +812,93 @@ export default function LoginPage() {
                         </div>
                       </motion.div>
                     )}
+
+                    {/* Smart Password Suggestions */}
+                    <motion.div 
+                      className="mt-3"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.6 }}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center">
+                          <SparklesIcon className="h-3 w-3 mr-1 text-indigo-500" />
+                          Akıllı Şifre Önerisi
+                        </span>
+                        <motion.button
+                          type="button"
+                          onClick={generatePasswordSuggestions}
+                          className="text-xs text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors flex items-center"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <RefreshCw className="h-3 w-3 mr-1" />
+                          Yeni Öneriler
+                        </motion.button>
+                      </div>
+                      
+                      {showPasswordSuggestions && (
+                        <motion.div 
+                          className="space-y-2"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          {passwordSuggestions.map((password, index) => (
+                            <motion.div
+                              key={index}
+                              className="flex items-center space-x-2 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-md border border-gray-200 dark:border-gray-600"
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.1 * index }}
+                            >
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-mono text-gray-700 dark:text-gray-300">
+                                    {password}
+                                  </span>
+                                  <div className="flex items-center space-x-1">
+                                    <motion.button
+                                      type="button"
+                                      onClick={() => copyPasswordToClipboard(password)}
+                                      className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                                      whileHover={{ scale: 1.1 }}
+                                      whileTap={{ scale: 0.9 }}
+                                      title="Şifreyi kopyala"
+                                    >
+                                      {copiedPassword === password ? (
+                                        <Check className="h-3 w-3 text-green-500" />
+                                      ) : (
+                                        <Copy className="h-3 w-3" />
+                                      )}
+                                    </motion.button>
+                                    <motion.button
+                                      type="button"
+                                      onClick={() => useSuggestedPassword(password)}
+                                      className="p-1 text-indigo-600 hover:text-indigo-700 dark:hover:text-indigo-400 transition-colors"
+                                      whileHover={{ scale: 1.1 }}
+                                      whileTap={{ scale: 0.9 }}
+                                      title="Bu şifreyi kullan"
+                                    >
+                                      <ArrowRight className="h-3 w-3" />
+                                    </motion.button>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between mt-1">
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    {password.length} karakter
+                                  </span>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    {/[^A-Za-z0-9]/.test(password) ? 'Sembol içerir' : 'Sadece alfanumerik'}
+                                  </span>
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </motion.div>
+                      )}
+                    </motion.div>
                     
                     <AnimatePresence>
                       {errors.password && (
@@ -695,6 +946,58 @@ export default function LoginPage() {
                       </label>
                     </div>
                   </motion.div>
+
+                  {/* Security Score */}
+                  {(watchedEmail || watchedPassword) && (
+                    <motion.div 
+                      className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-700/50"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.7 }}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-blue-700 dark:text-blue-300 flex items-center">
+                          <Shield className="h-4 w-4 mr-2" />
+                          Güvenlik Skoru
+                        </span>
+                        <span className={`text-sm font-bold ${calculateSecurityScore(watchedEmail || '', watchedPassword || '', watch('require2FA') || false, watch('rememberMe') || false).color}`}>
+                          {calculateSecurityScore(watchedEmail || '', watchedPassword || '', watch('require2FA') || false, watch('rememberMe') || false).score}/100
+                        </span>
+                      </div>
+                      
+                      <div className="mb-2">
+                        <div className="flex items-center justify-between text-xs text-blue-600 dark:text-blue-400 mb-1">
+                          <span>Seviye: {calculateSecurityScore(watchedEmail || '', watchedPassword || '', watch('require2FA') || false, watch('rememberMe') || false).level}</span>
+                        </div>
+                        <div className="w-full bg-blue-200 dark:bg-blue-700/50 rounded-full h-2 overflow-hidden">
+                          <motion.div 
+                            className="h-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${calculateSecurityScore(watchedEmail || '', watchedPassword || '', watch('require2FA') || false, watch('rememberMe') || false).score}%` }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
+                          />
+                        </div>
+                      </div>
+                      
+                      {calculateSecurityScore(watchedEmail || '', watchedPassword || '', watch('require2FA') || false, watch('rememberMe') || false).tips.length > 0 && (
+                        <div className="space-y-1">
+                          <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Güvenlik İpuçları:</span>
+                          {calculateSecurityScore(watchedEmail || '', watchedPassword || '', watch('require2FA') || false, watch('rememberMe') || false).tips.slice(0, 3).map((tip, index) => (
+                            <motion.div
+                              key={index}
+                              className="text-xs text-blue-600 dark:text-blue-400 flex items-center"
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.8 + index * 0.1 }}
+                            >
+                              <div className="w-1 h-1 bg-blue-400 rounded-full mr-2" />
+                              {tip}
+                            </motion.div>
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
 
                   {/* Enhanced 2FA Section */}
                   <AnimatePresence>
@@ -884,6 +1187,81 @@ export default function LoginPage() {
                       </motion.button>
                     </div>
                   </div>
+                </motion.div>
+
+                {/* Login History */}
+                <motion.div 
+                  className="text-center"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.0 }}
+                >
+                  <motion.button
+                    type="button"
+                    onClick={() => setShowLoginHistory(!showLoginHistory)}
+                    className="text-sm text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition-colors flex items-center justify-center mx-auto"
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <Info className="h-4 w-4 mr-2" />
+                    Giriş Geçmişi
+                    <motion.div
+                      animate={{ rotate: showLoginHistory ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </motion.div>
+                  </motion.button>
+                  
+                  <AnimatePresence>
+                    {showLoginHistory && (
+                      <motion.div 
+                        className="mt-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 text-center">
+                          Son Giriş Denemeleri
+                        </h4>
+                        
+                        {loginHistory.length === 0 ? (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                            Henüz giriş denemesi yapılmadı
+                          </p>
+                        ) : (
+                          <div className="space-y-2 max-h-32 overflow-y-auto">
+                            {loginHistory.map((attempt, index) => (
+                              <motion.div
+                                key={index}
+                                className="flex items-center justify-between p-2 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.1 * index }}
+                              >
+                                <div className="flex items-center space-x-2">
+                                  <div className={`w-2 h-2 rounded-full ${
+                                    attempt.status === 'success' ? 'bg-green-500' :
+                                    attempt.status === 'failed' ? 'bg-red-500' :
+                                    'bg-yellow-500'
+                                  }`} />
+                                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                                    {attempt.email}
+                                  </span>
+                                </div>
+                                <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+                                  <span>{formatTimestamp(attempt.timestamp)}</span>
+                                  <span className="text-xs bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded">
+                                    {attempt.ip}
+                                  </span>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               </motion.form>
             </div>

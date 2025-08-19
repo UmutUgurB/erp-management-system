@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import DashboardLayout from '@/components/Layout/DashboardLayout';
 import { employeesAPI } from '@/lib/api';
-import { Employee, EmployeeFilters, EmployeeStats } from '@/types/employee';
+import { Employee, EmployeeFilters as EmployeeFiltersType, EmployeeStats as EmployeeStatsType } from '@/types/employee';
 import EmployeeList from '@/components/Employees/EmployeeList';
 import EmployeeStats from '@/components/Employees/EmployeeStats';
 import EmployeeFilters from '@/components/Employees/EmployeeFilters';
@@ -14,9 +14,9 @@ import { Plus, Users, TrendingUp, AlertTriangle } from 'lucide-react';
 
 export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [stats, setStats] = useState<EmployeeStats | null>(null);
+  const [stats, setStats] = useState<EmployeeStatsType | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<EmployeeFilters>({
+  const [filters, setFilters] = useState<EmployeeFiltersType>({
     page: 1,
     limit: 10,
     sortBy: 'createdAt',

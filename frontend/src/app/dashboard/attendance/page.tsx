@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import DashboardLayout from '@/components/Layout/DashboardLayout';
 import { attendanceAPI, employeesAPI } from '@/lib/api';
-import { Attendance, AttendanceStats, Employee } from '@/types/attendance';
+import { Attendance, AttendanceStats as AttendanceStatsType, Employee } from '@/types/attendance';
 import AttendanceOverview from '@/components/Attendance/AttendanceOverview';
 import DailyAttendance from '@/components/Attendance/DailyAttendance';
 import AttendanceStats from '@/components/Attendance/AttendanceStats';
@@ -14,7 +14,7 @@ import { Clock, Users, Calendar, TrendingUp, AlertTriangle } from 'lucide-react'
 
 export default function AttendancePage() {
   const [todayAttendance, setTodayAttendance] = useState<Attendance[]>([]);
-  const [stats, setStats] = useState<AttendanceStats | null>(null);
+  const [stats, setStats] = useState<AttendanceStatsType | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
