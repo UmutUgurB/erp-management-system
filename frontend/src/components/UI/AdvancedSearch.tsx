@@ -1,79 +1,157 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
-  X, 
   Filter, 
-  SortAsc, 
-  SortDesc, 
-  History, 
-  TrendingUp,
-  Clock,
-  Star,
-  Zap
+  X, 
+  Clock, 
+  TrendingUp, 
+  Users, 
+  Package, 
+  ShoppingCart,
+  Building,
+  FileText,
+  Calendar,
+  DollarSign,
+  ArrowUp,
+  ArrowDown,
+  Sparkles
 } from 'lucide-react';
 
 interface SearchResult {
   id: string;
+  type: 'employee' | 'product' | 'order' | 'customer' | 'project';
   title: string;
   description: string;
-  type: 'product' | 'customer' | 'order' | 'user';
+  icon: React.ComponentType<any>;
   relevance: number;
   lastAccessed?: Date;
+  tags: string[];
+}
+
+interface SearchFilter {
+  type: string[];
+  dateRange: { start: Date | null; end: Date | null };
+  tags: string[];
+  relevance: 'all' | 'high' | 'medium' | 'low';
 }
 
 interface AdvancedSearchProps {
+  onSearch: (query: string, filters: SearchFilter) => void;
+  onResultSelect: (result: SearchResult) => void;
   placeholder?: string;
-  onSearch?: (query: string, filters: SearchFilters) => void;
-  onResultSelect?: (result: SearchResult) => void;
   className?: string;
-  showFilters?: boolean;
-  showHistory?: boolean;
-  showTrending?: boolean;
 }
 
-interface SearchFilters {
-  type: string[];
-  dateRange: 'all' | 'today' | 'week' | 'month' | 'year';
-  sortBy: 'relevance' | 'date' | 'name' | 'popularity';
-  sortOrder: 'asc' | 'desc';
-}
-
-export default function AdvancedSearch({
-  placeholder = "Arama yapın...",
+const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   onSearch,
   onResultSelect,
-  className = "",
-  showFilters = true,
-  showHistory = true,
-  showTrending = true
-}: AdvancedSearchProps) {
+  placeholder = 'Gelişmiş arama yapın...',
+  className = ''
+}) => {
   const [query, setQuery] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showResults, setShowResults] = useState(false);
-  const [filters, setFilters] = useState<SearchFilters>({
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<SearchFilter>({
     type: [],
-    dateRange: 'all',
-    sortBy: 'relevance',
-    sortOrder: 'desc'
+    dateRange: { start: null, end: null },
+    tags: [],
+    relevance: 'all'
   });
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [searchHistory, setSearchHistory] = useState<string[]>([]);
-  const [trendingSearches, setTrendingSearches] = useState<string[]>([]);
-  
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Mock data for demonstration
-  useEffect(() => {
-    setTrendingSearches(['laptop', 'müşteri', 'sipariş', 'ürün', 'rapor']);
-    setSearchHistory(['admin', 'kullanıcı', 'dashboard', 'analytics']);
-  }, []);
+  // Mock search results for demonstration
+  const mockResults: SearchResult[] = [
+    {
+      id: '1',
+      type: 'employee',
+      title: 'Ahmet Yılmaz',
+      description: 'Senior Developer - Yazılım Geliştirme Departmanı',
+      icon: Users,
+      relevance: 95,
+      lastAccessed: new Date('2024-01-15'),
+      tags: ['developer', 'senior', 'yazılım']
+    },
+    {
+      id: '2',
+      type: 'product',
+      title: 'Laptop Dell XPS 13',
+      description: 'Yüksek performanslı iş laptopu - Stok: 15',
+      icon: Package,
+      relevance: 88,
+      lastAccessed: new Date('2024-01-14'),
+      tags: ['laptop', 'dell', 'xps', 'iş']
+    },
+    {
+      id: '3',
+      type: 'order',
+      title: 'Sipariş #12345',
+      description: 'ABC Şirketi - ₺35,000 - Tamamlandı',
+      icon: ShoppingCart,
+      relevance: 82,
+      lastAccessed: new Date('2024-01-13'),
+      tags: ['sipariş', 'tamamlandı', 'abc']
+    },
+    {
+      id: '4',
+      type: 'customer',
+      title: 'ABC Şirketi',
+      description: 'Kurumsal müşteri - Premium üye',
+      icon: Building,
+      relevance: 78,
+      lastAccessed: new Date('2024-01-12'),
+      tags: ['kurumsal', 'premium', 'müşteri']
+    },
+    {
+      id: '5',
+      type: 'project',
+      title: 'ERP Sistemi Geliştirme',
+      description: 'Aktif proje - %75 tamamlandı',
+      icon: FileText,
+      relevance: 75,
+      lastAccessed: new Date('2024-01-11'),
+      tags: ['proje', 'erp', 'geliştirme', 'aktif']
+    }
+  ];
+
+  // Search suggestions
+  const searchSuggestions = [
+    'çalışan arama',
+    'ürün stok',
+    'sipariş durumu',
+    'müşteri bilgileri',
+    'proje raporu',
+    'finansal analiz',
+    'performans metrikleri'
+  ];
+
+  // Popular tags
+  const popularTags = [
+    'aktif', 'tamamlandı', 'beklemede', 'acil',
+    'senior', 'junior', 'yönetici', 'geliştirici',
+    'elektronik', 'giyim', 'gıda', 'hizmet',
+    'kurumsal', 'bireysel', 'premium', 'standart'
+  ];
 
   useEffect(() => {
+    // Load recent searches from localStorage
+    const saved = localStorage.getItem('erp-recent-searches');
+    if (saved) {
+      try {
+        setRecentSearches(JSON.parse(saved));
+      } catch (error) {
+        console.error('Error loading recent searches:', error);
+      }
+    }
+
+    // Handle click outside to close results
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowResults(false);
@@ -85,61 +163,62 @@ export default function AdvancedSearch({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSearch = async (searchQuery: string = query) => {
-    if (!searchQuery.trim()) return;
+  useEffect(() => {
+    // Generate suggestions based on query
+    if (query.length > 2) {
+      const filtered = searchSuggestions.filter(suggestion =>
+        suggestion.toLowerCase().includes(query.toLowerCase())
+      );
+      setSuggestions(filtered.slice(0, 5));
+    } else {
+      setSuggestions([]);
+    }
+  }, [query]);
 
-    setIsLoading(true);
+  const handleSearch = async () => {
+    if (!query.trim()) return;
+
+    setIsSearching(true);
     setShowResults(true);
 
-    // Add to search history
-    if (!searchHistory.includes(searchQuery)) {
-      setSearchHistory(prev => [searchQuery, ...prev.slice(0, 9)]);
-    }
-
-    // Simulate API call
+    // Simulate search delay
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Mock results
-    const mockResults: SearchResult[] = [
-      {
-        id: '1',
-        title: 'Laptop Pro 2024',
-        description: 'Yüksek performanslı iş bilgisayarı',
-        type: 'product',
-        relevance: 95,
-        lastAccessed: new Date()
-      },
-      {
-        id: '2',
-        title: 'Ahmet Yılmaz',
-        description: 'Müşteri - Premium üye',
-        type: 'customer',
-        relevance: 88,
-        lastAccessed: new Date(Date.now() - 86400000)
-      },
-      {
-        id: '3',
-        title: 'Sipariş #ORD-2024-001',
-        description: 'Bekleyen sipariş - 2 ürün',
-        type: 'order',
-        relevance: 82,
-        lastAccessed: new Date(Date.now() - 172800000)
-      }
-    ];
+    // Filter results based on query and filters
+    let filteredResults = mockResults.filter(result => {
+      const matchesQuery = result.title.toLowerCase().includes(query.toLowerCase()) ||
+                          result.description.toLowerCase().includes(query.toLowerCase()) ||
+                          result.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase()));
+      
+      const matchesType = filters.type.length === 0 || filters.type.includes(result.type);
+      const matchesTags = filters.tags.length === 0 || 
+                         filters.tags.some(tag => result.tags.includes(tag));
+      
+      return matchesQuery && matchesType && matchesTags;
+    });
 
-    setResults(mockResults);
-    setIsLoading(false);
-    onSearch?.(searchQuery, filters);
+    // Sort by relevance
+    filteredResults.sort((a, b) => b.relevance - a.relevance);
+
+    setSearchResults(filteredResults);
+    setIsSearching(false);
+
+    // Save to recent searches
+    const newRecentSearches = [query, ...recentSearches.filter(s => s !== query)].slice(0, 10);
+    setRecentSearches(newRecentSearches);
+    localStorage.setItem('erp-recent-searches', JSON.stringify(newRecentSearches));
+
+    // Call parent search handler
+    onSearch(query, filters);
   };
 
   const handleResultSelect = (result: SearchResult) => {
-    onResultSelect?.(result);
+    onResultSelect(result);
     setShowResults(false);
     setIsExpanded(false);
-    setQuery(result.title);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSearch();
     } else if (e.key === 'Escape') {
@@ -148,173 +227,228 @@ export default function AdvancedSearch({
     }
   };
 
-  const clearSearch = () => {
-    setQuery('');
-    setResults([]);
-    setShowResults(false);
-    setIsExpanded(false);
-    inputRef.current?.focus();
+  const clearFilters = () => {
+    setFilters({
+      type: [],
+      dateRange: { start: null, end: null },
+      tags: [],
+      relevance: 'all'
+    });
   };
 
-  const toggleFilters = () => {
-    setIsExpanded(!isExpanded);
+  const toggleFilter = (type: string) => {
+    setFilters(prev => ({
+      ...prev,
+      type: prev.type.includes(type)
+        ? prev.type.filter(t => t !== type)
+        : [...prev.type, type]
+    }));
+  };
+
+  const toggleTag = (tag: string) => {
+    setFilters(prev => ({
+      ...prev,
+      tags: prev.tags.includes(tag)
+        ? prev.tags.filter(t => t !== tag)
+        : [...prev.tags, tag]
+    }));
   };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'product': return '📦';
-      case 'customer': return '👤';
-      case 'order': return '🛒';
-      case 'user': return '👨‍💼';
-      default: return '📄';
+      case 'employee': return Users;
+      case 'product': return Package;
+      case 'order': return ShoppingCart;
+      case 'customer': return Building;
+      case 'project': return FileText;
+      default: return FileText;
     }
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'product': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
-      case 'customer': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
-      case 'order': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400';
-      case 'user': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400';
+      case 'employee': return 'text-blue-600 bg-blue-100 dark:bg-blue-900/20';
+      case 'product': return 'text-green-600 bg-green-100 dark:bg-green-900/20';
+      case 'order': return 'text-purple-600 bg-purple-100 dark:bg-purple-900/20';
+      case 'customer': return 'text-orange-600 bg-orange-100 dark:bg-orange-900/20';
+      case 'project': return 'text-indigo-600 bg-indigo-100 dark:bg-indigo-900/20';
+      default: return 'text-gray-600 bg-gray-100 dark:bg-gray-900/20';
     }
   };
 
   return (
-    <div ref={searchRef} className={`relative w-full max-w-2xl ${className}`}>
+    <div ref={searchRef} className={`relative ${className}`}>
       {/* Search Input */}
       <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-gray-400" />
-        </div>
-        
-        <input
-          ref={inputRef}
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={handleKeyPress}
-          onFocus={() => setShowResults(true)}
-          placeholder={placeholder}
-          className="block w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
-        />
-        
-        <div className="absolute inset-y-0 right-0 flex items-center pr-2 space-x-1">
-          {query && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={() => setIsExpanded(true)}
+            placeholder={placeholder}
+            className="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+          />
+          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
             <button
-              onClick={clearSearch}
-              className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-          
-          {showFilters && (
-            <button
-              onClick={toggleFilters}
-              className={`p-1 rounded transition-colors ${
-                isExpanded 
-                  ? 'text-indigo-600 bg-indigo-100 dark:bg-indigo-900/20' 
+              onClick={() => setShowFilters(!showFilters)}
+              className={`p-1.5 rounded-md transition-colors ${
+                showFilters || filters.type.length > 0 || filters.tags.length > 0
+                  ? 'text-blue-600 bg-blue-100 dark:bg-blue-900/20'
                   : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
               }`}
+              title="Filtreler"
             >
-              <Filter className="h-4 w-4" />
+              <Filter className="w-4 h-4" />
             </button>
-          )}
-          
-          <button
-            onClick={() => handleSearch()}
-            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-          >
-            <Zap className="h-4 w-4" />
-          </button>
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md transition-colors"
+                title="Temizle"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Search Button */}
+        <button
+          onClick={handleSearch}
+          disabled={!query.trim() || isSearching}
+          className="absolute right-0 top-0 h-full px-4 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200"
+        >
+          {isSearching ? (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Search className="w-4 h-4" />
+          )}
+        </button>
       </div>
 
-      {/* Filters Panel */}
+      {/* Expanded Search Panel */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="mt-2 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50"
           >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Type Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Tür
-                </label>
-                <div className="space-y-2">
-                  {['product', 'customer', 'order', 'user'].map((type) => (
-                    <label key={type} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={filters.type.includes(type)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setFilters(prev => ({ ...prev, type: [...prev.type, type] }));
-                          } else {
-                            setFilters(prev => ({ ...prev, type: prev.type.filter(t => t !== type) }));
-                          }
-                        }}
-                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                      />
-                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-300 capitalize">
-                        {type === 'product' ? 'Ürün' : type === 'customer' ? 'Müşteri' : type === 'order' ? 'Sipariş' : 'Kullanıcı'}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Date Range Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Tarih Aralığı
-                </label>
-                <select
-                  value={filters.dateRange}
-                  onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value as any }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="all">Tümü</option>
-                  <option value="today">Bugün</option>
-                  <option value="week">Bu Hafta</option>
-                  <option value="month">Bu Ay</option>
-                  <option value="year">Bu Yıl</option>
-                </select>
-              </div>
-
-              {/* Sort Options */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Sıralama
-                </label>
-                <div className="space-y-2">
-                  <select
-                    value={filters.sortBy}
-                    onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value as any }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="relevance">Alaka Düzeyi</option>
-                    <option value="date">Tarih</option>
-                    <option value="name">İsim</option>
-                    <option value="popularity">Popülerlik</option>
-                  </select>
-                  
+            {/* Filters Section */}
+            {showFilters && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="p-4 border-b border-gray-200 dark:border-gray-700"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-white">Filtreler</h3>
                   <button
-                    onClick={() => setFilters(prev => ({ ...prev, sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc' }))}
-                    className="flex items-center space-x-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                    onClick={clearFilters}
+                    className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                   >
-                    {filters.sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
-                    <span className="text-sm">
-                      {filters.sortOrder === 'asc' ? 'Artan' : 'Azalan'}
-                    </span>
+                    Temizle
                   </button>
                 </div>
-              </div>
+
+                {/* Type Filters */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Tür
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {['employee', 'product', 'order', 'customer', 'project'].map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => toggleFilter(type)}
+                        className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
+                          filters.type.includes(type)
+                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                            : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        {type === 'employee' && 'Çalışan'}
+                        {type === 'product' && 'Ürün'}
+                        {type === 'order' && 'Sipariş'}
+                        {type === 'customer' && 'Müşteri'}
+                        {type === 'project' && 'Proje'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Popular Tags */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Popüler Etiketler
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {popularTags.map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => toggleTag(tag)}
+                        className={`px-2 py-1 text-xs rounded-md transition-colors ${
+                          filters.tags.includes(tag)
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300'
+                            : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Suggestions & Recent Searches */}
+            <div className="p-4">
+              {/* Search Suggestions */}
+              {suggestions.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Öneriler
+                  </h3>
+                  <div className="space-y-1">
+                    {suggestions.map((suggestion, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setQuery(suggestion)}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recent Searches */}
+              {recentSearches.length > 0 && (
+                <div>
+                  <h3 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                    <Clock className="w-3 h-3 mr-1" />
+                    Son Aramalar
+                  </h3>
+                  <div className="space-y-1">
+                    {recentSearches.slice(0, 5).map((search, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setQuery(search)}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                      >
+                        {search}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -322,107 +456,70 @@ export default function AdvancedSearch({
 
       {/* Search Results */}
       <AnimatePresence>
-        {showResults && (
+        {showResults && searchResults.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto"
+            className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 max-h-96 overflow-y-auto"
           >
-            {isLoading ? (
-              <div className="p-4 text-center">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500 mx-auto"></div>
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Aranıyor...</p>
-              </div>
-            ) : results.length > 0 ? (
-              <div className="p-2">
-                {results.map((result) => (
-                  <motion.div
+            <div className="p-2">
+              {searchResults.map((result) => {
+                const Icon = result.icon;
+                return (
+                  <motion.button
                     key={result.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    whileHover={{ backgroundColor: 'rgba(59, 130, 246, 0.05)' }}
-                    className="flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors"
                     onClick={() => handleResultSelect(result)}
+                    whileHover={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}
+                    className="w-full text-left p-3 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                   >
-                    <div className="text-2xl">{getTypeIcon(result.type)}</div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                        {result.title}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {result.description}
-                      </p>
+                    <div className="flex items-start space-x-3">
+                      <div className={`p-2 rounded-lg ${getTypeColor(result.type)}`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                            {result.title}
+                          </h4>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {result.relevance}%
+                            </span>
+                            <TrendingUp className="w-3 h-3 text-green-500" />
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                          {result.description}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <div className="flex flex-wrap gap-1">
+                            {result.tags.slice(0, 3).map((tag, index) => (
+                              <span
+                                key={index}
+                                className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-md"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                          {result.lastAccessed && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {result.lastAccessed.toLocaleDateString('tr-TR')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className={`px-2 py-1 text-xs rounded-full ${getTypeColor(result.type)}`}>
-                        {result.type === 'product' ? 'Ürün' : result.type === 'customer' ? 'Müşteri' : result.type === 'order' ? 'Sipariş' : 'Kullanıcı'}
-                      </span>
-                      <span className="text-xs text-gray-400">
-                        {result.relevance}%
-                      </span>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            ) : query ? (
-              <div className="p-4 text-center">
-                <p className="text-sm text-gray-500 dark:text-gray-400">Sonuç bulunamadı</p>
-              </div>
-            ) : (
-              <div className="p-4">
-                {/* Search History */}
-                {showHistory && searchHistory.length > 0 && (
-                  <div className="mb-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <History className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Arama Geçmişi</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {searchHistory.map((term, index) => (
-                        <button
-                          key={index}
-                          onClick={() => {
-                            setQuery(term);
-                            handleSearch(term);
-                          }}
-                          className="px-3 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                        >
-                          {term}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Trending Searches */}
-                {showTrending && trendingSearches.length > 0 && (
-                  <div>
-                    <div className="flex items-center space-x-2 mb-2">
-                      <TrendingUp className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Trend Aramalar</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {trendingSearches.map((term, index) => (
-                        <button
-                          key={index}
-                          onClick={() => {
-                            setQuery(term);
-                            handleSearch(term);
-                          }}
-                          className="px-3 py-1 text-xs bg-indigo-100 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-800/40 transition-colors"
-                        >
-                          {term}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+                  </motion.button>
+                );
+              })}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
   );
-} 
+};
+
+export default AdvancedSearch; 

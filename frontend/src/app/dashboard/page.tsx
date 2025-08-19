@@ -10,14 +10,22 @@ import {
   Calendar,
   Activity,
   Target,
-  Award
+  Award,
+  Download,
+  MessageCircle,
+  Search
 } from 'lucide-react';
 import WidgetSystem from '@/components/Dashboard/WidgetSystem';
 import DataExport from '@/components/UI/DataExport';
+import AdvancedSearch from '@/components/UI/AdvancedSearch';
+import ChatSupport from '@/components/UI/ChatSupport';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'widgets'>('overview');
   const [showDataExport, setShowDataExport] = useState(false);
+  const [showChatSupport, setShowChatSupport] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchFilters, setSearchFilters] = useState<any>({});
 
   const stats = [
     {
@@ -85,17 +93,42 @@ export default function DashboardPage() {
     return colors[type as keyof typeof colors] || colors.info;
   };
 
+  const handleSearch = (query: string, filters: any) => {
+    setSearchQuery(query);
+    setSearchFilters(filters);
+    console.log('Search:', query, filters);
+    // Here you would typically perform the search
+  };
+
+  const handleSearchResultSelect = (result: any) => {
+    console.log('Selected result:', result);
+    // Here you would typically navigate to the selected item
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="px-6 py-4">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Dashboard
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            ERP sisteminizin genel durumu ve önemli metrikleri
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Dashboard
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                ERP sisteminizin genel durumu ve önemli metrikleri
+              </p>
+            </div>
+            
+            {/* Advanced Search */}
+            <div className="w-96">
+              <AdvancedSearch
+                onSearch={handleSearch}
+                onResultSelect={handleSearchResultSelect}
+                placeholder="Çalışan, ürün, sipariş ara..."
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -233,7 +266,7 @@ export default function DashboardPage() {
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
                 Hızlı İşlemler
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <button className="flex flex-col items-center p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
                   <Users className="w-8 h-8 text-indigo-600 dark:text-indigo-400 mb-2" />
                   <span className="text-sm font-medium text-gray-900 dark:text-white">Çalışan Ekle</span>
@@ -259,6 +292,32 @@ export default function DashboardPage() {
                 </button>
               </div>
             </motion.div>
+
+            {/* Support Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    Yardıma mı ihtiyacınız var?
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Canlı destek ekibimiz size yardımcı olmaya hazır
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowChatSupport(true)}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Canlı Destek</span>
+                </button>
+              </div>
+            </motion.div>
           </div>
         ) : (
           <WidgetSystem />
@@ -277,6 +336,13 @@ export default function DashboardPage() {
           />
         )}
       </AnimatePresence>
+
+      {/* Chat Support */}
+      <ChatSupport
+        isOpen={showChatSupport}
+        onClose={() => setShowChatSupport(false)}
+        onMinimize={() => setShowChatSupport(false)}
+      />
     </div>
   );
 } 
