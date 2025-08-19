@@ -1,62 +1,49 @@
 {
   "name": "erp-backend",
   "version": "1.0.0",
-  "description": "Backend API for ERP System",
+  "description": "ERP Management System Backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "echo 'No build step required for Node.js'",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint . --ext .js",
-    "lint:fix": "eslint . --ext .js --fix",
-    "format": "prettier --write .",
-    "seed": "node scripts/init-mongo.js",
-    "backup": "node utils/backup.js",
-    "health": "curl http://localhost:5000/health || echo 'Server not running'",
-    "docker:build": "docker build -t erp-backend .",
-    "docker:run": "docker run -p 5000:5000 erp-backend"
+    "test": "jest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "keywords": [
     "erp",
-    "backend",
+    "management",
+    "nodejs",
     "express",
     "mongodb",
-    "api",
-    "rest"
+    "websocket"
   ],
-  "author": "Your Name",
+  "author": "ERP Team",
   "license": "MIT",
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
-  },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "compression": "^1.8.1",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "express-rate-limit": "^8.0.1",
-    "express-validator": "^7.2.1",
-    "fs-extra": "^11.3.0",
-    "helmet": "^8.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "mongodb-memory-server": "^8.16.1",
     "mongoose": "^7.5.0",
-    "multer": "^2.0.2",
-    "nodemailer": "^7.0.5",
-    "rate-limiter-flexible": "^7.1.1",
-    "socket.io": "^4.8.1",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1",
-    "uuid": "^11.1.0",
-    "winston": "^3.17.0",
-    "ws": "^8.18.3"
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "express-rate-limit": "^6.10.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "express-validator": "^7.0.1",
+    "ws": "^8.13.0",
+    "uuid": "^9.0.0",
+    "winston": "^3.10.0",
+    "compression": "^1.7.4",
+    "exceljs": "^4.3.0",
+    "pdfkit": "^0.13.0",
+    "csv-writer": "^1.6.0",
+    "archiver": "^6.0.1"
   },
   "devDependencies": {
-    "eslint": "^8.0.0",
     "nodemon": "^3.0.1",
-    "prettier": "^3.0.0"
+    "jest": "^29.6.2",
+    "eslint": "^8.47.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }

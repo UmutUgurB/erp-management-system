@@ -9,6 +9,7 @@ const WebSocketServer = require('./utils/websocketServer');
 
 // Import routes
 const authRoutes = require('./routes/auth');
+const exportRoutes = require('./routes/export');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -66,6 +67,7 @@ app.get('/health', async (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/export', exportRoutes);
 
 // Root route
 app.get('/', (req, res) => {
