@@ -72,10 +72,14 @@ class ChatService {
 
     return new Promise((resolve, reject) => {
       try {
-        const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:5000';
+        // Use the correct WebSocket URL with /ws path
+        const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:5000/ws';
+        console.log('Connecting to WebSocket:', wsUrl);
+        
         this.ws = new WebSocket(wsUrl);
 
         this.ws.onopen = () => {
+          console.log('WebSocket connection opened');
           this.isConnected = true;
           this.reconnectAttempts = 0;
           this.startHeartbeat();
@@ -95,14 +99,43 @@ class ChatService {
 
         this.ws.onmessage = (event) => {
           try {
+            // Validate incoming data
+            if (typeof event.data !== 'string') {
+              console.warn('Received non-string WebSocket data:', event.data);
+              return;
+            }
+
+            // Check if data is HTML (error response)
+            if (event.data.trim().startsWith('<!DOCTYPE') || event.data.trim().startsWith('<html')) {
+              console.error('Received HTML instead of WebSocket data:', event.data.substring(0, 200));
+              this.emit('error', 'Server sent HTML instead of WebSocket data - check WebSocket URL');
+              return;
+            }
+
+            // Check if data is valid JSON
+            if (!event.data.trim().startsWith('{') && !event.data.trim().startsWith('[')) {
+              console.warn('Received non-JSON WebSocket data:', event.data.substring(0, 100));
+              return;
+            }
+
             const data: WebSocketMessage = JSON.parse(event.data);
+            
+            // Handle connection established message
+            if (data.type === 'connection_established') {
+              console.log('WebSocket connection confirmed:', data.message);
+              return;
+            }
+            
             this.handleMessage(data);
           } catch (error) {
             console.error('Error parsing WebSocket message:', error);
+            console.error('Raw message data:', event.data);
+            this.emit('error', 'Invalid message format received from server');
           }
         };
 
         this.ws.onclose = (event) => {
+          console.log('WebSocket connection closed:', event.code, event.reason);
           this.isConnected = false;
           this.stopHeartbeat();
           
@@ -145,9 +178,17 @@ class ChatService {
    */
   send(message: WebSocketMessage) {
     if (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(message));
+      try {
+        const messageStr = JSON.stringify(message);
+        this.ws.send(messageStr);
+        console.log('Sent WebSocket message:', message.type);
+      } catch (error) {
+        console.error('Error sending WebSocket message:', error);
+        this.emit('error', 'Failed to send message');
+      }
     } else {
       // Queue message for later if not connected
+      console.log('WebSocket not connected, queuing message:', message.type);
       this.messageQueue.push(message);
     }
   }
@@ -219,6 +260,8 @@ class ChatService {
    * Handle incoming WebSocket messages
    */
   private handleMessage(data: WebSocketMessage) {
+    console.log('Received WebSocket message:', data.type);
+    
     switch (data.type) {
       case 'auth_success':
         this.emit('auth_success', data);
@@ -250,7 +293,12 @@ class ChatService {
         break;
 
       case 'error':
+        console.error('Server error:', data.message);
         this.emit('error', data.message);
+        break;
+
+      case 'pong':
+        // Heartbeat response
         break;
 
       default:
@@ -263,12 +311,14 @@ class ChatService {
    */
   private attemptReconnect() {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.error('Max reconnection attempts reached');
       this.emit('reconnect_failed');
       return;
     }
 
     this.reconnectAttempts++;
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
+    console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`);
 
     setTimeout(() => {
       if (this.userId) {
@@ -287,7 +337,7 @@ class ChatService {
   private startHeartbeat() {
     this.heartbeatInterval = setInterval(() => {
       if (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify({ type: 'ping' }));
+        this.send({ type: 'ping' });
       }
     }, 30000); // Send ping every 30 seconds
   }

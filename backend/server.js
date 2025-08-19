@@ -5,7 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-const path = require('path'); // Added missing import
+const path = require('path');
 
 // Import utilities
 const { logger } = require('./utils/logger');
@@ -21,11 +21,21 @@ const ChatManager = require('./utils/chatManager');
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
 
 // Initialize chat manager
 const chatManager = new ChatManager();
 chatManager.initialize();
+
+// Create WebSocket server with specific path
+const wss = new WebSocket.Server({ 
+  server, 
+  path: '/ws',
+  verifyClient: (info) => {
+    // Basic verification - you can add more sophisticated auth here
+    logger.info(`WebSocket connection attempt from: ${info.req.headers.origin || 'unknown'}`);
+    return true;
+  }
+});
 
 // Middleware
 app.use(helmet());
@@ -77,20 +87,59 @@ app.get('/health', (req, res) => {
 
 // WebSocket connection handling
 wss.on('connection', (ws, req) => {
-  logger.info('New WebSocket connection established');
+  logger.info(`New WebSocket connection established from ${req.socket.remoteAddress}`);
   
   let userId = null;
   let userType = null; // 'user' or 'agent'
   let chatId = null;
 
+  // Send initial connection confirmation
+  ws.send(JSON.stringify({
+    type: 'connection_established',
+    message: 'WebSocket connection established successfully'
+  }));
+
   // Handle incoming messages
   ws.on('message', (message) => {
     try {
+      // Validate message format
+      if (typeof message !== 'string') {
+        logger.warn('Received non-string message, converting to string');
+        message = message.toString();
+      }
+
+      // Check if message is valid JSON
+      if (!message.trim().startsWith('{')) {
+        logger.warn('Received non-JSON message:', message.substring(0, 100));
+        ws.send(JSON.stringify({
+          type: 'error',
+          message: 'Invalid message format - expected JSON'
+        }));
+        return;
+      }
+
       const data = JSON.parse(message);
+      
+      // Validate message structure
+      if (!data.type) {
+        ws.send(JSON.stringify({
+          type: 'error',
+          message: 'Message must have a type field'
+        }));
+        return;
+      }
       
       switch (data.type) {
         case 'auth':
           // Authenticate user and establish connection
+          if (!data.userId || !data.userType) {
+            ws.send(JSON.stringify({
+              type: 'error',
+              message: 'Auth message must include userId and userType'
+            }));
+            return;
+          }
+
           userId = data.userId;
           userType = data.userType;
           logger.info(`WebSocket authenticated: ${userType} ${userId}`);
@@ -106,7 +155,7 @@ wss.on('connection', (ws, req) => {
           if (userType === 'user') {
             let chat = chatManager.getUserChat(userId);
             if (!chat) {
-              chat = chatManager.createChat(userId, data.userInfo);
+              chat = chatManager.createChat(userId, data.userInfo || {});
             }
             chatId = chat.id;
             
@@ -121,7 +170,21 @@ wss.on('connection', (ws, req) => {
           break;
 
         case 'chat_message':
-          if (!chatId) break;
+          if (!chatId) {
+            ws.send(JSON.stringify({
+              type: 'error',
+              message: 'No active chat session'
+            }));
+            return;
+          }
+          
+          if (!data.text || typeof data.text !== 'string') {
+            ws.send(JSON.stringify({
+              type: 'error',
+              message: 'Chat message must include text field'
+            }));
+            return;
+          }
           
           // Add message to chat
           const newMessage = chatManager.addMessage(chatId, {
@@ -146,6 +209,14 @@ wss.on('connection', (ws, req) => {
 
         case 'agent_status_update':
           if (userType === 'agent') {
+            if (!data.status || !['online', 'away', 'busy', 'offline'].includes(data.status)) {
+              ws.send(JSON.stringify({
+                type: 'error',
+                message: 'Invalid agent status'
+              }));
+              return;
+            }
+
             chatManager.updateAgentStatus(userId, data.status);
             
             // Broadcast agent status update
@@ -207,21 +278,32 @@ wss.on('connection', (ws, req) => {
           }
           break;
 
+        case 'ping':
+          // Respond to ping with pong
+          ws.send(JSON.stringify({ type: 'pong' }));
+          break;
+
         default:
           logger.warn(`Unknown WebSocket message type: ${data.type}`);
+          ws.send(JSON.stringify({
+            type: 'error',
+            message: `Unknown message type: ${data.type}`
+          }));
       }
     } catch (error) {
       logger.error('Error processing WebSocket message:', error);
+      logger.error('Raw message:', message);
+      
       ws.send(JSON.stringify({
         type: 'error',
-        message: 'Invalid message format'
+        message: 'Invalid message format or processing error'
       }));
     }
   });
 
   // Handle client disconnect
-  ws.on('close', () => {
-    logger.info(`WebSocket connection closed: ${userType} ${userId}`);
+  ws.on('close', (code, reason) => {
+    logger.info(`WebSocket connection closed: ${userType} ${userId} - Code: ${code}, Reason: ${reason}`);
     
     // If agent disconnected, update their status
     if (userType === 'agent' && userId) {
@@ -230,6 +312,11 @@ wss.on('connection', (ws, req) => {
     
     // Process chat queue when agents disconnect
     chatManager.processQueue();
+  });
+
+  // Handle WebSocket errors
+  ws.on('error', (error) => {
+    logger.error(`WebSocket error for ${userType} ${userId}:`, error);
   });
 
   // Store user info in WebSocket object for easy access
@@ -265,7 +352,7 @@ const gracefulShutdown = async (signal) => {
   
   // Close WebSocket connections
   wss.clients.forEach((client) => {
-    client.close();
+    client.close(1000, 'Server shutting down');
   });
   wss.close();
   
@@ -290,7 +377,7 @@ server.listen(PORT, async () => {
   try {
     await connectDB();
     logger.info(`Server running on port ${PORT}`);
-    logger.info('WebSocket server ready for real-time chat');
+    logger.info(`WebSocket server ready at ws://localhost:${PORT}/ws`);
     
     // Log initial chat manager status
     const stats = chatManager.getStats();

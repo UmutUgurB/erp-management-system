@@ -126,6 +126,7 @@ const ChatSupport: React.FC<ChatSupportProps> = ({ isOpen, onClose, onMinimize }
       chatService.on('chat_ended', handleChatEnded);
       chatService.on('error', handleError);
       chatService.on('disconnected', handleDisconnected);
+      chatService.on('reconnect_failed', handleReconnectFailed);
       
       inputRef.current?.focus();
     } catch (error) {
@@ -143,6 +144,7 @@ const ChatSupport: React.FC<ChatSupportProps> = ({ isOpen, onClose, onMinimize }
     chatService.off('chat_ended', handleChatEnded);
     chatService.off('error', handleError);
     chatService.off('disconnected', handleDisconnected);
+    chatService.off('reconnect_failed', handleReconnectFailed);
     
     // Disconnect if chat is ended
     if (chatStatus === 'ended') {
@@ -173,12 +175,24 @@ const ChatSupport: React.FC<ChatSupportProps> = ({ isOpen, onClose, onMinimize }
 
   const handleError = (error: string) => {
     console.error('Chat error:', error);
-    // You could show a toast notification here
+    
+    // Show user-friendly error message
+    if (error.includes('HTML instead of WebSocket data')) {
+      setConnectionStatus('disconnected');
+      setChatStatus('ended');
+      // You could show a toast notification here
+    }
   };
 
   const handleDisconnected = () => {
     setConnectionStatus('disconnected');
     setChatStatus('ended');
+  };
+
+  const handleReconnectFailed = () => {
+    setConnectionStatus('disconnected');
+    setChatStatus('ended');
+    // You could show a toast notification here
   };
 
   const sendMessage = async () => {
