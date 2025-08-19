@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sun, Moon, Monitor } from 'lucide-react';
-import { useThemeContext } from '@/context/ThemeContext';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function ThemeToggle() {
-  const { theme, setTheme, isDark } = useThemeContext();
+  const { settings, isDark, updateTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
 
   const themes = [
@@ -15,7 +15,7 @@ export default function ThemeToggle() {
     { value: 'system', label: 'Sistem', icon: Monitor },
   ] as const;
 
-  const currentTheme = themes.find(t => t.value === theme) || themes[0];
+  const currentTheme = themes.find(t => t.value === settings.theme) || themes[0];
   const CurrentIcon = currentTheme.icon;
 
   return (
@@ -47,11 +47,11 @@ export default function ThemeToggle() {
                     key={themeOption.value}
                     whileHover={{ backgroundColor: isDark ? '#374151' : '#f9fafb' }}
                     onClick={() => {
-                      setTheme(themeOption.value);
+                      updateTheme(themeOption.value);
                       setIsOpen(false);
                     }}
                     className={`w-full text-left px-4 py-2 text-sm flex items-center space-x-2 transition-colors ${
-                      theme === themeOption.value
+                      settings.theme === themeOption.value
                         ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300'
                         : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
                     }`}
