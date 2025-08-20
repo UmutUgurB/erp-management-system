@@ -1,320 +1,461 @@
-const crypto = require('crypto');
+const Redis = require('ioredis');
+const logger = require('./logger');
 
+// Cache configuration
+const cacheConfig = {
+  redis: {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: process.env.REDIS_PORT || 6379,
+    password: process.env.REDIS_PASSWORD,
+    db: process.env.REDIS_DB || 1, // Use different DB for cache
+    retryDelayOnFailover: 100,
+    maxRetriesPerRequest: 3,
+    lazyConnect: true,
+    keyPrefix: 'cache:'
+  },
+  memory: {
+    maxSize: 1000, // Maximum number of items in memory cache
+    ttl: 300000, // 5 minutes default TTL
+    checkPeriod: 60000 // Check for expired items every minute
+  }
+};
+
+// Memory cache fallback
+class MemoryCache {
+  constructor() {
+    this.cache = new Map();
+    this.timers = new Map();
+    this.size = 0;
+    this.maxSize = cacheConfig.memory.maxSize;
+    this.checkPeriod = cacheConfig.memory.checkPeriod;
+    
+    // Start cleanup timer
+    this.startCleanupTimer();
+  }
+
+  set(key, value, ttl = cacheConfig.memory.ttl) {
+    // Remove existing timer if key exists
+    if (this.timers.has(key)) {
+      clearTimeout(this.timers.get(key));
+    }
+
+    // Remove oldest items if cache is full
+    if (this.size >= this.maxSize && !this.cache.has(key)) {
+      this.evictOldest();
+    }
+
+    const expiresAt = Date.now() + ttl;
+    this.cache.set(key, { value, expiresAt });
+    this.timers.set(key, setTimeout(() => this.delete(key), ttl));
+    
+    if (!this.cache.has(key)) {
+      this.size++;
+    }
+  }
+
+  get(key) {
+    const item = this.cache.get(key);
+    if (!item) return null;
+
+    if (Date.now() > item.expiresAt) {
+      this.delete(key);
+      return null;
+    }
+
+    return item.value;
+  }
+
+  delete(key) {
+    if (this.timers.has(key)) {
+      clearTimeout(this.timers.get(key));
+      this.timers.delete(key);
+    }
+    
+    if (this.cache.delete(key)) {
+      this.size--;
+    }
+  }
+
+  has(key) {
+    return this.cache.has(key) && this.get(key) !== null;
+  }
+
+  clear() {
+    this.timers.forEach(timer => clearTimeout(timer));
+    this.timers.clear();
+    this.cache.clear();
+    this.size = 0;
+  }
+
+  keys() {
+    return Array.from(this.cache.keys());
+  }
+
+  size() {
+    return this.size;
+  }
+
+  evictOldest() {
+    let oldestKey = null;
+    let oldestTime = Date.now();
+
+    for (const [key, item] of this.cache.entries()) {
+      if (item.expiresAt < oldestTime) {
+        oldestTime = item.expiresAt;
+        oldestKey = key;
+      }
+    }
+
+    if (oldestKey) {
+      this.delete(oldestKey);
+    }
+  }
+
+  startCleanupTimer() {
+    setInterval(() => {
+      const now = Date.now();
+      for (const [key, item] of this.cache.entries()) {
+        if (now > item.expiresAt) {
+          this.delete(key);
+        }
+      }
+    }, this.checkPeriod);
+  }
+}
+
+// Cache Manager Class
 class CacheManager {
   constructor() {
-    this.memoryCache = new Map();
-    this.diskCache = new Map();
+    this.redis = null;
+    this.memory = new MemoryCache();
+    this.isRedisAvailable = false;
     this.stats = {
       hits: 0,
       misses: 0,
       sets: 0,
       deletes: 0,
-      evictions: 0
-    };
-    this.maxMemorySize = 100 * 1024 * 1024; // 100MB
-    this.currentMemorySize = 0;
-  }
-
-  // Set cache with TTL
-  set(key, value, ttl = 3600000, options = {}) {
-    const cacheKey = this.generateKey(key);
-    const cacheItem = {
-      value,
-      timestamp: Date.now(),
-      ttl,
-      size: this.calculateSize(value),
-      accessCount: 0,
-      lastAccessed: Date.now(),
-      tags: options.tags || [],
-      priority: options.priority || 'normal'
+      errors: 0
     };
 
-    // Memory cache
-    if (options.persistent !== false) {
-      this.setMemoryCache(cacheKey, cacheItem);
-    }
-
-    // Disk cache for large items
-    if (cacheItem.size > 1024 * 1024) { // > 1MB
-      this.setDiskCache(cacheKey, cacheItem);
-    }
-
-    this.stats.sets++;
-    return true;
+    this.initializeRedis();
   }
 
-  // Get cache item
-  get(key, options = {}) {
-    const cacheKey = this.generateKey(key);
-    
-    // Try memory cache first
-    let item = this.getMemoryCache(cacheKey);
-    
-    if (!item && options.fallbackToDisk !== false) {
-      item = this.getDiskCache(cacheKey);
-      if (item) {
-        // Move to memory cache
-        this.setMemoryCache(cacheKey, item);
+  // Initialize Redis connection
+  async initializeRedis() {
+    try {
+      this.redis = new Redis(cacheConfig.redis);
+      
+      this.redis.on('error', (err) => {
+        logger.error('Redis cache error:', err);
+        this.isRedisAvailable = false;
+      });
+
+      this.redis.on('connect', () => {
+        logger.info('Redis cache connected successfully');
+        this.isRedisAvailable = true;
+      });
+
+      this.redis.on('ready', () => {
+        this.isRedisAvailable = true;
+      });
+
+      // Test connection
+      await this.redis.ping();
+      this.isRedisAvailable = true;
+      
+    } catch (error) {
+      logger.warn('Redis cache not available, using memory cache only:', error.message);
+      this.isRedisAvailable = false;
+    }
+  }
+
+  // Set cache value
+  async set(key, value, ttl = 3600) {
+    try {
+      this.stats.sets++;
+      
+      // Always set in memory cache as fallback
+      this.memory.set(key, value, ttl * 1000);
+
+      // Try to set in Redis if available
+      if (this.isRedisAvailable && this.redis) {
+        const serializedValue = JSON.stringify(value);
+        await this.redis.setex(key, ttl, serializedValue);
       }
-    }
 
-    if (item && !this.isExpired(item)) {
-      this.updateAccessStats(item);
-      this.stats.hits++;
-      return item.value;
-    }
-
-    this.stats.misses++;
-    return null;
-  }
-
-  // Delete cache item
-  delete(key) {
-    const cacheKey = this.generateKey(key);
-    const memoryDeleted = this.deleteMemoryCache(cacheKey);
-    const diskDeleted = this.deleteDiskCache(cacheKey);
-    
-    if (memoryDeleted || diskDeleted) {
-      this.stats.deletes++;
       return true;
+    } catch (error) {
+      this.stats.errors++;
+      logger.error('Cache set error:', error);
+      return false;
     }
-    
-    return false;
   }
 
-  // Clear cache by tags
-  clearByTags(tags) {
-    let clearedCount = 0;
-    
-    for (const [key, item] of this.memoryCache.entries()) {
-      if (tags.some(tag => item.tags.includes(tag))) {
-        this.deleteMemoryCache(key);
-        clearedCount++;
+  // Get cache value
+  async get(key) {
+    try {
+      // Try Redis first
+      if (this.isRedisAvailable && this.redis) {
+        try {
+          const value = await this.redis.get(key);
+          if (value) {
+            this.stats.hits++;
+            const parsedValue = JSON.parse(value);
+            // Update memory cache
+            this.memory.set(key, parsedValue, 300000); // 5 minutes
+            return parsedValue;
+          }
+        } catch (redisError) {
+          logger.warn('Redis get error, falling back to memory:', redisError.message);
+        }
       }
-    }
-    
-    for (const [key, item] of this.diskCache.entries()) {
-      if (tags.some(tag => item.tags.includes(tag))) {
-        this.deleteDiskCache(key);
-        clearedCount++;
+
+      // Fallback to memory cache
+      const memoryValue = this.memory.get(key);
+      if (memoryValue !== null) {
+        this.stats.hits++;
+        return memoryValue;
       }
+
+      this.stats.misses++;
+      return null;
+    } catch (error) {
+      this.stats.errors++;
+      logger.error('Cache get error:', error);
+      return null;
     }
-    
-    return clearedCount;
+  }
+
+  // Delete cache value
+  async delete(key) {
+    try {
+      this.stats.deletes++;
+      
+      // Delete from memory cache
+      this.memory.delete(key);
+
+      // Delete from Redis if available
+      if (this.isRedisAvailable && this.redis) {
+        await this.redis.del(key);
+      }
+
+      return true;
+    } catch (error) {
+      this.stats.errors++;
+      logger.error('Cache delete error:', error);
+      return false;
+    }
+  }
+
+  // Check if key exists
+  async exists(key) {
+    try {
+      // Check memory cache first
+      if (this.memory.has(key)) {
+        return true;
+      }
+
+      // Check Redis if available
+      if (this.isRedisAvailable && this.redis) {
+        const exists = await this.redis.exists(key);
+        return exists === 1;
+      }
+
+      return false;
+    } catch (error) {
+      this.stats.errors++;
+      logger.error('Cache exists error:', error);
+      return false;
+    }
+  }
+
+  // Set multiple values
+  async mset(keyValuePairs, ttl = 3600) {
+    try {
+      const results = [];
+      
+      for (const [key, value] of keyValuePairs) {
+        const result = await this.set(key, value, ttl);
+        results.push({ key, success: result });
+      }
+
+      return results;
+    } catch (error) {
+      this.stats.errors++;
+      logger.error('Cache mset error:', error);
+      return keyValuePairs.map(([key]) => ({ key, success: false }));
+    }
+  }
+
+  // Get multiple values
+  async mget(keys) {
+    try {
+      const results = [];
+      
+      for (const key of keys) {
+        const value = await this.get(key);
+        results.push({ key, value, exists: value !== null });
+      }
+
+      return results;
+    } catch (error) {
+      this.stats.errors++;
+      logger.error('Cache mget error:', error);
+      return keys.map(key => ({ key, value: null, exists: false }));
+    }
+  }
+
+  // Increment counter
+  async increment(key, amount = 1, ttl = 3600) {
+    try {
+      const currentValue = await this.get(key) || 0;
+      const newValue = currentValue + amount;
+      await this.set(key, newValue, ttl);
+      return newValue;
+    } catch (error) {
+      this.stats.errors++;
+      logger.error('Cache increment error:', error);
+      return null;
+    }
+  }
+
+  // Decrement counter
+  async decrement(key, amount = 1, ttl = 3600) {
+    try {
+      const currentValue = await this.get(key) || 0;
+      const newValue = Math.max(0, currentValue - amount);
+      await this.set(key, newValue, ttl);
+      return newValue;
+    } catch (error) {
+      this.stats.errors++;
+      logger.error('Cache decrement error:', error);
+      return null;
+    }
   }
 
   // Get cache statistics
   getStats() {
+    const memoryStats = {
+      size: this.memory.size,
+      keys: this.memory.keys().length
+    };
+
+    const redisStats = this.isRedisAvailable ? {
+      status: 'connected',
+      info: this.redis ? 'available' : 'unavailable'
+    } : {
+      status: 'disconnected',
+      info: 'unavailable'
+    };
+
     return {
-      ...this.stats,
-      memorySize: this.currentMemorySize,
-      memoryItems: this.memoryCache.size,
-      diskItems: this.diskCache.size,
-      hitRate: this.stats.hits / (this.stats.hits + this.stats.misses) || 0,
-      memoryUsage: (this.currentMemorySize / this.maxMemorySize) * 100
+      redis: redisStats,
+      memory: memoryStats,
+      stats: { ...this.stats },
+      hitRate: this.stats.hits + this.stats.misses > 0 
+        ? (this.stats.hits / (this.stats.hits + this.stats.misses) * 100).toFixed(2) + '%'
+        : '0%'
     };
   }
 
-  // Warm up cache
-  async warmup(keys, fetcher) {
-    const results = [];
-    
-    for (const key of keys) {
-      try {
-        const value = await fetcher(key);
-        this.set(key, value, 1800000, { tags: ['warmup'] }); // 30 min TTL
-        results.push({ key, success: true });
-      } catch (error) {
-        results.push({ key, success: false, error: error.message });
-      }
-    }
-    
-    return results;
-  }
-
-  // Cache invalidation patterns
-  invalidatePattern(pattern) {
-    let invalidatedCount = 0;
-    
-    for (const key of this.memoryCache.keys()) {
-      if (key.includes(pattern)) {
-        this.deleteMemoryCache(key);
-        invalidatedCount++;
-      }
-    }
-    
-    for (const key of this.diskCache.keys()) {
-      if (key.includes(pattern)) {
-        this.deleteDiskCache(key);
-        invalidatedCount++;
-      }
-    }
-    
-    return invalidatedCount;
-  }
-
-  // Memory cache management
-  setMemoryCache(key, item) {
-    // Check if we need to evict items
-    while (this.currentMemorySize + item.size > this.maxMemorySize) {
-      this.evictLRU();
-    }
-    
-    this.memoryCache.set(key, item);
-    this.currentMemorySize += item.size;
-  }
-
-  getMemoryCache(key) {
-    const item = this.memoryCache.get(key);
-    if (item) {
-      item.lastAccessed = Date.now();
-      item.accessCount++;
-    }
-    return item;
-  }
-
-  deleteMemoryCache(key) {
-    const item = this.memoryCache.get(key);
-    if (item) {
-      this.currentMemorySize -= item.size;
-      this.memoryCache.delete(key);
-      return true;
-    }
-    return false;
-  }
-
-  // Disk cache management (simplified)
-  setDiskCache(key, item) {
-    this.diskCache.set(key, item);
-  }
-
-  getDiskCache(key) {
-    return this.diskCache.get(key);
-  }
-
-  deleteDiskCache(key) {
-    return this.diskCache.delete(key);
-  }
-
-  // LRU eviction
-  evictLRU() {
-    let oldestKey = null;
-    let oldestTime = Date.now();
-    
-    for (const [key, item] of this.memoryCache.entries()) {
-      if (item.lastAccessed < oldestTime) {
-        oldestTime = item.lastAccessed;
-        oldestKey = key;
-      }
-    }
-    
-    if (oldestKey) {
-      this.deleteMemoryCache(oldestKey);
-      this.stats.evictions++;
-    }
-  }
-
-  // Utility methods
-  generateKey(key) {
-    return crypto.createHash('md5').update(String(key)).digest('hex');
-  }
-
-  calculateSize(value) {
-    return Buffer.byteLength(JSON.stringify(value), 'utf8');
-  }
-
-  isExpired(item) {
-    return Date.now() - item.timestamp > item.ttl;
-  }
-
-  updateAccessStats(item) {
-    item.lastAccessed = Date.now();
-    item.accessCount++;
-  }
-
-  // Cache compression
-  compressValue(value) {
+  // Clear all cache
+  async clear() {
     try {
-      const jsonString = JSON.stringify(value);
-      const compressed = Buffer.from(jsonString).toString('base64');
-      
-      return {
-        compressed,
-        originalSize: jsonString.length,
-        compressedSize: compressed.length,
-        compressionRatio: (1 - compressed.length / jsonString.length) * 100
-      };
-    } catch (error) {
-      return { compressed: value, originalSize: 0, compressedSize: 0, compressionRatio: 0 };
-    }
-  }
+      // Clear memory cache
+      this.memory.clear();
 
-  // Cache analytics
-  getAnalytics() {
-    const analytics = {
-      totalItems: this.memoryCache.size + this.diskCache.size,
-      memoryUsage: (this.currentMemorySize / this.maxMemorySize) * 100,
-      hitRate: this.stats.hits / (this.stats.hits + this.stats.misses) || 0,
-      averageItemSize: this.currentMemorySize / this.memoryCache.size || 0,
-      topAccessedKeys: this.getTopAccessedKeys(),
-      cacheDistribution: {
-        memory: this.memoryCache.size,
-        disk: this.diskCache.size
+      // Clear Redis cache if available
+      if (this.isRedisAvailable && this.redis) {
+        const keys = await this.redis.keys('cache:*');
+        if (keys.length > 0) {
+          await this.redis.del(...keys);
+        }
       }
-    };
-    
-    return analytics;
+
+      // Reset stats
+      this.stats = {
+        hits: 0,
+        misses: 0,
+        sets: 0,
+        deletes: 0,
+        errors: 0
+      };
+
+      logger.info('Cache cleared successfully');
+      return true;
+    } catch (error) {
+      this.stats.errors++;
+      logger.error('Cache clear error:', error);
+      return false;
+    }
   }
 
-  getTopAccessedKeys(limit = 10) {
-    const items = Array.from(this.memoryCache.entries())
-      .map(([key, item]) => ({ key, accessCount: item.accessCount, lastAccessed: item.lastAccessed }))
-      .sort((a, b) => b.accessCount - a.accessCount)
-      .slice(0, limit);
-    
-    return items;
+  // Get cache keys by pattern
+  async keys(pattern = '*') {
+    try {
+      const keys = [];
+
+      // Get memory cache keys
+      const memoryKeys = this.memory.keys();
+      keys.push(...memoryKeys);
+
+      // Get Redis keys if available
+      if (this.isRedisAvailable && this.redis) {
+        try {
+          const redisKeys = await this.redis.keys(pattern);
+          keys.push(...redisKeys);
+        } catch (redisError) {
+          logger.warn('Redis keys error:', redisError.message);
+        }
+      }
+
+      // Remove duplicates
+      return [...new Set(keys)];
+    } catch (error) {
+      this.stats.errors++;
+      logger.error('Cache keys error:', error);
+      return [];
+    }
   }
 
-  // Cache health check
-  healthCheck() {
-    const issues = [];
-    
-    if (this.currentMemorySize > this.maxMemorySize * 0.9) {
-      issues.push('Memory cache nearly full');
-    }
-    
-    if (this.stats.evictions > 100) {
-      issues.push('High eviction rate detected');
-    }
-    
-    if (this.stats.hitRate < 0.5) {
-      issues.push('Low cache hit rate');
-    }
-    
+  // Health check
+  async health() {
+    const redisHealth = this.isRedisAvailable && this.redis ? 'healthy' : 'unhealthy';
+    const memoryHealth = 'healthy'; // Memory cache is always available
+
     return {
-      healthy: issues.length === 0,
-      issues,
-      recommendations: this.getRecommendations(issues)
+      status: redisHealth === 'healthy' ? 'healthy' : 'degraded',
+      redis: redisHealth,
+      memory: memoryHealth,
+      stats: this.getStats()
     };
   }
 
-  getRecommendations(issues) {
-    const recommendations = [];
-    
-    if (issues.includes('Memory cache nearly full')) {
-      recommendations.push('Increase maxMemorySize or implement more aggressive eviction');
+  // Cleanup and disconnect
+  async cleanup() {
+    try {
+      // Clear memory cache
+      this.memory.clear();
+
+      // Disconnect Redis if available
+      if (this.redis) {
+        await this.redis.disconnect();
+        this.redis = null;
+      }
+
+      this.isRedisAvailable = false;
+      logger.info('Cache manager cleaned up successfully');
+    } catch (error) {
+      logger.error('Cache cleanup error:', error);
     }
-    
-    if (issues.includes('High eviction rate detected')) {
-      recommendations.push('Review cache TTL settings and memory allocation');
-    }
-    
-    if (issues.includes('Low cache hit rate')) {
-      recommendations.push('Review cache key patterns and TTL strategies');
-    }
-    
-    return recommendations;
   }
 }
 
-module.exports = CacheManager;
+// Create singleton instance
+const cacheManager = new CacheManager();
+
+// Graceful shutdown
+process.on('SIGTERM', () => cacheManager.cleanup());
+process.on('SIGINT', () => cacheManager.cleanup());
+
+module.exports = cacheManager;

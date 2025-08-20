@@ -12,6 +12,11 @@ const { connectDB, disconnectDB } = require('./config/database');
 const { security } = require('./middleware/security');
 const { global: globalRateLimit } = require('./middleware/rateLimit');
 
+// Import advanced utilities
+const cacheManager = require('./utils/cacheManager');
+const performanceMonitor = require('./utils/performanceMonitor');
+const { jobQueue } = require('./utils/jobQueue');
+
 // Import routes
 const authRoutes = require('./routes/auth');
 const exportRoutes = require('./routes/export');
@@ -43,6 +48,9 @@ app.use(security);
 // Apply rate limiting
 app.use(globalRateLimit);
 
+// Apply performance monitoring middleware
+app.use(performanceMonitor.middleware);
+
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -54,6 +62,52 @@ app.use('/exports', express.static(path.join(__dirname, 'exports')));
 app.use('/api/auth', authRoutes);
 app.use('/api/export', exportRoutes);
 
+// Performance and monitoring endpoints
+app.get('/api/performance', async (req, res) => {
+  try {
+    const report = performanceMonitor.getReport(req.query.timeRange || '1h');
+    res.json(ResponseFormatter.success('Performance report retrieved', report));
+  } catch (error) {
+    res.status(500).json(ResponseFormatter.error('Failed to get performance report', error.message));
+  }
+});
+
+app.get('/api/cache/stats', async (req, res) => {
+  try {
+    const stats = cacheManager.getStats();
+    res.json(ResponseFormatter.success('Cache statistics retrieved', stats));
+  } catch (error) {
+    res.status(500).json(ResponseFormatter.error('Failed to get cache statistics', error.message));
+  }
+});
+
+app.post('/api/cache/clear', async (req, res) => {
+  try {
+    const result = await cacheManager.clear();
+    res.json(ResponseFormatter.success('Cache cleared successfully', { result }));
+  } catch (error) {
+    res.status(500).json(ResponseFormatter.error('Failed to clear cache', error.message));
+  }
+});
+
+app.get('/api/jobs/stats', async (req, res) => {
+  try {
+    const stats = await jobQueue.getStats();
+    res.json(ResponseFormatter.success('Job queue statistics retrieved', stats));
+  } catch (error) {
+    res.status(500).json(ResponseFormatter.error('Failed to get job queue statistics', error.message));
+  }
+});
+
+app.post('/api/jobs/:jobId/cancel', async (req, res) => {
+  try {
+    const result = await jobQueue.cancelJob(req.params.jobId);
+    res.json(ResponseFormatter.success('Job cancelled successfully', { result }));
+  } catch (error) {
+    res.status(500).json(ResponseFormatter.error('Failed to cancel job', error.message));
+  }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   const health = {
@@ -61,7 +115,10 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     memory: process.memoryUsage(),
-    database: 'connected', // You can add actual DB health check here
+    database: 'connected',
+    cache: cacheManager.health(),
+    performance: performanceMonitor.health(),
+    jobQueue: jobQueue.getStats(),
     chat: {
       activeChats: chatManager.activeChats.size,
       waitingChats: chatManager.chatQueue.length,
@@ -344,15 +401,22 @@ const gracefulShutdown = async (signal) => {
   wss.close();
   
   // Close HTTP server
-  server.close(() => {
+  server.close(async () => {
     logger.info('HTTP server closed');
+    
+    // Cleanup utilities
+    await cacheManager.cleanup();
+    performanceMonitor.cleanup();
+    await jobQueue.cleanup();
+    
+    // Disconnect database
+    await disconnectDB();
+    
+    logger.info('All services cleaned up');
+    
+    // Exit process
+    process.exit(0);
   });
-  
-  // Disconnect database
-  await disconnectDB();
-  
-  // Exit process
-  process.exit(0);
 };
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
