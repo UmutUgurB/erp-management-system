@@ -1,16 +1,16 @@
 const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
-const cors = require('cors');
-const helmet = require('helmet');
-const compression = require('compression');
-const rateLimit = require('express-rate-limit');
 const path = require('path');
 
 // Import utilities
 const { logger } = require('./utils/logger');
 const { ResponseFormatter } = require('./utils/responseFormatter');
 const { connectDB, disconnectDB } = require('./config/database');
+
+// Import middleware
+const { security } = require('./middleware/security');
+const { global: globalRateLimit } = require('./middleware/rateLimit');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -37,24 +37,11 @@ const wss = new WebSocket.Server({
   }
 });
 
-// Middleware
-app.use(helmet());
-app.use(compression());
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
-}));
+// Apply security middleware
+app.use(security);
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-app.use(limiter);
+// Apply rate limiting
+app.use(globalRateLimit);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));

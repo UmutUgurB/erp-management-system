@@ -37,7 +37,12 @@
     "pdfkit": "^0.13.0",
     "csv-writer": "^1.6.0",
     "archiver": "^6.0.1",
-    "winston": "^3.10.0"
+    "winston": "^3.10.0",
+    "express-mongo-sanitize": "^2.2.0",
+    "xss-clean": "^0.1.1",
+    "hpp": "^0.2.3",
+    "ioredis": "^5.3.2",
+    "rate-limit-redis": "^4.2.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1",
