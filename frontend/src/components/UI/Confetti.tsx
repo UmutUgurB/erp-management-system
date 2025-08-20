@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ConfettiPiece {
   id: number;
@@ -18,120 +18,141 @@ interface ConfettiProps {
   duration?: number;
   pieceCount?: number;
   colors?: string[];
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
   onComplete?: () => void;
 }
 
-export default function Confetti({ 
-  isActive, 
-  duration = 3000, 
+const Confetti: React.FC<ConfettiProps> = ({
+  isActive,
+  duration = 3000,
   pieceCount = 50,
-  colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd'],
-  onComplete 
-}: ConfettiProps) {
+  colors = ['#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899'],
+  size = 'md',
+  className = '',
+  onComplete
+}) => {
   const [pieces, setPieces] = useState<ConfettiPiece[]>([]);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const getSizeClasses = () => {
+    switch (size) {
+      case 'sm': return 'w-2 h-2';
+      case 'lg': return 'w-4 h-4';
+      default: return 'w-3 h-3';
+    }
+  };
+
+  const generatePieces = useCallback(() => {
+    const newPieces: ConfettiPiece[] = [];
+    
+    for (let i = 0; i < pieceCount; i++) {
+      newPieces.push({
+        id: i,
+        x: Math.random() * 100,
+        y: -10 - Math.random() * 20,
+        rotation: Math.random() * 360,
+        scale: 0.5 + Math.random() * 0.5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        delay: Math.random() * 0.5
+      });
+    }
+    
+    setPieces(newPieces);
+  }, [pieceCount, colors]);
+
+  const startAnimation = useCallback(() => {
+    if (isActive && !isAnimating) {
+      setIsAnimating(true);
+      generatePieces();
+      
+      setTimeout(() => {
+        setIsAnimating(false);
+        setPieces([]);
+        onComplete?.();
+      }, duration);
+    }
+  }, [isActive, isAnimating, duration, generatePieces, onComplete]);
 
   useEffect(() => {
-    if (!isActive) {
-      setPieces([]);
-      return;
+    if (isActive) {
+      startAnimation();
     }
+  }, [isActive, startAnimation]);
 
-    // Generate confetti pieces
-    const newPieces: ConfettiPiece[] = Array.from({ length: pieceCount }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: -20,
-      rotation: Math.random() * 360,
-      scale: Math.random() * 0.5 + 0.5,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      delay: Math.random() * 0.5
-    }));
+  const renderConfettiPiece = (piece: ConfettiPiece) => (
+    <motion.div
+      key={piece.id}
+      className={`absolute ${getSizeClasses()} rounded-sm ${className}`}
+      style={{
+        left: `${piece.x}%`,
+        backgroundColor: piece.color,
+        zIndex: 1000
+      }}
+      initial={{
+        y: piece.y,
+        x: piece.x,
+        rotation: piece.rotation,
+        scale: 0,
+        opacity: 0
+      }}
+      animate={{
+        y: [piece.y, piece.y + 100 + Math.random() * 50],
+        x: [piece.x, piece.x + (Math.random() - 0.5) * 40],
+        rotation: [piece.rotation, piece.rotation + 360 + Math.random() * 180],
+        scale: [0, piece.scale, piece.scale * 0.8],
+        opacity: [0, 1, 0.8, 0]
+      }}
+      transition={{
+        duration: duration / 1000,
+        delay: piece.delay,
+        ease: "easeOut"
+      }}
+    />
+  );
 
-    setPieces(newPieces);
-
-    // Cleanup after animation
-    const timer = setTimeout(() => {
-      setPieces([]);
-      onComplete?.();
-    }, duration);
-
-    return () => clearTimeout(timer);
-  }, [isActive, pieceCount, colors, duration, onComplete]);
-
-  if (!isActive || pieces.length === 0) return null;
+  if (!isActive && !isAnimating) return null;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
-      {pieces.map((piece) => (
-        <motion.div
-          key={piece.id}
-          className="absolute w-2 h-2 rounded-sm"
-          style={{
-            left: `${piece.x}%`,
-            backgroundColor: piece.color,
-            boxShadow: `0 0 6px ${piece.color}`,
-          }}
-          initial={{
-            y: piece.y,
-            x: piece.x,
-            rotation: piece.rotation,
-            scale: piece.scale,
-            opacity: 1
-          }}
-          animate={{
-            y: [piece.y, piece.y + 120],
-            x: [piece.x, piece.x + (Math.random() - 0.5) * 40],
-            rotation: [piece.rotation, piece.rotation + 360],
-            scale: [piece.scale, piece.scale * 0.8],
-            opacity: [1, 0]
-          }}
-          transition={{
-            duration: duration / 1000,
-            delay: piece.delay,
-            ease: "easeOut"
-          }}
-        />
-      ))}
+    <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      <AnimatePresence>
+        {pieces.map(renderConfettiPiece)}
+      </AnimatePresence>
     </div>
   );
-}
+};
+
+export default Confetti;
 
 // Specialized confetti components
-export function SuccessConfetti({ isActive, onComplete }: { isActive: boolean; onComplete?: () => void }) {
-  return (
-    <Confetti
-      isActive={isActive}
-      colors={['#10b981', '#059669', '#34d399', '#6ee7b7']}
-      pieceCount={60}
-      duration={4000}
-      onComplete={onComplete}
-    />
-  );
-}
+export const SuccessConfetti: React.FC<{ isActive: boolean }> = ({ isActive }) => (
+  <Confetti
+    isActive={isActive}
+    colors={['#22c55e', '#16a34a', '#15803d', '#166534']}
+    pieceCount={30}
+    duration={4000}
+  />
+);
 
-export function CelebrationConfetti({ isActive, onComplete }: { isActive: boolean; onComplete?: () => void }) {
-  return (
-    <Confetti
-      isActive={isActive}
-      colors={['#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4']}
-      pieceCount={80}
-      duration={5000}
-      onComplete={onComplete}
-    />
-  );
-}
+export const CelebrationConfetti: React.FC<{ isActive: boolean }> = ({ isActive }) => (
+  <Confetti
+    isActive={isActive}
+    colors={['#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981']}
+    pieceCount={80}
+    duration={5000}
+    size="lg"
+  />
+);
 
-export function BirthdayConfetti({ isActive, onComplete }: { isActive: boolean; onComplete?: () => void }) {
-  return (
-    <Confetti
-      isActive={isActive}
-      colors={['#fbbf24', '#f59e0b', '#d97706', '#92400e', '#78350f']}
-      pieceCount={100}
-      duration={6000}
-      onComplete={onComplete}
-    />
-  );
-}
+export const RainConfetti: React.FC<{ isActive: boolean }> = ({ isActive }) => (
+  <Confetti
+    isActive={isActive}
+    colors={['#3b82f6', '#1d4ed8', '#1e40af', '#1e3a8a']}
+    pieceCount={100}
+    duration={6000}
+    size="sm"
+  />
+);
 
 // Hook for easy confetti usage
 export function useConfetti() {

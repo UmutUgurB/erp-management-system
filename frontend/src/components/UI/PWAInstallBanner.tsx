@@ -1,184 +1,265 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Download, 
   X, 
   Smartphone, 
-  Wifi, 
-  WifiOff,
-  RefreshCw,
-  CheckCircle
+  Globe, 
+  Star, 
+  Zap,
+  CheckCircle,
+  Info
 } from 'lucide-react';
-import { usePWA } from '@/hooks/usePWA';
-import { useNotifications } from '@/hooks/useNotifications';
 
-export default function PWAInstallBanner() {
-  const { 
-    canInstall, 
-    isInstalled, 
-    isOnline, 
-    isUpdateAvailable, 
-    installApp, 
-    updateApp, 
-    skipWaiting 
-  } = usePWA();
-  
-  const [showBanner, setShowBanner] = useState(false);
-  const [isInstalling, setIsInstalling] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const { addNotification } = useNotifications();
+interface PWAInstallBannerProps {
+  className?: string;
+  onInstall?: () => void;
+  onDismiss?: () => void;
+  showInstallButton?: boolean;
+  customMessage?: string;
+  position?: 'top' | 'bottom' | 'floating';
+  theme?: 'light' | 'dark' | 'auto';
+}
+
+const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({
+  className = '',
+  onInstall,
+  onDismiss,
+  showInstallButton = true,
+  customMessage,
+  position = 'top',
+  theme = 'auto'
+}) => {
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+  [isInstalled, setIsInstalled] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
+  const [installStep, setInstallStep] = useState<'idle' | 'installing' | 'success' | 'error'>('idle');
 
   useEffect(() => {
-    // Show install banner if app can be installed and not already installed
-    if (canInstall && !isInstalled) {
-      setShowBanner(true);
+    // Check if PWA is already installed
+    const checkIfInstalled = () => {
+      if (window.matchMedia('(display-mode: standalone)').matches ||
+          (window.navigator as any).standalone === true) {
+        setIsInstalled(true);
+        return true;
+      }
+      return false;
+    };
+
+    // Listen for beforeinstallprompt event
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      
+      // Show banner after a delay
+      setTimeout(() => {
+        if (!checkIfInstalled() && !isDismissed) {
+          setIsVisible(true);
+        }
+      }, 3000);
+    };
+
+    // Listen for appinstalled event
+    const handleAppInstalled = () => {
+      setIsInstalled(true);
+      setIsVisible(false);
+      setInstallStep('success');
+      
+      // Hide success message after 3 seconds
+      setTimeout(() => {
+        setInstallStep('idle');
+      }, 3000);
+    };
+
+    // Check if already installed
+    if (!checkIfInstalled()) {
+      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.addEventListener('appinstalled', handleAppInstalled);
     }
 
-    // Show update banner if update is available
-    if (isUpdateAvailable) {
-      setShowBanner(true);
-    }
-  }, [canInstall, isInstalled, isUpdateAvailable]);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, [isDismissed]);
 
   const handleInstall = async () => {
-    setIsInstalling(true);
-    try {
-      await installApp();
-      setShowBanner(false);
-      addNotification('success', 'Başarılı!', 'Uygulama başarıyla yüklendi.');
-    } catch (error) {
-      addNotification('error', 'Hata!', 'Uygulama yüklenirken bir hata oluştu.');
-    } finally {
-      setIsInstalling(false);
-    }
-  };
+    if (!deferredPrompt) return;
 
-  const handleUpdate = async () => {
-    setIsUpdating(true);
+    setInstallStep('installing');
+    
     try {
-      updateApp();
-      skipWaiting();
-      setShowBanner(false);
-      addNotification('success', 'Başarılı!', 'Uygulama güncellendi. Sayfa yenileniyor...');
-      setTimeout(() => window.location.reload(), 2000);
+      // Show the install prompt
+      deferredPrompt.prompt();
+      
+      // Wait for the user to respond to the prompt
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        setInstallStep('success');
+        onInstall?.();
+        
+        // Hide banner after success
+        setTimeout(() => {
+          setIsVisible(false);
+          setInstallStep('idle');
+        }, 2000);
+      } else {
+        setInstallStep('idle');
+      }
     } catch (error) {
-      addNotification('error', 'Hata!', 'Güncelleme sırasında bir hata oluştu.');
-    } finally {
-      setIsUpdating(false);
+      console.error('Installation failed:', error);
+      setInstallStep('error');
+      
+      setTimeout(() => {
+        setInstallStep('idle');
+      }, 3000);
     }
+    
+    // Clear the deferred prompt
+    setDeferredPrompt(null);
   };
 
   const handleDismiss = () => {
-    setShowBanner(false);
-    // Store dismissal in localStorage to avoid showing again for a while
+    setIsVisible(false);
+    setIsDismissed(true);
+    onDismiss?.();
+    
+    // Store dismissal in localStorage
     localStorage.setItem('pwa-banner-dismissed', Date.now().toString());
   };
 
-  const handleClose = () => {
-    setShowBanner(false);
+  const getPositionClasses = () => {
+    switch (position) {
+      case 'bottom':
+        return 'bottom-0 left-0 right-0';
+      case 'floating':
+        return 'bottom-4 right-4';
+      default: // top
+        return 'top-0 left-0 right-0';
+    }
   };
 
-  if (!showBanner) return null;
+  const getThemeClasses = () => {
+    switch (theme) {
+      case 'dark':
+        return 'bg-gray-900 text-white border-gray-700';
+      case 'light':
+        return 'bg-white text-gray-900 border-gray-200';
+      default: // auto
+        return 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-200 dark:border-gray-700';
+    }
+  };
+
+  const getInstallStepContent = () => {
+    switch (installStep) {
+      case 'installing':
+        return (
+          <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+            <span>Kuruluyor...</span>
+          </div>
+        );
+      case 'success':
+        return (
+          <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
+            <CheckCircle className="w-4 h-4" />
+            <span>Başarıyla kuruldu!</span>
+          </div>
+        );
+      case 'error':
+        return (
+          <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
+            <Info className="w-4 h-4" />
+            <span>Kurulum başarısız</span>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  // Don't show if already installed, dismissed, or no install prompt
+  if (isInstalled || isDismissed || !deferredPrompt || !isVisible) {
+    return null;
+  }
 
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: -100 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -100 }}
-        transition={{ duration: 0.3 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+        className={`fixed z-50 ${getPositionClasses()} ${className}`}
+        initial={{ 
+          opacity: 0, 
+          y: position === 'top' ? -100 : 100,
+          scale: position === 'floating' ? 0.8 : 1
+        }}
+        animate={{ 
+          opacity: 1, 
+          y: 0,
+          scale: 1
+        }}
+        exit={{ 
+          opacity: 0, 
+          y: position === 'top' ? -100 : 100,
+          scale: position === 'floating' ? 0.8 : 1
+        }}
+        transition={{ 
+          type: "spring", 
+          damping: 25, 
+          stiffness: 300 
+        }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-3">
-            <div className="flex items-center space-x-3">
-              <div className="flex-shrink-0">
-                {isUpdateAvailable ? (
-                  <RefreshCw className="h-6 w-6 animate-spin" />
-                ) : (
-                  <Smartphone className="h-6 w-6" />
-                )}
-              </div>
-              
-              <div className="flex-1">
-                <h3 className="text-sm font-medium">
-                  {isUpdateAvailable 
-                    ? 'Yeni Güncelleme Mevcut' 
-                    : 'ERP Sistemi Uygulamasını Yükleyin'
-                  }
-                </h3>
-                <p className="text-xs opacity-90">
-                  {isUpdateAvailable 
-                    ? 'Yeni özellikler ve iyileştirmeler için uygulamayı güncelleyin.'
-                    : 'Daha hızlı erişim için uygulamayı ana ekranınıza ekleyin.'
-                  }
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              {/* Online/Offline Status */}
-              <div className="flex items-center space-x-1 text-xs">
-                {isOnline ? (
-                  <>
-                    <Wifi className="h-3 w-3 text-green-300" />
-                    <span className="text-green-300">Çevrimiçi</span>
-                  </>
-                ) : (
-                  <>
-                    <WifiOff className="h-3 w-3 text-yellow-300" />
-                    <span className="text-yellow-300">Çevrimdışı</span>
-                  </>
-                )}
+        <div className={`border-b ${getThemeClasses()} shadow-lg`}>
+          <div className="max-w-7xl mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
+                  <div className="p-1 bg-blue-100 dark:bg-blue-900/20 rounded">
+                    <Smartphone className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="hidden sm:flex items-center space-x-1 text-sm">
+                    <Star className="w-3 h-3 text-yellow-500" />
+                    <span className="font-medium">PWA Kurulumu</span>
+                  </div>
+                </div>
+                
+                <div className="text-sm">
+                  {customMessage || (
+                    <span>
+                      Bu uygulamayı <strong>ana ekranınıza</strong> kurarak hızlı erişim sağlayın
+                    </span>
+                  )}
+                </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center space-x-2">
-                {isUpdateAvailable ? (
-                  <button
-                    onClick={handleUpdate}
-                    disabled={isUpdating}
-                    className="flex items-center space-x-1 px-3 py-1.5 bg-white text-indigo-600 rounded-full text-xs font-medium hover:bg-gray-100 transition-colors disabled:opacity-50"
-                  >
-                    {isUpdating ? (
-                      <>
-                        <RefreshCw className="h-3 w-3 animate-spin" />
-                        <span>Güncelleniyor...</span>
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="h-3 w-3" />
-                        <span>Güncelle</span>
-                      </>
-                    )}
-                  </button>
-                ) : (
-                  <button
+              <div className="flex items-center space-x-3">
+                {/* Install Step Indicator */}
+                {getInstallStepContent()}
+                
+                {/* Install Button */}
+                {showInstallButton && installStep === 'idle' && (
+                  <motion.button
                     onClick={handleInstall}
-                    disabled={isInstalling || !isOnline}
-                    className="flex items-center space-x-1 px-3 py-1.5 bg-white text-indigo-600 rounded-full text-xs font-medium hover:bg-gray-100 transition-colors disabled:opacity-50"
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    {isInstalling ? (
-                      <>
-                        <Download className="h-3 w-3 animate-spin" />
-                        <span>Yükleniyor...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Download className="h-3 w-3" />
-                        <span>Yükle</span>
-                      </>
-                    )}
-                  </button>
+                    <Download className="w-4 h-4" />
+                    <span>Kur</span>
+                  </motion.button>
                 )}
-
+                
+                {/* Dismiss Button */}
                 <button
                   onClick={handleDismiss}
-                  className="px-2 py-1.5 text-white hover:bg-white/10 rounded-full transition-colors"
+                  className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  title="Kapat"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -187,34 +268,39 @@ export default function PWAInstallBanner() {
       </motion.div>
     </AnimatePresence>
   );
-}
+};
 
-// PWA Status Indicator Component
-export function PWAStatusIndicator() {
-  const { isInstalled, isOnline, isUpdateAvailable } = usePWA();
+export default PWAInstallBanner;
 
-  if (!isInstalled) return null;
+// Specialized PWA banner components
+export const TopPWAInstallBanner: React.FC<{
+  className?: string;
+  onInstall?: () => void;
+  onDismiss?: () => void;
+}> = (props) => (
+  <PWAInstallBanner position="top" {...props} />
+);
 
-  return (
-    <div className="fixed bottom-4 right-4 z-40">
-      <div className="flex items-center space-x-2 bg-white dark:bg-gray-800 rounded-full shadow-lg px-3 py-2">
-        {isUpdateAvailable ? (
-          <div className="flex items-center space-x-1 text-orange-600">
-            <RefreshCw className="h-4 w-4 animate-spin" />
-            <span className="text-xs font-medium">Güncelleme</span>
-          </div>
-        ) : isOnline ? (
-          <div className="flex items-center space-x-1 text-green-600">
-            <CheckCircle className="h-4 w-4" />
-            <span className="text-xs font-medium">Çevrimiçi</span>
-          </div>
-        ) : (
-          <div className="flex items-center space-x-1 text-yellow-600">
-            <WifiOff className="h-4 w-4" />
-            <span className="text-xs font-medium">Çevrimdışı</span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-} 
+export const BottomPWAInstallBanner: React.FC<{
+  className?: string;
+  onInstall?: () => void;
+  onDismiss?: () => void;
+}> = (props) => (
+  <PWAInstallBanner position="bottom" {...props} />
+);
+
+export const FloatingPWAInstallBanner: React.FC<{
+  className?: string;
+  onInstall?: () => void;
+  onDismiss?: () => void;
+}> = (props) => (
+  <PWAInstallBanner position="floating" {...props} />
+);
+
+export const DarkPWAInstallBanner: React.FC<{
+  className?: string;
+  onInstall?: () => void;
+  onDismiss?: () => void;
+}> = (props) => (
+  <PWAInstallBanner theme="dark" {...props} />
+); 

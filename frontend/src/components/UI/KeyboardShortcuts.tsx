@@ -1,514 +1,299 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Keyboard, 
   X, 
   Search, 
-  Zap, 
+  Home, 
   Users, 
   Package, 
   ShoppingCart, 
-  FileText, 
   BarChart3, 
   Settings, 
-  HelpCircle, 
+  HelpCircle,
   Command,
+  Ctrl,
+  Shift,
   ArrowUp,
   ArrowDown,
   ArrowLeft,
   ArrowRight,
   Plus,
-  Minus,
-  RotateCcw,
+  Edit,
+  Trash2,
   Save,
-  Download,
-  Upload,
-  Eye,
-  EyeOff,
-  Moon,
-  Sun,
-  Bell,
-  Mail,
-  Calendar,
-  Clock,
-  Star,
-  Heart,
-  Bookmark,
-  Share2,
-  Lock,
-  Unlock,
-  Shield,
-  AlertTriangle,
-  CheckCircle,
-  Info
+  Escape
 } from 'lucide-react';
 
 interface Shortcut {
-  id: string;
-  category: 'navigation' | 'actions' | 'editing' | 'view' | 'system' | 'custom';
-  title: string;
+  key: string;
   description: string;
-  keys: string[];
-  icon: React.ReactNode;
-  isGlobal?: boolean;
-  isCustomizable?: boolean;
+  category: string;
+  action: string;
+  modifier?: 'ctrl' | 'cmd' | 'shift' | 'alt';
+  icon?: React.ComponentType<any>;
 }
 
 interface KeyboardShortcutsProps {
   className?: string;
-  isOpen?: boolean;
-  onClose?: () => void;
+  showHelpButton?: boolean;
+  onShortcut?: (shortcut: Shortcut) => void;
 }
 
-export default function KeyboardShortcuts({ 
-  className = '', 
-  isOpen = false, 
-  onClose 
-}: KeyboardShortcutsProps) {
+const KeyboardShortcuts: React.FC<KeyboardShortcutsProps> = ({
+  className = '',
+  showHelpButton = true,
+  onShortcut
+}) => {
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [showCustomize, setShowCustomize] = useState(false);
-  const [customShortcuts, setCustomShortcuts] = useState<Shortcut[]>([]);
 
   const shortcuts: Shortcut[] = [
     // Navigation
-    {
-      id: 'navigate-dashboard',
-      category: 'navigation',
-      title: 'Dashboard\'a Git',
-      description: 'Ana dashboard sayfasına hızlı erişim',
-      keys: ['Ctrl', 'Shift', 'D'],
-      icon: <BarChart3 className="w-4 h-4" />,
-      isGlobal: true
-    },
-    {
-      id: 'navigate-customers',
-      category: 'navigation',
-      title: 'Müşteriler Sayfası',
-      description: 'Müşteri yönetimi sayfasına git',
-      keys: ['Ctrl', 'Shift', 'C'],
-      icon: <Users className="w-4 h-4" />,
-      isGlobal: true
-    },
-    {
-      id: 'navigate-products',
-      category: 'navigation',
-      title: 'Ürünler Sayfası',
-      description: 'Ürün kataloğu sayfasına git',
-      keys: ['Ctrl', 'Shift', 'P'],
-      icon: <Package className="w-4 h-4" />,
-      isGlobal: true
-    },
-    {
-      id: 'navigate-orders',
-      category: 'navigation',
-      title: 'Siparişler Sayfası',
-      description: 'Sipariş yönetimi sayfasına git',
-      keys: ['Ctrl', 'Shift', 'O'],
-      icon: <ShoppingCart className="w-4 h-4" />,
-      isGlobal: true
-    },
+    { key: 'G', description: 'Dashboard\'a git', category: 'navigation', action: 'Ana sayfaya yönlendir', icon: Home },
+    { key: 'U', description: 'Kullanıcılar sayfasına git', category: 'navigation', action: 'Kullanıcılar listesini aç', icon: Users },
+    { key: 'P', description: 'Ürünler sayfasına git', category: 'navigation', action: 'Ürün kataloğunu aç', icon: Package },
+    { key: 'S', description: 'Siparişler sayfasına git', category: 'navigation', action: 'Sipariş listesini aç', icon: ShoppingCart },
+    { key: 'A', description: 'Analitik sayfasına git', category: 'navigation', action: 'Analitik dashboard\'ını aç', icon: BarChart3 },
+    { key: 'C', description: 'Ayarlar sayfasına git', category: 'navigation', action: 'Sistem ayarlarını aç', icon: Settings },
 
     // Actions
-    {
-      id: 'quick-actions',
-      category: 'actions',
-      title: 'Hızlı İşlemler',
-      description: 'Hızlı işlemler menüsünü aç',
-      keys: ['Ctrl', 'K'],
-      icon: <Zap className="w-4 h-4" />,
-      isGlobal: true
-    },
-    {
-      id: 'new-item',
-      category: 'actions',
-      title: 'Yeni Öğe Ekle',
-      description: 'Mevcut sayfada yeni öğe oluştur',
-      keys: ['Ctrl', 'N'],
-      icon: <Plus className="w-4 h-4" />,
-      isGlobal: true
-    },
-    {
-      id: 'save',
-      category: 'actions',
-      title: 'Kaydet',
-      description: 'Mevcut değişiklikleri kaydet',
-      keys: ['Ctrl', 'S'],
-      icon: <Save className="w-4 h-4" />,
-      isGlobal: true
-    },
-    {
-      id: 'refresh',
-      category: 'actions',
-      title: 'Yenile',
-      description: 'Sayfa verilerini yenile',
-      keys: ['F5'],
-      icon: <RotateCcw className="w-4 h-4" />,
-      isGlobal: true
-    },
+    { key: 'N', description: 'Yeni öğe oluştur', category: 'actions', action: 'Yeni kayıt formu aç', modifier: 'ctrl', icon: Plus },
+    { key: 'E', description: 'Düzenle', category: 'actions', action: 'Seçili öğeyi düzenle', modifier: 'ctrl', icon: Edit },
+    { key: 'D', description: 'Sil', category: 'actions', action: 'Seçili öğeyi sil', modifier: 'ctrl', icon: Trash2 },
+    { key: 'S', description: 'Kaydet', category: 'actions', action: 'Değişiklikleri kaydet', modifier: 'ctrl', icon: Save },
 
-    // Editing
-    {
-      id: 'undo',
-      category: 'editing',
-      title: 'Geri Al',
-      description: 'Son işlemi geri al',
-      keys: ['Ctrl', 'Z'],
-      icon: <ArrowLeft className="w-4 h-4" />,
-      isGlobal: true
-    },
-    {
-      id: 'redo',
-      category: 'editing',
-      title: 'Yinele',
-      description: 'Geri alınan işlemi yinele',
-      keys: ['Ctrl', 'Y'],
-      icon: <ArrowRight className="w-4 h-4" />,
-      isGlobal: true
-    },
-    {
-      id: 'copy',
-      category: 'editing',
-      title: 'Kopyala',
-      description: 'Seçili öğeyi kopyala',
-      keys: ['Ctrl', 'C'],
-      icon: <Copy className="w-4 h-4" />,
-      isGlobal: true
-    },
-    {
-      id: 'paste',
-      category: 'editing',
-      title: 'Yapıştır',
-      description: 'Kopyalanan öğeyi yapıştır',
-      keys: ['Ctrl', 'V'],
-      icon: <Clipboard className="w-4 h-4" />,
-      isGlobal: true
-    },
+    // Search & Filter
+    { key: 'F', description: 'Arama yap', category: 'search', action: 'Arama kutusunu odakla', modifier: 'ctrl' },
+    { key: 'F', description: 'Filtreleri temizle', category: 'search', action: 'Tüm filtreleri sıfırla', modifier: 'shift' },
 
-    // View
-    {
-      id: 'toggle-sidebar',
-      category: 'view',
-      title: 'Kenar Çubuğunu Aç/Kapat',
-      description: 'Sol kenar çubuğunu gizle/göster',
-      keys: ['Ctrl', 'B'],
-      icon: <Eye className="w-4 h-4" />,
-      isGlobal: true
-    },
-    {
-      id: 'toggle-theme',
-      category: 'view',
-      title: 'Tema Değiştir',
-      description: 'Açık/koyu tema arasında geçiş',
-      keys: ['Ctrl', 'T'],
-      icon: <Sun className="w-4 h-4" />,
-      isGlobal: true
-    },
-    {
-      id: 'fullscreen',
-      category: 'view',
-      title: 'Tam Ekran',
-      description: 'Tam ekran moduna geç',
-      keys: ['F11'],
-      icon: <Maximize className="w-4 h-4" />,
-      isGlobal: true
-    },
-    {
-      id: 'zoom-in',
-      category: 'view',
-      title: 'Yakınlaştır',
-      description: 'Sayfa içeriğini yakınlaştır',
-      keys: ['Ctrl', '+'],
-      icon: <Plus className="w-4 h-4" />,
-      isGlobal: true
-    },
+    // Navigation
+    { key: '↑', description: 'Yukarı git', category: 'navigation', action: 'Önceki öğeye git', icon: ArrowUp },
+    { key: '↓', description: 'Aşağı git', category: 'navigation', action: 'Sonraki öğeye git', icon: ArrowDown },
+    { key: '←', description: 'Sol git', category: 'navigation', action: 'Sol sekmeye git', icon: ArrowLeft },
+    { key: '→', description: 'Sağ git', category: 'navigation', action: 'Sağ sekmeye git', icon: ArrowRight },
 
     // System
-    {
-      id: 'settings',
-      category: 'system',
-      title: 'Ayarlar',
-      description: 'Sistem ayarlarını aç',
-      keys: ['Ctrl', ','],
-      icon: <Settings className="w-4 h-4" />,
-      isGlobal: true
-    },
-    {
-      id: 'help',
-      category: 'system',
-      title: 'Yardım',
-      description: 'Yardım ve destek sayfasını aç',
-      keys: ['F1'],
-      icon: <HelpCircle className="w-4 h-4" />,
-      isGlobal: true
-    },
-    {
-      id: 'notifications',
-      category: 'system',
-      title: 'Bildirimler',
-      description: 'Bildirim panelini aç/kapat',
-      keys: ['Ctrl', 'N'],
-      icon: <Bell className="w-4 h-4" />,
-      isGlobal: true
-    },
-    {
-      id: 'search',
-      category: 'system',
-      title: 'Arama',
-      description: 'Genel arama yap',
-      keys: ['Ctrl', 'F'],
-      icon: <Search className="w-4 h-4" />,
-      isGlobal: true
-    }
+    { key: 'H', description: 'Yardım', category: 'system', action: 'Yardım modalını aç', modifier: 'ctrl', icon: HelpCircle },
+    { key: 'ESC', description: 'Kapat', category: 'system', action: 'Modal/Form kapat', icon: Escape },
   ];
 
   const categories = [
-    { id: 'all', label: 'Tümü', icon: <Keyboard className="w-4 h-4" /> },
-    { id: 'navigation', label: 'Navigasyon', icon: <ArrowUp className="w-4 h-4" /> },
-    { id: 'actions', label: 'İşlemler', icon: <Zap className="w-4 h-4" /> },
-    { id: 'editing', label: 'Düzenleme', icon: <Edit className="w-4 h-4" /> },
-    { id: 'view', label: 'Görünüm', icon: <Eye className="w-4 h-4" /> },
-    { id: 'system', label: 'Sistem', icon: <Settings className="w-4 h-4" /> },
-    { id: 'custom', label: 'Özel', icon: <Star className="w-4 h-4" /> }
+    { id: 'all', name: 'Tümü', count: shortcuts.length },
+    { id: 'navigation', name: 'Navigasyon', count: shortcuts.filter(s => s.category === 'navigation').length },
+    { id: 'actions', name: 'İşlemler', count: shortcuts.filter(s => s.category === 'actions').length },
+    { id: 'search', name: 'Arama & Filtre', count: shortcuts.filter(s => s.category === 'search').length },
+    { id: 'system', name: 'Sistem', count: shortcuts.filter(s => s.category === 'system').length },
   ];
 
-  // Filter shortcuts based on search and category
-  const filteredShortcuts = [...shortcuts, ...customShortcuts].filter(shortcut => {
-    const matchesSearch = shortcut.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         shortcut.description.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredShortcuts = shortcuts.filter(shortcut => {
+    const matchesSearch = shortcut.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         shortcut.action.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || shortcut.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  // Handle keyboard events
+  const handleKeyPress = useCallback((event: KeyboardEvent) => {
+    // Check for Ctrl/Cmd + K (help)
+    if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+      event.preventDefault();
+      setIsHelpOpen(true);
+    }
+
+    // Check for Ctrl/Cmd + N (new)
+    if ((event.ctrlKey || event.metaKey) && event.key === 'n') {
+      event.preventDefault();
+      const shortcut = shortcuts.find(s => s.key === 'N' && s.modifier === 'ctrl');
+      if (shortcut) onShortcut?.(shortcut);
+    }
+
+    // Check for Ctrl/Cmd + F (search)
+    if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
+      event.preventDefault();
+      const shortcut = shortcuts.find(s => s.key === 'F' && s.modifier === 'ctrl');
+      if (shortcut) onShortcut?.(shortcut);
+    }
+
+    // Check for Escape
+    if (event.key === 'Escape') {
+      if (isHelpOpen) {
+        setIsHelpOpen(false);
+      }
+    }
+  }, [isHelpOpen, shortcuts, onShortcut]);
+
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Close on Escape
-      if (event.key === 'Escape' && onClose) {
-        onClose();
-      }
-      
-      // Prevent default for common shortcuts when panel is open
-      if (isOpen) {
-        event.preventDefault();
-      }
-    };
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [handleKeyPress]);
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
-  const renderKey = (key: string) => {
-    const isSpecialKey = ['Ctrl', 'Shift', 'Alt', 'Cmd', 'Enter', 'Space', 'Tab', 'Escape'].includes(key);
+  const renderKey = (key: string, modifier?: string) => {
+    const isModifier = modifier === 'ctrl' || modifier === 'cmd' || modifier === 'shift' || modifier === 'alt';
     
     return (
-      <kbd
-        key={key}
-        className={`inline-flex items-center justify-center px-2 py-1 text-xs font-mono rounded ${
-          isSpecialKey
-            ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600'
-            : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 shadow-sm'
-        } min-w-[2rem]`}
-      >
-        {key}
-      </kbd>
+      <div className="flex items-center space-x-1">
+        {modifier && (
+          <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded">
+            {modifier === 'ctrl' ? <Ctrl className="w-3 h-3" /> : 
+             modifier === 'cmd' ? <Command className="w-3 h-3" /> : 
+             modifier === 'shift' ? <Shift className="w-3 h-3" /> : 
+             'Alt'}
+          </kbd>
+        )}
+        <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded">
+          {key === '↑' ? <ArrowUp className="w-3 h-3" /> :
+           key === '↓' ? <ArrowDown className="w-3 h-3" /> :
+           key === '←' ? <ArrowLeft className="w-3 h-3" /> :
+           key === '→' ? <ArrowRight className="w-3 h-3" /> :
+           key === 'ESC' ? 'ESC' : key}
+        </kbd>
+      </div>
     );
   };
 
-  const handleCustomizeShortcut = (shortcut: Shortcut) => {
-    // In real app, this would open a customization modal
-    console.log('Customize shortcut:', shortcut);
+  const renderShortcutIcon = (shortcut: Shortcut) => {
+    if (!shortcut.icon) return null;
+    const Icon = shortcut.icon;
+    return <Icon className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        transition={{ duration: 0.2 }}
-        className={`bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-4xl max-h-[90vh] overflow-hidden ${className}`}
-      >
-        {/* Header */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg">
-                <Keyboard className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  Klavye Kısayolları
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Hızlı erişim için klavye kısayollarını kullanın
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <motion.button
-                onClick={() => setShowCustomize(!showCustomize)}
-                className="px-3 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Özelleştir
-              </motion.button>
-              
-              {onClose && (
-                <motion.button
-                  onClick={onClose}
-                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <X className="w-5 h-5 text-gray-500" />
-                </motion.button>
-              )}
-            </div>
-          </div>
+    <>
+      {/* Help Button */}
+      {showHelpButton && (
+        <button
+          onClick={() => setIsHelpOpen(true)}
+          className={`p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors ${className}`}
+          title="Klavye kısayolları (Ctrl+K)"
+        >
+          <Keyboard className="w-5 h-5" />
+        </button>
+      )}
 
-          {/* Search Bar */}
-          <div className="mt-4 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Kısayol ara..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              autoFocus
-            />
-          </div>
-
-          {/* Category Tabs */}
-          <div className="flex space-x-1 mt-4 overflow-x-auto">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                  selectedCategory === category.id
-                    ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                {category.icon}
-                <span>{category.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Shortcuts List */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {filteredShortcuts.length > 0 ? (
-            <div className="grid gap-4">
-              {filteredShortcuts.map((shortcut) => (
-                <motion.div
-                  key={shortcut.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="p-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                      {shortcut.icon}
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-medium text-gray-900 dark:text-gray-100">
-                        {shortcut.title}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {shortcut.description}
-                      </p>
-                      {shortcut.isGlobal && (
-                        <span className="inline-flex items-center px-2 py-1 mt-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200">
-                          Global
-                        </span>
-                      )}
-                    </div>
+      {/* Help Modal */}
+      <AnimatePresence>
+        {isHelpOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+                    <Keyboard className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                   </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center space-x-1">
-                      {shortcut.keys.map((key, index) => (
-                        <div key={index} className="flex items-center">
-                          {renderKey(key)}
-                          {index < shortcut.keys.length - 1 && (
-                            <span className="mx-1 text-gray-400">+</span>
-                          )}
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                      Klavye Kısayolları
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Hızlı navigasyon ve işlemler için kısayollar
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsHelpOpen(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Search and Filters */}
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                  {/* Search */}
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Kısayol ara..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Category Filter */}
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    {categories.map(category => (
+                      <option key={category.id} value={category.id}>
+                        {category.name} ({category.count})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Shortcuts List */}
+              <div className="p-6 max-h-96 overflow-y-auto">
+                <div className="grid gap-4">
+                  {filteredShortcuts.map((shortcut, index) => (
+                    <motion.div
+                      key={`${shortcut.key}-${shortcut.modifier}-${index}`}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <div className="flex items-center space-x-3">
+                        {renderShortcutIcon(shortcut)}
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                            {shortcut.description}
+                          </h3>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {shortcut.action}
+                          </p>
                         </div>
-                      ))}
-                    </div>
-                    
-                    {shortcut.isCustomizable && (
-                      <motion.button
-                        onClick={() => handleCustomizeShortcut(shortcut)}
-                        className="p-1 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        title="Özelleştir"
-                      >
-                        <Settings className="w-4 h-4" />
-                      </motion.button>
-                    )}
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {renderKey(shortcut.key, shortcut.modifier)}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {filteredShortcuts.length === 0 && (
+                  <div className="text-center py-8">
+                    <Keyboard className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500 dark:text-gray-400">
+                      Kısayol bulunamadı
+                    </p>
                   </div>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <Keyboard className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 dark:text-gray-400 text-lg">
-                "{searchQuery}" için kısayol bulunamadı
-              </p>
-              <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">
-                Farklı bir arama terimi deneyin
-              </p>
-            </div>
-          )}
-        </div>
+                )}
+              </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
-          <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-            <span>Toplam {filteredShortcuts.length} kısayol</span>
-            <span>ESC tuşu ile kapat</span>
-          </div>
-        </div>
-      </motion.div>
-    </div>
+              {/* Footer */}
+              <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+                  <span>Toplam {filteredShortcuts.length} kısayol</span>
+                  <span>ESC tuşu ile kapat</span>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
-}
+};
 
-// Missing icon components
-const Copy = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-  </svg>
-);
-
-const Clipboard = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-  </svg>
-);
-
-const Maximize = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-  </svg>
-);
-
-const Edit = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-  </svg>
-);
+export default KeyboardShortcuts;

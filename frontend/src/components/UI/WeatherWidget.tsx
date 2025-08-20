@@ -1,350 +1,402 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
+  MapPin, 
+  RefreshCw, 
+  Settings, 
   Sun, 
   Cloud, 
   CloudRain, 
   CloudSnow, 
-  CloudLightning, 
   Wind, 
-  Thermometer, 
-  Droplets, 
+  Thermometer,
+  Droplets,
   Eye,
-  MapPin,
-  RefreshCw,
-  Settings,
-  Info
+  Sunrise,
+  Sunset,
+  Navigation
 } from 'lucide-react';
 
 interface WeatherData {
+  location: string;
   temperature: number;
   feelsLike: number;
+  description: string;
+  icon: string;
   humidity: number;
   windSpeed: number;
   visibility: number;
-  condition: 'sunny' | 'cloudy' | 'rainy' | 'snowy' | 'stormy' | 'windy';
-  description: string;
-  city: string;
-  country: string;
-  lastUpdated: string;
+  pressure: number;
+  sunrise: string;
+  sunset: string;
+  forecast: Array<{
+    date: string;
+    high: number;
+    low: number;
+    description: string;
+    icon: string;
+  }>;
 }
 
 interface WeatherWidgetProps {
   className?: string;
-  autoRefresh?: boolean;
-  refreshInterval?: number; // in minutes
+  showForecast?: boolean;
+  showDetails?: boolean;
+  autoLocation?: boolean;
+  defaultLocation?: string;
+  units?: 'metric' | 'imperial';
+  refreshInterval?: number;
 }
 
-export default function WeatherWidget({ 
-  className = '', 
-  autoRefresh = true, 
-  refreshInterval = 30 
-}: WeatherWidgetProps) {
+const WeatherWidget: React.FC<WeatherWidgetProps> = ({
+  className = '',
+  showForecast = true,
+  showDetails = true,
+  autoLocation = true,
+  defaultLocation = 'İstanbul',
+  units = 'metric',
+  refreshInterval = 300000 // 5 minutes
+}) => {
   const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [location, setLocation] = useState(defaultLocation);
+  const [showSettings, setShowSettings] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Mock weather data - in real app, this would come from a weather API
-  const mockWeatherData: WeatherData = {
-    temperature: 24,
-    feelsLike: 26,
-    humidity: 65,
-    windSpeed: 12,
-    visibility: 10,
-    condition: 'sunny',
-    description: 'Güneşli',
-    city: 'İstanbul',
-    country: 'Türkiye',
-    lastUpdated: new Date().toLocaleTimeString('tr-TR', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    })
-  };
-
-  const getWeatherIcon = (condition: WeatherData['condition']) => {
-    const iconProps = { className: "w-8 h-8" };
+  // Mock weather data for demonstration
+  const generateMockWeather = (city: string): WeatherData => {
+    const conditions = [
+      { description: 'Güneşli', icon: 'sun', temp: 25, feels: 27 },
+      { description: 'Parçalı Bulutlu', icon: 'cloud', temp: 22, feels: 24 },
+      { description: 'Yağmurlu', icon: 'rain', temp: 18, feels: 19 },
+      { description: 'Karlı', icon: 'snow', temp: -2, feels: -5 },
+      { description: 'Rüzgarlı', icon: 'wind', temp: 20, feels: 18 }
+    ];
     
-    switch (condition) {
-      case 'sunny':
-        return <Sun {...iconProps} className="w-8 h-8 text-yellow-500" />;
-      case 'cloudy':
-        return <Cloud {...iconProps} className="w-8 h-8 text-gray-500" />;
-      case 'rainy':
-        return <CloudRain {...iconProps} className="w-8 h-8 text-blue-500" />;
-      case 'snowy':
-        return <CloudSnow {...iconProps} className="w-8 h-8 text-blue-300" />;
-      case 'stormy':
-        return <CloudLightning {...iconProps} className="w-8 h-8 text-purple-500" />;
-      case 'windy':
-        return <Wind {...iconProps} className="w-8 h-8 text-gray-400" />;
-      default:
-        return <Sun {...iconProps} className="w-8 h-8 text-yellow-500" />;
-    }
+    const randomCondition = conditions[Math.floor(Math.random() * conditions.length)];
+    
+    return {
+      location: city,
+      temperature: randomCondition.temp,
+      feelsLike: randomCondition.feels,
+      description: randomCondition.description,
+      icon: randomCondition.icon,
+      humidity: Math.floor(Math.random() * 30) + 50,
+      windSpeed: Math.floor(Math.random() * 20) + 5,
+      visibility: Math.floor(Math.random() * 10) + 5,
+      pressure: Math.floor(Math.random() * 20) + 1000,
+      sunrise: '06:30',
+      sunset: '19:45',
+      forecast: Array.from({ length: 5 }, (_, i) => {
+        const dayTemp = randomCondition.temp + Math.floor(Math.random() * 10) - 5;
+        const dayCondition = conditions[Math.floor(Math.random() * conditions.length)];
+        return {
+          date: new Date(Date.now() + i * 24 * 60 * 60 * 1000).toLocaleDateString('tr-TR', { weekday: 'short' }),
+          high: dayTemp + 3,
+          low: dayTemp - 3,
+          description: dayCondition.description,
+          icon: dayCondition.icon
+        };
+      })
+    };
   };
 
-  const getWeatherGradient = (condition: WeatherData['condition']) => {
-    switch (condition) {
-      case 'sunny':
-        return 'from-yellow-400 via-orange-400 to-red-400';
-      case 'cloudy':
-        return 'from-gray-400 via-gray-500 to-gray-600';
-      case 'rainy':
-        return 'from-blue-400 via-blue-500 to-indigo-500';
-      case 'snowy':
-        return 'from-blue-200 via-blue-300 to-blue-400';
-      case 'stormy':
-        return 'from-purple-500 via-purple-600 to-purple-700';
-      case 'windy':
-        return 'from-gray-300 via-gray-400 to-gray-500';
-      default:
-        return 'from-blue-400 via-blue-500 to-indigo-500';
-    }
-  };
-
-  const getWeatherAdvice = (condition: WeatherData['condition']) => {
-    switch (condition) {
-      case 'sunny':
-        return 'Güneş kremi kullanmayı unutmayın!';
-      case 'cloudy':
-        return 'Hafif bir ceket giyebilirsiniz.';
-      case 'rainy':
-        return 'Şemsiye almayı unutmayın!';
-      case 'snowy':
-        return 'Kalın giyin ve dikkatli olun!';
-      case 'stormy':
-        return 'Mümkünse dışarı çıkmayın!';
-      case 'windy':
-        return 'Rüzgara karşı dikkatli olun!';
-      default:
-        return 'Güzel bir gün!';
-    }
-  };
-
-  const fetchWeather = async () => {
+  const fetchWeather = async (city: string) => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      setIsRefreshing(true);
-      setError(null);
-      
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // In real app, this would be an actual API call
-      // const response = await fetch(`/api/weather?city=Istanbul`);
-      // const data = await response.json();
-      
-      setWeather(mockWeatherData);
-      setIsLoading(false);
+      const weatherData = generateMockWeather(city);
+      setWeather(weatherData);
+      setLastUpdated(new Date());
     } catch (err) {
       setError('Hava durumu bilgisi alınamadı');
-      setIsLoading(false);
+      console.error('Weather fetch error:', err);
     } finally {
-      setIsRefreshing(false);
+      setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchWeather();
-  }, []);
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setError('Konum servisi desteklenmiyor');
+      return;
+    }
 
-  useEffect(() => {
-    if (!autoRefresh) return;
-
-    const interval = setInterval(() => {
-      fetchWeather();
-    }, refreshInterval * 60 * 1000);
-
-    return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval]);
-
-  const handleRefresh = () => {
-    fetchWeather();
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          // In a real app, you would reverse geocode the coordinates
+          // For now, we'll use a default city
+          const city = 'Konumunuz';
+          setLocation(city);
+          await fetchWeather(city);
+        } catch (err) {
+          setError('Konum belirlenemedi');
+        }
+      },
+      (err) => {
+        setError('Konum erişimi reddedildi');
+        console.error('Geolocation error:', err);
+      }
+    );
   };
 
-  if (isLoading) {
-    return (
-      <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 ${className}`}>
-        <div className="animate-pulse">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 rounded-lg"></div>
-            <div className="flex-1">
-              <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-24 mb-2"></div>
-              <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-32"></div>
-            </div>
-          </div>
-          <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded w-20 mb-2"></div>
-          <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-40"></div>
-        </div>
-      </div>
-    );
-  }
+  const handleRefresh = () => {
+    fetchWeather(location);
+  };
 
-  if (error) {
+  const handleLocationChange = (newLocation: string) => {
+    setLocation(newLocation);
+    fetchWeather(newLocation);
+  };
+
+  const getWeatherIcon = (icon: string) => {
+    switch (icon) {
+      case 'sun':
+        return <Sun className="w-8 h-8 text-yellow-500" />;
+      case 'cloud':
+        return <Cloud className="w-8 h-8 text-gray-500" />;
+      case 'rain':
+        return <CloudRain className="w-8 h-8 text-blue-500" />;
+      case 'snow':
+        return <CloudSnow className="w-8 h-8 text-blue-300" />;
+      case 'wind':
+        return <Wind className="w-8 h-8 text-gray-400" />;
+      default:
+        return <Sun className="w-8 h-8 text-yellow-500" />;
+    }
+  };
+
+  const formatTemperature = (temp: number) => {
+    if (units === 'imperial') {
+      return `${Math.round((temp * 9/5) + 32)}°F`;
+    }
+    return `${Math.round(temp)}°C`;
+  };
+
+  const formatWindSpeed = (speed: number) => {
+    if (units === 'imperial') {
+      return `${Math.round(speed * 2.237)} mph`;
+    }
+    return `${Math.round(speed * 3.6)} km/h`;
+  };
+
+  useEffect(() => {
+    if (autoLocation) {
+      getCurrentLocation();
+    } else {
+      fetchWeather(location);
+    }
+  }, [autoLocation, location]);
+
+  useEffect(() => {
+    if (refreshInterval > 0) {
+      const interval = setInterval(() => {
+        fetchWeather(location);
+      }, refreshInterval);
+      
+      return () => clearInterval(interval);
+    }
+  }, [refreshInterval, location]);
+
+  if (error && !weather) {
     return (
-      <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 ${className}`}>
-        <div className="text-center">
-          <Cloud className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-500 dark:text-gray-400 mb-3">{error}</p>
-          <motion.button
+      <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 ${className}`}>
+        <div className="text-center text-red-600 dark:text-red-400">
+          <p className="text-sm">{error}</p>
+          <button
             onClick={handleRefresh}
-            className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            className="mt-2 px-3 py-1 text-xs bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-900/30 transition-colors"
           >
             Tekrar Dene
-          </motion.button>
+          </button>
         </div>
       </div>
     );
   }
 
-  if (!weather) return null;
-
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden ${className}`}>
+    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden ${className}`}>
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <MapPin className="w-4 h-4 text-gray-500" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              {weather.city}, {weather.country}
+            <MapPin className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <span className="text-sm font-medium text-gray-900 dark:text-white">
+              {weather?.location || location}
             </span>
           </div>
           
           <div className="flex items-center space-x-2">
-            <motion.button
+            <button
               onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-              whileHover={{ scale: 1.1, rotate: 180 }}
-              whileTap={{ scale: 0.9 }}
+              disabled={isLoading}
+              className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors disabled:opacity-50"
               title="Yenile"
             >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            </motion.button>
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            </button>
             
-            <motion.button
-              onClick={() => setShowDetails(!showDetails)}
+            <button
+              onClick={() => setShowSettings(!showSettings)}
               className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              title={showDetails ? 'Detayları Gizle' : 'Detayları Göster'}
+              title="Ayarlar"
             >
-              <Eye className="w-4 h-4" />
-            </motion.button>
+              <Settings className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
 
       {/* Main Weather Display */}
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-4">
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              {getWeatherIcon(weather.condition)}
-            </motion.div>
-            
-            <div>
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-                className="text-3xl font-bold text-gray-900 dark:text-gray-100"
-              >
-                {weather.temperature}°C
-              </motion.div>
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-                className="text-sm text-gray-600 dark:text-gray-400"
-              >
-                {weather.description}
-              </motion.div>
-            </div>
-          </div>
-          
-          <div className="text-right">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              Hissedilen: {weather.feelsLike}°C
-            </div>
-            <div className="text-xs text-gray-400 dark:text-gray-500">
-              Son güncelleme: {weather.lastUpdated}
-            </div>
-          </div>
-        </div>
-
-        {/* Weather Advice */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-          className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-800 mb-4"
-        >
-          <div className="flex items-center space-x-2">
-            <Info className="w-4 h-4 text-blue-500" />
-            <span className="text-sm text-blue-700 dark:text-blue-300">
-              💡 {getWeatherAdvice(weather.condition)}
-            </span>
-          </div>
-        </motion.div>
-
-        {/* Detailed Weather Info */}
-        <AnimatePresence>
-          {showDetails && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700"
-            >
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center space-x-2">
-                  <Thermometer className="w-4 h-4 text-red-500" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Nem: {weather.humidity}%
-                  </span>
+      {weather && (
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-4">
+              {getWeatherIcon(weather.icon)}
+              <div>
+                <div className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {formatTemperature(weather.temperature)}
                 </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Wind className="w-4 h-4 text-blue-500" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Rüzgar: {weather.windSpeed} km/h
-                  </span>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  {weather.description}
                 </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Eye className="w-4 h-4 text-green-500" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Görüş: {weather.visibility} km
-                  </span>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Droplets className="w-4 h-4 text-cyan-500" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Yağış: %{Math.floor(Math.random() * 30)}
-                  </span>
+                <div className="text-xs text-gray-500 dark:text-gray-500">
+                  Hissedilen: {formatTemperature(weather.feelsLike)}
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+            </div>
+            
+            {lastUpdated && (
+              <div className="text-xs text-gray-500 dark:text-gray-500 text-right">
+                <div>Son güncelleme</div>
+                <div>{lastUpdated.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</div>
+              </div>
+            )}
+          </div>
 
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5 pointer-events-none">
-        <div className={`absolute inset-0 bg-gradient-to-br ${getWeatherGradient(weather.condition)}`} />
-      </div>
+          {/* Weather Details */}
+          {showDetails && (
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="flex items-center space-x-2 text-sm">
+                <Droplets className="w-4 h-4 text-blue-500" />
+                <span className="text-gray-600 dark:text-gray-400">Nem:</span>
+                <span className="font-medium text-gray-900 dark:text-white">{weather.humidity}%</span>
+              </div>
+              
+              <div className="flex items-center space-x-2 text-sm">
+                <Wind className="w-4 h-4 text-gray-500" />
+                <span className="text-gray-600 dark:text-gray-400">Rüzgar:</span>
+                <span className="font-medium text-gray-900 dark:text-white">{formatWindSpeed(weather.windSpeed)}</span>
+              </div>
+              
+              <div className="flex items-center space-x-2 text-sm">
+                <Eye className="w-4 h-4 text-gray-500" />
+                <span className="text-gray-600 dark:text-gray-400">Görüş:</span>
+                <span className="font-medium text-gray-900 dark:text-white">{weather.visibility} km</span>
+              </div>
+              
+              <div className="flex items-center space-x-2 text-sm">
+                <Thermometer className="w-4 h-4 text-red-500" />
+                <span className="text-gray-600 dark:text-gray-400">Basınç:</span>
+                <span className="font-medium text-gray-900 dark:text-white">{weather.pressure} hPa</span>
+              </div>
+            </div>
+          )}
+
+          {/* Sunrise/Sunset */}
+          <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <div className="flex items-center space-x-2">
+              <Sunrise className="w-4 h-4 text-orange-500" />
+              <span>Gün doğumu: {weather.sunrise}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Sunset className="w-4 h-4 text-orange-600" />
+              <span>Gün batımı: {weather.sunset}</span>
+            </div>
+          </div>
+
+          {/* Forecast */}
+          {showForecast && (
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">5 Günlük Tahmin</h4>
+              <div className="grid grid-cols-5 gap-2">
+                {weather.forecast.map((day, index) => (
+                  <div key={index} className="text-center">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                      {day.date}
+                    </div>
+                    <div className="mb-1">
+                      {getWeatherIcon(day.icon)}
+                    </div>
+                    <div className="text-xs font-medium text-gray-900 dark:text-white">
+                      {formatTemperature(day.high)}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-500">
+                      {formatTemperature(day.low)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Settings Panel */}
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-700/50"
+          >
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Konum
+                </label>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleLocationChange(location)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="Şehir adı girin"
+                />
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => handleLocationChange(location)}
+                  className="px-3 py-2 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Güncelle
+                </button>
+                
+                <button
+                  onClick={getCurrentLocation}
+                  className="px-3 py-2 text-xs bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center space-x-1"
+                >
+                  <Navigation className="w-3 h-3" />
+                  <span>Konumumu Bul</span>
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
-}
+};
+
+export default WeatherWidget;

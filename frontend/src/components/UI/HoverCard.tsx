@@ -1,208 +1,245 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { ReactNode } from 'react';
-import { cn } from '@/lib/utils';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronRight, Info, ExternalLink, ArrowUpRight } from 'lucide-react';
 
 interface HoverCardProps {
-  children: ReactNode;
-  effect?: 'lift' | 'glow' | 'scale' | 'rotate' | 'slide' | 'tilt';
+  children: React.ReactNode;
+  content: React.ReactNode;
+  title?: string;
+  description?: string;
+  variant?: 'default' | 'info' | 'link' | 'preview';
+  position?: 'top' | 'bottom' | 'left' | 'right';
+  delay?: number;
   className?: string;
-  onClick?: () => void;
-  interactive?: boolean;
+  trigger?: 'hover' | 'click';
+  showArrow?: boolean;
+  maxWidth?: string;
 }
 
-export default function HoverCard({
+const HoverCard: React.FC<HoverCardProps> = ({
   children,
-  effect = 'lift',
+  content,
+  title,
+  description,
+  variant = 'default',
+  position = 'top',
+  delay = 0.2,
   className = '',
-  onClick,
-  interactive = true
-}: HoverCardProps) {
-  const baseClasses = 'bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-300';
-  
-  const getEffectVariants = () => {
-    switch (effect) {
-      case 'lift':
-        return {
-          hover: {
-            y: -8,
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-            transition: { duration: 0.3, ease: "easeOut" }
-          }
-        };
+  trigger = 'hover',
+  showArrow = true,
+  maxWidth = 'max-w-sm'
+}) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClicked, setIsClicked] = useState(false);
 
-      case 'glow':
-        return {
-          hover: {
-            boxShadow: '0 0 30px rgba(99, 102, 241, 0.3)',
-            scale: 1.02,
-            transition: { duration: 0.3 }
-          }
-        };
-
-      case 'scale':
-        return {
-          hover: {
-            scale: 1.05,
-            transition: { duration: 0.3 }
-          }
-        };
-
-      case 'rotate':
-        return {
-          hover: {
-            rotateY: 5,
-            rotateX: 5,
-            transition: { duration: 0.3 }
-          }
-        };
-
-      case 'slide':
-        return {
-          hover: {
-            x: 10,
-            transition: { duration: 0.3 }
-          }
-        };
-
-      case 'tilt':
-        return {
-          hover: {
-            rotateZ: 2,
-            scale: 1.02,
-            transition: { duration: 0.3 }
-          }
-        };
-
-      default:
-        return {
-          hover: {
-            y: -4,
-            transition: { duration: 0.3 }
-          }
-        };
+  const handleMouseEnter = () => {
+    if (trigger === 'hover') {
+      setIsVisible(true);
     }
   };
 
-  const CardContent = () => (
-    <motion.div
-      className={cn(baseClasses, className)}
-      variants={getEffectVariants()}
-      whileHover={interactive ? "hover" : undefined}
-      whileTap={interactive ? { scale: 0.98 } : undefined}
-      onClick={onClick}
-      style={interactive ? { cursor: onClick ? 'pointer' : 'default' } : {}}
-    >
-      {children}
-    </motion.div>
-  );
+  const handleMouseLeave = () => {
+    if (trigger === 'hover') {
+      setIsVisible(false);
+    }
+  };
 
-  if (effect === 'tilt') {
-    return (
-      <motion.div
-        className="perspective-1000"
-        whileHover={interactive ? { rotateY: 5, rotateX: 5 } : undefined}
-        transition={{ duration: 0.3 }}
-      >
-        <CardContent />
-      </motion.div>
-    );
-  }
+  const handleClick = () => {
+    if (trigger === 'click') {
+      setIsClicked(!isClicked);
+      setIsVisible(!isVisible);
+    }
+  };
 
-  return <CardContent />;
-}
+  const getPositionClasses = () => {
+    switch (position) {
+      case 'bottom':
+        return 'top-full left-1/2 transform -translate-x-1/2 mt-2';
+      case 'left':
+        return 'right-full top-1/2 transform -translate-y-1/2 mr-2';
+      case 'right':
+        return 'left-full top-1/2 transform -translate-y-1/2 ml-2';
+      default: // top
+        return 'bottom-full left-1/2 transform -translate-x-1/2 mb-2';
+    }
+  };
 
-// Specialized card components
-export function StatsCard({ 
-  title, 
-  value, 
-  change, 
-  icon: Icon, 
-  className = '' 
-}: {
-  title: string;
-  value: string;
-  change?: number;
-  icon?: any;
-  className?: string;
-}) {
+  const getArrowPosition = () => {
+    switch (position) {
+      case 'bottom':
+        return 'top-0 left-1/2 transform -translate-x-1/2 -translate-y-full';
+      case 'left':
+        return 'top-1/2 right-0 transform translate-x-full -translate-y-1/2';
+      case 'right':
+        return 'top-1/2 left-0 transform -translate-x-full -translate-y-1/2';
+      default: // top
+        return 'bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full';
+    }
+  };
+
+  const getVariantStyles = () => {
+    switch (variant) {
+      case 'info':
+        return 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700';
+      case 'link':
+        return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700';
+      case 'preview':
+        return 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700';
+      default:
+        return 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700';
+    }
+  };
+
+  const getVariantIcon = () => {
+    switch (variant) {
+      case 'info':
+        return <Info className="w-4 h-4 text-blue-600 dark:text-blue-400" />;
+      case 'link':
+        return <ExternalLink className="w-4 h-4 text-green-600 dark:text-green-400" />;
+      case 'preview':
+        return <ArrowUpRight className="w-4 h-4 text-purple-600 dark:text-purple-400" />;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <HoverCard effect="lift" className={className}>
-      <div className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
-            {change !== undefined && (
-              <p className={`text-sm ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {change >= 0 ? '+' : ''}{change}%
+    <div 
+      className={`relative inline-block ${className}`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onClick={handleClick}
+    >
+      {/* Trigger Element */}
+      <div className="cursor-pointer">
+        {children}
+      </div>
+
+      {/* Hover Card */}
+      <AnimatePresence>
+        {isVisible && (
+          <motion.div
+            className={`absolute z-50 ${getPositionClasses()} ${maxWidth} ${getVariantStyles()} rounded-lg border shadow-lg p-4`}
+            initial={{ 
+              opacity: 0, 
+              scale: 0.95,
+              y: position === 'top' ? 10 : position === 'bottom' ? -10 : 0,
+              x: position === 'left' ? 10 : position === 'right' ? -10 : 0
+            }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1,
+              y: 0,
+              x: 0
+            }}
+            exit={{ 
+              opacity: 0, 
+              scale: 0.95,
+              y: position === 'top' ? 10 : position === 'bottom' ? -10 : 0,
+              x: position === 'left' ? 10 : position === 'right' ? -10 : 0
+            }}
+            transition={{
+              duration: 0.2,
+              delay,
+              ease: "easeOut"
+            }}
+          >
+            {/* Arrow */}
+            {showArrow && (
+              <div className={`absolute ${getArrowPosition()}`}>
+                <div className={`w-2 h-2 bg-white dark:bg-gray-800 border-l border-t transform rotate-45 ${getVariantStyles().split(' ')[0]}`} />
+              </div>
+            )}
+
+            {/* Header */}
+            {(title || variant !== 'default') && (
+              <div className="flex items-center space-x-2 mb-3">
+                {getVariantIcon()}
+                {title && (
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                    {title}
+                  </h3>
+                )}
+              </div>
+            )}
+
+            {/* Description */}
+            {description && (
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                {description}
               </p>
             )}
-          </div>
-          {Icon && (
-            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/20 rounded-lg">
-              <Icon className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-            </div>
-          )}
-        </div>
-      </div>
-    </HoverCard>
-  );
-}
 
-export function FeatureCard({ 
-  title, 
-  description, 
-  icon: Icon, 
-  className = '' 
-}: {
+            {/* Content */}
+            <div className="text-sm text-gray-700 dark:text-gray-300">
+              {content}
+            </div>
+
+            {/* Footer for link variant */}
+            {variant === 'link' && (
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-green-200 dark:border-green-700">
+                <span className="text-xs text-green-600 dark:text-green-400">
+                  Tıklayarak aç
+                </span>
+                <ChevronRight className="w-3 h-3 text-green-600 dark:text-green-400" />
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+export default HoverCard;
+
+// Specialized hover card components
+export const InfoCard: React.FC<{
+  children: React.ReactNode;
   title: string;
   description: string;
-  icon?: any;
   className?: string;
-}) {
-  return (
-    <HoverCard effect="glow" className={className}>
-      <div className="p-6">
-        <div className="flex items-start space-x-4">
-          {Icon && (
-            <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg">
-              <Icon className="w-6 h-6 text-white" />
-            </div>
-          )}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">{title}</h3>
-            <p className="text-gray-600 dark:text-gray-400">{description}</p>
-          </div>
-        </div>
-      </div>
-    </HoverCard>
-  );
-}
+}> = ({ children, title, description, className }) => (
+  <HoverCard
+    title={title}
+    description={description}
+    variant="info"
+    className={className}
+  >
+    {children}
+  </HoverCard>
+);
 
-export function ActionCard({ 
-  title, 
-  description, 
-  action, 
-  className = '' 
-}: {
+export const LinkCard: React.FC<{
+  children: React.ReactNode;
   title: string;
   description: string;
-  action: ReactNode;
   className?: string;
-}) {
-  return (
-    <HoverCard effect="scale" className={className}>
-      <div className="p-6">
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">{title}</h3>
-          <p className="text-gray-600 dark:text-gray-400">{description}</p>
-        </div>
-        <div className="flex justify-end">
-          {action}
-        </div>
-      </div>
-    </HoverCard>
-  );
-} 
+}> = ({ children, title, description, className }) => (
+  <HoverCard
+    title={title}
+    description={description}
+    variant="link"
+    className={className}
+  >
+    {children}
+  </HoverCard>
+);
+
+export const PreviewCard: React.FC<{
+  children: React.ReactNode;
+  title: string;
+  content: React.ReactNode;
+  className?: string;
+}> = ({ children, title, content, className }) => (
+  <HoverCard
+    title={title}
+    content={content}
+    variant="preview"
+    className={className}
+  >
+    {children}
+  </HoverCard>
+); 

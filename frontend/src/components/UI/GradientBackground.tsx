@@ -1,115 +1,193 @@
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ReactNode } from 'react';
 
 interface GradientBackgroundProps {
-  children: ReactNode;
-  type?: 'static' | 'animated' | 'mesh' | 'particles';
-  colors?: string[];
+  children: React.ReactNode;
   className?: string;
+  variant?: 'default' | 'sunset' | 'ocean' | 'forest' | 'cosmic' | 'custom';
+  animated?: boolean;
+  speed?: 'slow' | 'normal' | 'fast';
+  opacity?: number;
 }
 
-export default function GradientBackground({
+const GradientBackground: React.FC<GradientBackgroundProps> = ({
   children,
-  type = 'static',
-  colors = ['#6366f1', '#8b5cf6', '#ec4899'],
-  className = ''
-}: GradientBackgroundProps) {
-  const getGradientStyle = () => {
-    switch (type) {
-      case 'animated':
-        return (
-          <motion.div
-            className="absolute inset-0"
-            animate={{
-              background: [
-                `linear-gradient(45deg, ${colors[0]}, ${colors[1]}, ${colors[2]})`,
-                `linear-gradient(135deg, ${colors[1]}, ${colors[2]}, ${colors[0]})`,
-                `linear-gradient(225deg, ${colors[2]}, ${colors[0]}, ${colors[1]})`,
-                `linear-gradient(315deg, ${colors[0]}, ${colors[1]}, ${colors[2]})`
-              ]
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-          />
-        );
+  className = '',
+  variant = 'default',
+  animated = true,
+  speed = 'normal',
+  opacity = 1
+}) => {
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
-      case 'mesh':
-        return (
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 opacity-20" />
-            <div className="absolute inset-0 bg-gradient-to-tl from-blue-500 via-cyan-500 to-teal-500 opacity-20" />
-            <div className="absolute inset-0 bg-gradient-to-tr from-yellow-500 via-orange-500 to-red-500 opacity-20" />
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-bl from-green-500 via-emerald-500 to-teal-500 opacity-20"
-              animate={{
-                opacity: [0.2, 0.4, 0.2]
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            />
-          </div>
-        );
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
 
-      case 'particles':
-        return (
-          <div className="absolute inset-0 overflow-hidden">
-            {Array.from({ length: 20 }).map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-2 h-2 bg-white rounded-full opacity-20"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`
-                }}
-                animate={{
-                  y: [0, -100, 0],
-                  x: [0, Math.random() * 50 - 25, 0],
-                  opacity: [0.2, 0.8, 0.2],
-                  scale: [1, 1.5, 1]
-                }}
-                transition={{
-                  duration: 3 + Math.random() * 2,
-                  repeat: Infinity,
-                  delay: Math.random() * 2
-                }}
-              />
-            ))}
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/30 via-purple-500/30 to-pink-500/30" />
-          </div>
-        );
+    if (animated) {
+      window.addEventListener('mousemove', handleMouseMove);
+    }
 
+    return () => {
+      if (animated) {
+        window.removeEventListener('mousemove', handleMouseMove);
+      }
+    };
+  }, [animated]);
+
+  const getGradientColors = () => {
+    switch (variant) {
+      case 'sunset':
+        return {
+          from: 'from-orange-400 via-pink-500 to-red-500',
+          to: 'to-orange-400 via-pink-500 from-red-500'
+        };
+      case 'ocean':
+        return {
+          from: 'from-blue-400 via-cyan-500 to-teal-500',
+          to: 'to-blue-400 via-cyan-500 from-teal-500'
+        };
+      case 'forest':
+        return {
+          from: 'from-green-400 via-emerald-500 to-teal-500',
+          to: 'to-green-400 via-emerald-500 from-teal-500'
+        };
+      case 'cosmic':
+        return {
+          from: 'from-purple-400 via-pink-500 to-indigo-500',
+          to: 'to-purple-400 via-pink-500 from-indigo-500'
+        };
+      case 'custom':
+        return {
+          from: 'from-violet-400 via-fuchsia-500 to-cyan-500',
+          to: 'to-violet-400 via-fuchsia-500 from-cyan-500'
+        };
       default:
-        return (
-          <div 
-            className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500"
-            style={{
-              background: `linear-gradient(135deg, ${colors.join(', ')})`
-            }}
-          />
-        );
+        return {
+          from: 'from-indigo-500 via-purple-500 to-pink-500',
+          to: 'to-indigo-500 via-purple-500 from-pink-500'
+        };
     }
   };
 
+  const getAnimationSpeed = () => {
+    switch (speed) {
+      case 'slow': return 20;
+      case 'fast': return 5;
+      default: return 10;
+    }
+  };
+
+  const colors = getGradientColors();
+  const animationSpeed = getAnimationSpeed();
+
   return (
-    <div className={`relative min-h-screen ${className}`}>
-      {getGradientStyle()}
+    <div className={`relative min-h-screen overflow-hidden ${className}`}>
+      {/* Animated Background */}
+      <motion.div
+        className={`absolute inset-0 bg-gradient-to-br ${colors.from} ${colors.to}`}
+        style={{ opacity }}
+        animate={animated ? {
+          background: [
+            `linear-gradient(45deg, var(--tw-gradient-from), var(--tw-gradient-via), var(--tw-gradient-to))`,
+            `linear-gradient(135deg, var(--tw-gradient-to), var(--tw-gradient-from), var(--tw-gradient-via))`,
+            `linear-gradient(225deg, var(--tw-gradient-via), var(--tw-gradient-to), var(--tw-gradient-from))`,
+            `linear-gradient(315deg, var(--tw-gradient-from), var(--tw-gradient-to), var(--tw-gradient-via))`
+          ]
+        } : {}}
+        transition={{
+          duration: animationSpeed,
+          repeat: Infinity,
+          ease: "linear"
+        }}
+      />
+
+      {/* Floating Elements */}
+      {animated && (
+        <>
+          <motion.div
+            className="absolute top-20 left-20 w-32 h-32 bg-white/10 rounded-full blur-xl"
+            animate={{
+              x: [0, 100, 0],
+              y: [0, -50, 0],
+              scale: [1, 1.2, 1]
+            }}
+            transition={{
+              duration: animationSpeed * 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          <motion.div
+            className="absolute top-40 right-32 w-24 h-24 bg-white/10 rounded-full blur-xl"
+            animate={{
+              x: [0, -80, 0],
+              y: [0, 60, 0],
+              scale: [1, 0.8, 1]
+            }}
+            transition={{
+              duration: animationSpeed * 1.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 1
+            }}
+          />
+          <motion.div
+            className="absolute bottom-32 left-1/3 w-40 h-40 bg-white/5 rounded-full blur-2xl"
+            animate={{
+              x: [0, 120, 0],
+              y: [0, -80, 0],
+              scale: [1, 1.5, 1]
+            }}
+            transition={{
+              duration: animationSpeed * 2.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 2
+            }}
+          />
+        </>
+      )}
+
+      {/* Interactive Mouse Follow Effect */}
+      {animated && (
+        <motion.div
+          className="absolute w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none"
+          animate={{
+            x: mousePosition.x - 192,
+            y: mousePosition.y - 192
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 50,
+            damping: 20
+          }}
+        />
+      )}
+
+      {/* Content */}
       <div className="relative z-10">
         {children}
       </div>
+
+      {/* Overlay Pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+          backgroundSize: '20px 20px'
+        }} />
+      </div>
     </div>
   );
-}
+};
+
+export default GradientBackground;
 
 // Specialized gradient components
-export function HeroGradient({ children }: { children: ReactNode }) {
+export function HeroGradient({ children }: { children: React.ReactNode }) {
   return (
     <GradientBackground type="animated" className="min-h-[60vh] flex items-center justify-center">
       <div className="text-center text-white">
@@ -119,7 +197,7 @@ export function HeroGradient({ children }: { children: ReactNode }) {
   );
 }
 
-export function CardGradient({ children }: { children: ReactNode }) {
+export function CardGradient({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative p-1 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
       <div className="bg-white dark:bg-gray-900 rounded-xl p-6">
@@ -133,7 +211,7 @@ export function AnimatedGradientText({
   children, 
   className = '' 
 }: { 
-  children: ReactNode;
+  children: React.ReactNode;
   className?: string;
 }) {
   return (
