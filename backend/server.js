@@ -1,451 +1,425 @@
 const express = require('express');
-const http = require('http');
-const WebSocket = require('ws');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+const RedisStore = require('rate-limit-redis');
+const Redis = require('ioredis');
 const path = require('path');
+const fs = require('fs-extra');
 
 // Import utilities
 const { logger } = require('./utils/logger');
-const { ResponseFormatter } = require('./utils/responseFormatter');
-const { connectDB, disconnectDB } = require('./config/database');
+const { databaseManager } = require('./utils/databaseManager');
+const { cacheManager } = require('./utils/cacheManager');
+const { performanceMonitor } = require('./utils/performanceMonitor');
+const { jobQueue } = require('./utils/jobQueue');
+const { chatManager } = require('./utils/chatManager');
+const { ResponseHandler } = require('./utils/responseHandler');
 
 // Import middleware
-const { security } = require('./middleware/security');
-const { global: globalRateLimit } = require('./middleware/rateLimit');
-
-// Import advanced utilities
-const cacheManager = require('./utils/cacheManager');
-const performanceMonitor = require('./utils/performanceMonitor');
-const { jobQueue } = require('./utils/jobQueue');
+const securityMiddleware = require('./middleware/security');
+const rateLimitMiddleware = require('./middleware/rateLimit');
+const {
+  requestTiming,
+  requestValidation,
+  cacheMiddleware,
+  performanceMonitoring,
+  errorTracking,
+  requestLogging,
+  responseEnhancement,
+  databaseMonitoring,
+  enhancedRateLimiting,
+  requestSanitization,
+  compressionOptimization
+} = require('./middleware/advanced');
 
 // Import routes
 const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/users');
+const employeeRoutes = require('./routes/employees');
+const productRoutes = require('./routes/products');
+const orderRoutes = require('./routes/orders');
+const attendanceRoutes = require('./routes/attendance');
+const leaveRoutes = require('./routes/leave');
+const performanceRoutes = require('./routes/performance');
 const exportRoutes = require('./routes/export');
+const apiRoutes = require('./routes/api');
 
-// Import chat manager
-const ChatManager = require('./utils/chatManager');
+// Import WebSocket server
+const { WebSocketServer } = require('./utils/websocketServer');
 
 const app = express();
-const server = http.createServer(app);
+const PORT = process.env.PORT || 5000;
 
-// Initialize chat manager
-const chatManager = new ChatManager();
-chatManager.initialize();
-
-// Create WebSocket server with specific path
-const wss = new WebSocket.Server({ 
-  server, 
-  path: '/ws',
-  verifyClient: (info) => {
-    // Basic verification - you can add more sophisticated auth here
-    logger.info(`WebSocket connection attempt from: ${info.req.headers.origin || 'unknown'}`);
-    return true;
-  }
+// Initialize Redis connection
+const redis = new Redis({
+  host: process.env.REDIS_HOST || 'localhost',
+  port: process.env.REDIS_PORT || 6379,
+  password: process.env.REDIS_PASSWORD,
+  retryDelayOnFailover: 100,
+  maxRetriesPerRequest: 3,
+  lazyConnect: true
 });
 
-// Apply security middleware
-app.use(security);
+// Redis event handlers
+redis.on('connect', () => {
+  logger.info('Redis connected successfully');
+});
 
-// Apply rate limiting
-app.use(globalRateLimit);
+redis.on('error', (error) => {
+  logger.error('Redis connection error', { error: error.message });
+});
 
-// Apply performance monitoring middleware
-app.use(performanceMonitor.middleware);
+redis.on('close', () => {
+  logger.warn('Redis connection closed');
+});
 
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Initialize services
+let websocketServer;
+let gracefulShutdownInProgress = false;
 
-// Static files for exports
-app.use('/exports', express.static(path.join(__dirname, 'exports')));
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/export', exportRoutes);
-
-// Performance and monitoring endpoints
-app.get('/api/performance', async (req, res) => {
+/**
+ * Initialize all services
+ */
+async function initializeServices() {
   try {
-    const report = performanceMonitor.getReport(req.query.timeRange || '1h');
-    res.json(ResponseFormatter.success('Performance report retrieved', report));
+    logger.info('Initializing services...');
+    
+    // Initialize database
+    await databaseManager.connect();
+    logger.info('Database initialized');
+    
+    // Initialize cache manager
+    await cacheManager.initialize(redis);
+    logger.info('Cache manager initialized');
+    
+    // Initialize performance monitor
+    performanceMonitor.start();
+    logger.info('Performance monitor started');
+    
+    // Initialize job queue
+    await jobQueue.initialize(redis);
+    logger.info('Job queue initialized');
+    
+    // Initialize chat manager
+    await chatManager.initialize();
+    logger.info('Chat manager initialized');
+    
+    // Initialize WebSocket server
+    websocketServer = new WebSocketServer();
+    await websocketServer.initialize();
+    logger.info('WebSocket server initialized');
+    
+    logger.info('All services initialized successfully');
   } catch (error) {
-    res.status(500).json(ResponseFormatter.error('Failed to get performance report', error.message));
+    logger.error('Service initialization failed', {
+      error: error.message,
+      stack: error.stack
+    });
+    throw error;
   }
-});
+}
 
-app.get('/api/cache/stats', async (req, res) => {
-  try {
-    const stats = cacheManager.getStats();
-    res.json(ResponseFormatter.success('Cache statistics retrieved', stats));
-  } catch (error) {
-    res.status(500).json(ResponseFormatter.error('Failed to get cache statistics', error.message));
-  }
-});
-
-app.post('/api/cache/clear', async (req, res) => {
-  try {
-    const result = await cacheManager.clear();
-    res.json(ResponseFormatter.success('Cache cleared successfully', { result }));
-  } catch (error) {
-    res.status(500).json(ResponseFormatter.error('Failed to clear cache', error.message));
-  }
-});
-
-app.get('/api/jobs/stats', async (req, res) => {
-  try {
-    const stats = await jobQueue.getStats();
-    res.json(ResponseFormatter.success('Job queue statistics retrieved', stats));
-  } catch (error) {
-    res.status(500).json(ResponseFormatter.error('Failed to get job queue statistics', error.message));
-  }
-});
-
-app.post('/api/jobs/:jobId/cancel', async (req, res) => {
-  try {
-    const result = await jobQueue.cancelJob(req.params.jobId);
-    res.json(ResponseFormatter.success('Job cancelled successfully', { result }));
-  } catch (error) {
-    res.status(500).json(ResponseFormatter.error('Failed to cancel job', error.message));
-  }
-});
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  const health = {
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    memory: process.memoryUsage(),
-    database: 'connected',
-    cache: cacheManager.health(),
-    performance: performanceMonitor.health(),
-    jobQueue: jobQueue.getStats(),
-    chat: {
-      activeChats: chatManager.activeChats.size,
-      waitingChats: chatManager.chatQueue.length,
-      onlineAgents: Array.from(chatManager.agents.values()).filter(a => a.status === 'online').length
-    }
-  };
-  
-  res.json(ResponseFormatter.success('Server is healthy', health));
-});
-
-// WebSocket connection handling
-wss.on('connection', (ws, req) => {
-  logger.info(`New WebSocket connection established from ${req.socket.remoteAddress}`);
-  
-  let userId = null;
-  let userType = null; // 'user' or 'agent'
-  let chatId = null;
-
-  // Send initial connection confirmation
-  ws.send(JSON.stringify({
-    type: 'connection_established',
-    message: 'WebSocket connection established successfully'
+/**
+ * Setup middleware
+ */
+function setupMiddleware() {
+  // Basic security middleware
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "https:"],
+        scriptSrc: ["'self'"],
+        connectSrc: ["'self'", "ws:", "wss:"]
+      }
+    },
+    crossOriginEmbedderPolicy: false
   }));
-
-  // Handle incoming messages
-  ws.on('message', (message) => {
+  
+  // CORS configuration
+  app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-API-Key']
+  }));
+  
+  // Body parsing
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  
+  // Compression
+  app.use(compression({
+    level: 6,
+    threshold: 1024,
+    filter: (req, res) => {
+      if (req.headers['x-no-compression']) {
+        return false;
+      }
+      return compression.filter(req, res);
+    }
+  }));
+  
+  // Advanced middleware
+  app.use(requestTiming);
+  app.use(performanceMonitoring);
+  app.use(errorTracking);
+  app.use(requestLogging);
+  app.use(responseEnhancement);
+  app.use(databaseMonitoring);
+  app.use(requestSanitization);
+  app.use(compressionOptimization);
+  
+  // Enhanced rate limiting
+  app.use(enhancedRateLimiting({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Çok fazla istek gönderildi',
+    standardHeaders: true,
+    legacyHeaders: false,
+    store: new RedisStore({
+      sendCommand: (...args) => redis.call(...args)
+    })
+  }));
+  
+  // Security middleware
+  app.use(securityMiddleware);
+  
+  // Static files
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+  app.use('/exports', express.static(path.join(__dirname, 'exports')));
+  
+  // Health check endpoint (before rate limiting)
+  app.get('/health', async (req, res) => {
     try {
-      // Validate message format
-      if (typeof message !== 'string') {
-        logger.warn('Received non-string message, converting to string');
-        message = message.toString();
-      }
-
-      // Check if message is valid JSON
-      if (!message.trim().startsWith('{')) {
-        logger.warn('Received non-JSON message:', message.substring(0, 100));
-        ws.send(JSON.stringify({
-          type: 'error',
-          message: 'Invalid message format - expected JSON'
-        }));
-        return;
-      }
-
-      const data = JSON.parse(message);
+      const healthData = {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        services: {
+          database: databaseManager.getConnectionStatus(),
+          cache: await cacheManager.health(),
+          performance: performanceMonitor.getStats(),
+          jobQueue: jobQueue.getStats()
+        }
+      };
       
-      // Validate message structure
-      if (!data.type) {
-        ws.send(JSON.stringify({
-          type: 'error',
-          message: 'Message must have a type field'
-        }));
-        return;
-      }
+      const allServicesHealthy = Object.values(healthData.services).every(
+        service => service.status === 'healthy' || service.isConnected
+      );
       
-      switch (data.type) {
-        case 'auth':
-          // Authenticate user and establish connection
-          if (!data.userId || !data.userType) {
-            ws.send(JSON.stringify({
-              type: 'error',
-              message: 'Auth message must include userId and userType'
-            }));
-            return;
-          }
-
-          userId = data.userId;
-          userType = data.userType;
-          logger.info(`WebSocket authenticated: ${userType} ${userId}`);
-          
-          // Send connection confirmation
-          ws.send(JSON.stringify({
-            type: 'auth_success',
-            userId,
-            userType
-          }));
-          
-          // If user, check for existing chat or create new one
-          if (userType === 'user') {
-            let chat = chatManager.getUserChat(userId);
-            if (!chat) {
-              chat = chatManager.createChat(userId, data.userInfo || {});
-            }
-            chatId = chat.id;
-            
-            ws.send(JSON.stringify({
-              type: 'chat_status',
-              chatId,
-              status: chat.status,
-              agentId: chat.agentId,
-              messages: chat.messages
-            }));
-          }
-          break;
-
-        case 'chat_message':
-          if (!chatId) {
-            ws.send(JSON.stringify({
-              type: 'error',
-              message: 'No active chat session'
-            }));
-            return;
-          }
-          
-          if (!data.text || typeof data.text !== 'string') {
-            ws.send(JSON.stringify({
-              type: 'error',
-              message: 'Chat message must include text field'
-            }));
-            return;
-          }
-          
-          // Add message to chat
-          const newMessage = chatManager.addMessage(chatId, {
-            text: data.text,
-            sender: userType,
-            attachments: data.attachments || []
-          });
-          
-          if (newMessage) {
-            // Broadcast message to all connected clients for this chat
-            wss.clients.forEach((client) => {
-              if (client.chatId === chatId && client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify({
-                  type: 'new_message',
-                  chatId,
-                  message: newMessage
-                }));
-              }
-            });
-          }
-          break;
-
-        case 'agent_status_update':
-          if (userType === 'agent') {
-            if (!data.status || !['online', 'away', 'busy', 'offline'].includes(data.status)) {
-              ws.send(JSON.stringify({
-                type: 'error',
-                message: 'Invalid agent status'
-              }));
-              return;
-            }
-
-            chatManager.updateAgentStatus(userId, data.status);
-            
-            // Broadcast agent status update
-            wss.clients.forEach((client) => {
-              if (client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify({
-                  type: 'agent_status_update',
-                  agentId: userId,
-                  status: data.status
-                }));
-              }
-            });
-          }
-          break;
-
-        case 'chat_end':
-          if (chatId) {
-            chatManager.endChat(chatId, data.rating, data.feedback);
-            
-            // Broadcast chat end
-            wss.clients.forEach((client) => {
-              if (client.chatId === chatId && client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify({
-                  type: 'chat_ended',
-                  chatId
-                }));
-              }
-            });
-          }
-          break;
-
-        case 'typing_start':
-          if (chatId) {
-            wss.clients.forEach((client) => {
-              if (client.chatId === chatId && client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify({
-                  type: 'typing_start',
-                  chatId,
-                  userId,
-                  userType
-                }));
-              }
-            });
-          }
-          break;
-
-        case 'typing_stop':
-          if (chatId) {
-            wss.clients.forEach((client) => {
-              if (client.chatId === chatId && client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify({
-                  type: 'typing_stop',
-                  chatId,
-                  userId,
-                  userType
-                }));
-              }
-            });
-          }
-          break;
-
-        case 'ping':
-          // Respond to ping with pong
-          ws.send(JSON.stringify({ type: 'pong' }));
-          break;
-
-        default:
-          logger.warn(`Unknown WebSocket message type: ${data.type}`);
-          ws.send(JSON.stringify({
-            type: 'error',
-            message: `Unknown message type: ${data.type}`
-          }));
-      }
+      healthData.status = allServicesHealthy ? 'healthy' : 'degraded';
+      const statusCode = allServicesHealthy ? 200 : 503;
+      
+      res.status(statusCode).json(healthData);
     } catch (error) {
-      logger.error('Error processing WebSocket message:', error);
-      logger.error('Raw message:', message);
-      
-      ws.send(JSON.stringify({
-        type: 'error',
-        message: 'Invalid message format or processing error'
-      }));
+      logger.error('Health check failed', { error: error.message });
+      res.status(503).json({ status: 'unhealthy', error: error.message });
     }
   });
+}
 
-  // Handle client disconnect
-  ws.on('close', (code, reason) => {
-    logger.info(`WebSocket connection closed: ${userType} ${userId} - Code: ${code}, Reason: ${reason}`);
-    
-    // If agent disconnected, update their status
-    if (userType === 'agent' && userId) {
-      chatManager.updateAgentStatus(userId, 'offline');
-    }
-    
-    // Process chat queue when agents disconnect
-    chatManager.processQueue();
+/**
+ * Setup routes
+ */
+function setupRoutes() {
+  // API routes
+  app.use('/api', apiRoutes);
+  
+  // Feature routes
+  app.use('/api/auth', authRoutes);
+  app.use('/api/users', userRoutes);
+  app.use('/api/employees', employeeRoutes);
+  app.use('/api/products', productRoutes);
+  app.use('/api/orders', orderRoutes);
+  app.use('/api/attendance', attendanceRoutes);
+  app.use('/api/leave', leaveRoutes);
+  app.use('/api/performance', performanceRoutes);
+  app.use('/api/export', exportRoutes);
+  
+  // 404 handler
+  app.use('*', (req, res) => {
+    return ResponseHandler.notFound(res, 'Endpoint', 'Endpoint bulunamadı');
   });
-
-  // Handle WebSocket errors
-  ws.on('error', (error) => {
-    logger.error(`WebSocket error for ${userType} ${userId}:`, error);
+  
+  // Global error handler
+  app.use((error, req, res, next) => {
+    logger.error('Unhandled error', {
+      error: error.message,
+      stack: error.stack,
+      url: req.url,
+      method: req.method,
+      ip: req.ip || req.connection.remoteAddress
+    });
+    
+    return ResponseHandler.error(res, error, error.statusCode || 500);
   });
+}
 
-  // Store user info in WebSocket object for easy access
-  ws.userId = userId;
-  ws.userType = userType;
-  ws.chatId = chatId;
-});
-
-// Process chat queue periodically
-setInterval(() => {
-  chatManager.processQueue();
-}, 5000); // Every 5 seconds
-
-// Cleanup old chats periodically
-setInterval(() => {
-  chatManager.cleanup();
-}, 60 * 60 * 1000); // Every hour
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json(ResponseFormatter.notFound('Endpoint not found'));
-});
-
-// Global error handler
-app.use((error, req, res, next) => {
-  logger.error('Unhandled error:', error);
-  res.status(500).json(ResponseFormatter.error('Internal server error', error.message));
-});
-
-// Graceful shutdown
-const gracefulShutdown = async (signal) => {
+/**
+ * Graceful shutdown
+ */
+async function gracefulShutdown(signal) {
+  if (gracefulShutdownInProgress) {
+    logger.warn('Graceful shutdown already in progress');
+    return;
+  }
+  
+  gracefulShutdownInProgress = true;
   logger.info(`Received ${signal}. Starting graceful shutdown...`);
   
-  // Close WebSocket connections
-  wss.clients.forEach((client) => {
-    client.close(1000, 'Server shutting down');
-  });
-  wss.close();
-  
-  // Close HTTP server
-  server.close(async () => {
-    logger.info('HTTP server closed');
-    
-    // Cleanup utilities
-    await cacheManager.cleanup();
-    performanceMonitor.cleanup();
-    await jobQueue.cleanup();
-    
-    // Disconnect database
-    await disconnectDB();
-    
-    logger.info('All services cleaned up');
-    
-    // Exit process
-    process.exit(0);
-  });
-};
-
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-
-// Start server
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, async () => {
   try {
-    await connectDB();
-    logger.info(`Server running on port ${PORT}`);
-    logger.info(`WebSocket server ready at ws://localhost:${PORT}/ws`);
+    // Stop accepting new connections
+    if (server) {
+      server.close(() => {
+        logger.info('HTTP server closed');
+      });
+    }
     
-    // Log initial chat manager status
-    const stats = chatManager.getStats();
-    logger.info('Chat manager initialized:', stats);
+    // Close WebSocket connections
+    if (websocketServer) {
+      await websocketServer.shutdown();
+      logger.info('WebSocket server closed');
+    }
+    
+    // Stop performance monitoring
+    performanceMonitor.stop();
+    logger.info('Performance monitoring stopped');
+    
+    // Stop job queue
+    await jobQueue.shutdown();
+    logger.info('Job queue stopped');
+    
+    // Close database connection
+    await databaseManager.disconnect();
+    logger.info('Database connection closed');
+    
+    // Close cache connections
+    await cacheManager.shutdown();
+    logger.info('Cache connections closed');
+    
+    // Close Redis connection
+    await redis.quit();
+    logger.info('Redis connection closed');
+    
+    // Stop logger
+    await logger.shutdown();
+    logger.info('Logger stopped');
+    
+    logger.info('Graceful shutdown completed');
+    process.exit(0);
   } catch (error) {
-    logger.error('Failed to start server:', error);
+    logger.error('Error during graceful shutdown', {
+      error: error.message,
+      stack: error.stack
+    });
     process.exit(1);
   }
-});
+}
 
-// Memory monitoring
-setInterval(() => {
-  const memUsage = process.memoryUsage();
-  if (memUsage.heapUsed > 100 * 1024 * 1024) { // 100MB
-    logger.warn('High memory usage detected:', {
-      heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)}MB`,
-      heapTotal: `${Math.round(memUsage.heapTotal / 1024 / 1024)}MB`
+/**
+ * Start server
+ */
+async function startServer() {
+  try {
+    // Initialize services
+    await initializeServices();
+    
+    // Setup middleware and routes
+    setupMiddleware();
+    setupRoutes();
+    
+    // Start HTTP server
+    const server = app.listen(PORT, () => {
+      logger.info(`Server running on port ${PORT}`, {
+        port: PORT,
+        environment: process.env.NODE_ENV || 'development',
+        timestamp: new Date().toISOString()
+      });
+      
+      // Log server information
+      const serverInfo = {
+        port: PORT,
+        environment: process.env.NODE_ENV || 'development',
+        nodeVersion: process.version,
+        platform: process.platform,
+        arch: process.arch,
+        memoryUsage: process.memoryUsage(),
+        uptime: process.uptime()
+      };
+      
+      logger.info('Server information', serverInfo);
     });
+    
+    // Store server reference for graceful shutdown
+    global.server = server;
+    
+    // Handle server errors
+    server.on('error', (error) => {
+      logger.error('Server error', {
+        error: error.message,
+        stack: error.stack
+      });
+      
+      if (error.code === 'EADDRINUSE') {
+        logger.error(`Port ${PORT} is already in use`);
+        process.exit(1);
+      }
+    });
+    
+    // Handle uncaught exceptions
+    process.on('uncaughtException', (error) => {
+      logger.error('Uncaught exception', {
+        error: error.message,
+        stack: error.stack
+      });
+      
+      gracefulShutdown('uncaughtException');
+    });
+    
+    // Handle unhandled promise rejections
+    process.on('unhandledRejection', (reason, promise) => {
+      logger.error('Unhandled promise rejection', {
+        reason: reason?.message || reason,
+        stack: reason?.stack,
+        promise: promise
+      });
+      
+      gracefulShutdown('unhandledRejection');
+    });
+    
+    // Handle graceful shutdown signals
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    
+    // Handle process warnings
+    process.on('warning', (warning) => {
+      logger.warn('Process warning', {
+        name: warning.name,
+        message: warning.message,
+        stack: warning.stack
+      });
+    });
+    
+    logger.info('Server started successfully');
+    
+  } catch (error) {
+    logger.error('Failed to start server', {
+      error: error.message,
+      stack: error.stack
+    });
+    
+    process.exit(1);
   }
-}, 5 * 60 * 1000); // Every 5 minutes
+}
+
+// Start the server
+startServer();
+
+module.exports = app;
