@@ -17,6 +17,7 @@ const { performanceMonitor } = require('./utils/performanceMonitor');
 const { jobQueue } = require('./utils/jobQueue');
 const { chatManager } = require('./utils/chatManager');
 const { ResponseHandler } = require('./utils/responseHandler');
+const { jobScheduler } = require('./utils/scheduler');
 
 // Import middleware
 const securityMiddleware = require('./middleware/security');
@@ -46,6 +47,9 @@ const leaveRoutes = require('./routes/leave');
 const performanceRoutes = require('./routes/performance');
 const exportRoutes = require('./routes/export');
 const apiRoutes = require('./routes/api');
+const analyticsRoutes = require('./routes/analytics');
+const webhookRoutes = require('./routes/webhooks');
+const docsRoutes = require('./routes/docs');
 
 // Import WebSocket server
 const { WebSocketServer } = require('./utils/websocketServer');
@@ -106,6 +110,10 @@ async function initializeServices() {
     // Initialize chat manager
     await chatManager.initialize();
     logger.info('Chat manager initialized');
+    
+    // Initialize job scheduler
+    await jobScheduler.initialize();
+    logger.info('Job scheduler initialized');
     
     // Initialize WebSocket server
     websocketServer = new WebSocketServer();
@@ -206,7 +214,8 @@ function setupMiddleware() {
           database: databaseManager.getConnectionStatus(),
           cache: await cacheManager.health(),
           performance: performanceMonitor.getStats(),
-          jobQueue: jobQueue.getStats()
+          jobQueue: jobQueue.getStats(),
+          jobScheduler: jobScheduler.getAllJobsStatus()
         }
       };
       
@@ -242,6 +251,9 @@ function setupRoutes() {
   app.use('/api/leave', leaveRoutes);
   app.use('/api/performance', performanceRoutes);
   app.use('/api/export', exportRoutes);
+  app.use('/api/analytics', analyticsRoutes);
+  app.use('/api/webhooks', webhookRoutes);
+  app.use('/api/docs', docsRoutes);
   
   // 404 handler
   app.use('*', (req, res) => {
@@ -295,6 +307,10 @@ async function gracefulShutdown(signal) {
     // Stop job queue
     await jobQueue.shutdown();
     logger.info('Job queue stopped');
+    
+    // Stop job scheduler
+    jobScheduler.stopAllJobs();
+    logger.info('Job scheduler stopped');
     
     // Close database connection
     await databaseManager.disconnect();
