@@ -175,7 +175,7 @@
 - **Smooth animations** and micro-interactions
 
 ### 🔔 Advanced Notifications
-- **Real-time notifications** with WebSocket
+- **Real-time notifications** with WebSocket-
 - **Email notifications** for important events
 - **Push notifications** for mobile devices
 - **Customizable notification** preferences
